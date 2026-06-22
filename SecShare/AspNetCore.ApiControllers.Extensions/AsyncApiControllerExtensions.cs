@@ -86,9 +86,9 @@ namespace AspNetCore.ApiControllers.Extensions
                 return apiController.InvalidModelState(apiController.ModelState);
 
             var response = await apiController.AsyncRequestBuilder.ExecuteAsync<TRequest, TResponse>(request);
-            if (response is FileResponse or FileResult)
+            if (response is IActionResult actionResult)
             {
-                return response as IActionResult;
+                return actionResult;
             }
 
             return success(response);
