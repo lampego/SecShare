@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "4GLOYUxfbQM=",
+  "dgSpecHash": "Paub68i/kxE=",
   "success": true,
   "projectFilePath": "/mnt/nvme1n1p1/nvme_2/repos/secshare/SecShare/Api.Requests.Base/Api.Requests.Base.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "/home/lampego/.nuget/packages/autofac/9.3.0/autofac.9.3.0.nupkg.sha512"
+  ],
   "logs": []
 }

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AspNetCore.ApiControllers.Extensions")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f5abe245621dfbe488260b77b04764902abc85bc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f97f72b991a60cb87cbb391070524708e9d183b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("AspNetCore.ApiControllers.Extensions")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AspNetCore.ApiControllers.Extensions")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

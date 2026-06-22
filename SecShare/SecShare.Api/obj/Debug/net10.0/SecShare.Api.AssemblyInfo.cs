@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SecShare.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f5abe245621dfbe488260b77b04764902abc85bc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f97f72b991a60cb87cbb391070524708e9d183b7")]
 [assembly: System.Reflection.AssemblyProductAttribute("SecShare.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SecShare.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

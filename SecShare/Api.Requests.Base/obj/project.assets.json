@@ -1,11 +1,65 @@
 {
   "version": 3,
   "targets": {
-    "net10.0": {}
+    "net10.0": {
+      "Autofac/9.3.0": {
+        "type": "package",
+        "compile": {
+          "lib/net10.0/Autofac.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net10.0/Autofac.dll": {
+            "related": ".xml"
+          }
+        }
+      },
+      "Api.Requests.Abstractions/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v10.0",
+        "compile": {
+          "bin/placeholder/Api.Requests.Abstractions.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/Api.Requests.Abstractions.dll": {}
+        }
+      }
+    }
   },
-  "libraries": {},
+  "libraries": {
+    "Autofac/9.3.0": {
+      "sha512": "OXigGAa1oFYbHmI9lEEYYSRQvbtGC3AnNdg+4BEhHa0x8XlJrYOS7Sg5fZtmlrHPLp+gRsDnz2aqbsglNUnv0g==",
+      "type": "package",
+      "path": "autofac/9.3.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "README.md",
+        "autofac.9.3.0.nupkg.sha512",
+        "autofac.nuspec",
+        "icon.png",
+        "lib/net10.0/Autofac.dll",
+        "lib/net10.0/Autofac.xml",
+        "lib/net8.0/Autofac.dll",
+        "lib/net8.0/Autofac.xml",
+        "lib/netstandard2.0/Autofac.dll",
+        "lib/netstandard2.0/Autofac.xml",
+        "lib/netstandard2.1/Autofac.dll",
+        "lib/netstandard2.1/Autofac.xml"
+      ]
+    },
+    "Api.Requests.Abstractions/1.0.0": {
+      "type": "project",
+      "path": "../Api.Requests.Abstractions/Api.Requests.Abstractions.csproj",
+      "msbuildProject": "../Api.Requests.Abstractions/Api.Requests.Abstractions.csproj"
+    }
+  },
   "projectFileDependencyGroups": {
-    "net10.0": []
+    "net10.0": [
+      "Api.Requests.Abstractions >= 1.0.0",
+      "Autofac >= 9.3.0"
+    ]
   },
   "packageFolders": {
     "/home/lampego/.nuget/packages/": {}
@@ -32,7 +86,11 @@
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/mnt/nvme1n1p1/nvme_2/repos/secshare/SecShare/Api.Requests.Abstractions/Api.Requests.Abstractions.csproj": {
+              "projectPath": "/mnt/nvme1n1p1/nvme_2/repos/secshare/SecShare/Api.Requests.Abstractions/Api.Requests.Abstractions.csproj"
+            }
+          }
         }
       },
       "warningProperties": {
@@ -50,6 +108,12 @@
     "frameworks": {
       "net10.0": {
         "targetAlias": "net10.0",
+        "dependencies": {
+          "Autofac": {
+            "target": "Package",
+            "version": "[9.3.0, )"
+          }
+        },
         "imports": [
           "net461",
           "net462",
