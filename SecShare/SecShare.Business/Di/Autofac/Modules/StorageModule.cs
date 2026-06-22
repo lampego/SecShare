@@ -8,8 +8,8 @@ public class StorageModule : Module
     protected override void Load(ContainerBuilder builder)
     {
         builder
-            .RegisterType<LocalFileStorageClient>()
-            .As<IFileStorageClient>()
+            .RegisterType<FileStorageS3Client>()
+            .As<IFileStorageS3Client>()
             .InstancePerLifetimeScope();
     }
 }

@@ -10,10 +10,10 @@ public class FileStorage : IFileStorage
     public const int MaxFileSize = 1024 * 1024 * 50;
 
     private readonly IFilesDao _filesDao;
-    private readonly IFileStorageClient _storageClient;
+    private readonly IFileStorageS3Client _storageClient;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
-    public FileStorage(IFilesDao filesDao, IFileStorageClient storageClient)
+    public FileStorage(IFilesDao filesDao, IFileStorageS3Client storageClient)
     {
         _filesDao = filesDao;
         _storageClient = storageClient;
@@ -34,7 +34,7 @@ public class FileStorage : IFileStorage
 
         var storagePath = BuildStoragePath(fileName);
         await using var fileStream = new MemoryStream(fileData);
-        await _storageClient.SaveAsync(storagePath, fileStream, cancellationToken);
+        await _storageClient.Upload(storagePath, fileStream, cancellationToken);
 
         var file = new FileEntity
         {
@@ -59,7 +59,7 @@ public class FileStorage : IFileStorage
         var file = await _filesDao.GetAsync(fileId, cancellationToken)
             ?? throw new InvalidOperationException($"File was not found: {fileId}");
 
-        return (file, await _storageClient.OpenReadAsync(file.StoragePath, cancellationToken));
+        return (file, await _storageClient.GetAsStream(file.StoragePath, cancellationToken));
     }
 
     public async Task DeleteFileAsync(Guid fileId, CancellationToken cancellationToken = default)
@@ -67,7 +67,7 @@ public class FileStorage : IFileStorage
         var file = await _filesDao.GetAsync(fileId, cancellationToken)
             ?? throw new InvalidOperationException($"File was not found: {fileId}");
 
-        await _storageClient.DeleteAsync(file.StoragePath, cancellationToken);
+        await _storageClient.Delete(file.StoragePath, cancellationToken);
         file.DeletedAt = DateTime.UtcNow;
     }
 
