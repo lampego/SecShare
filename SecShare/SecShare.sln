@@ -36,6 +36,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Migrations", "SecS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Business.Testing", "SecShare.Business.Testing\SecShare.Business.Testing.csproj", "{640A840D-3C99-4B3E-ACBA-F1C98F075507}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Console", "SecShare.Console\SecShare.Console.csproj", "{FA16656D-7E7F-4528-A257-09216EDB0E48}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -102,6 +104,10 @@ Global
 		{640A840D-3C99-4B3E-ACBA-F1C98F075507}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{640A840D-3C99-4B3E-ACBA-F1C98F075507}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{640A840D-3C99-4B3E-ACBA-F1C98F075507}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FA16656D-7E7F-4528-A257-09216EDB0E48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FA16656D-7E7F-4528-A257-09216EDB0E48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FA16656D-7E7F-4528-A257-09216EDB0E48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FA16656D-7E7F-4528-A257-09216EDB0E48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{1C102C63-7047-499E-A856-D75260B09647} = {56D9E2BB-2981-4402-A7C7-E82CCC547FE9}
