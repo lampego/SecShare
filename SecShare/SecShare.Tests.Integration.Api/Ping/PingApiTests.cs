@@ -1,23 +1,21 @@
 using System.Net;
-using System.Net.Http.Json;
 using SecShare.Api.Controllers.Ping.Actions;
 using SecShare.Tests.Integration.Api.Core;
 
 namespace SecShare.Tests.Integration.Api.Ping;
 
-public class PingApiTests : IClassFixture<ApiTestFactory>
+public class PingApiTests : BaseTest
 {
-    private readonly HttpClient _client;
+    private const string Url = "/api/ping";
 
-    public PingApiTests(ApiTestFactory factory)
+    public PingApiTests(ApiCustomWebApplicationFactory factory) : base(factory)
     {
-        _client = factory.CreateClient();
     }
 
     [Fact]
     public async Task Ping_Returns_Ok_Status()
     {
-        var response = await _client.GetAsync("/api/ping");
+        var response = await GetRequestAsAnonymousAsync(Url);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -25,7 +23,7 @@ public class PingApiTests : IClassFixture<ApiTestFactory>
     [Fact]
     public async Task Ping_Returns_Response_Body()
     {
-        var response = await _client.GetFromJsonAsync<PingResponse>("/api/ping");
+        var response = await GetJsonAsAnonymousAsync<PingResponse>(Url);
 
         Assert.NotNull(response);
         Assert.Equal("ok", response.Status);

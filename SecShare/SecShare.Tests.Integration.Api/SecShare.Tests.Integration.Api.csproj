@@ -17,6 +17,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\SecShare.Api\SecShare.Api.csproj" />
+        <ProjectReference Include="..\SecShare.Business.Orm\SecShare.Business.Orm.csproj" />
         <ProjectReference Include="..\SecShare.Business.Testing\SecShare.Business.Testing.csproj" />
     </ItemGroup>
 
