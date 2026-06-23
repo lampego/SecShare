@@ -18,4 +18,8 @@
         <Using Include="Xunit"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <ProjectReference Include="..\SecShare.Business\SecShare.Business.csproj" />
+    </ItemGroup>
+
 </Project>
