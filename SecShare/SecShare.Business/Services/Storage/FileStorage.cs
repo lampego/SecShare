@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.StaticFiles;
 using SecShare.Business.Orm.Dao.Files;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Services.Storage.Client;
+using SecShare.Business.Services.Queue;
+using SecShare.Business.Services.Queue.Handlers;
 
 namespace SecShare.Business.Services.Storage;
 
@@ -48,7 +50,9 @@ public class FileStorage : IFileStorage
             CreatedAt = DateTime.UtcNow
         };
 
-        return await _filesDao.CreateAsync(file, cancellationToken);
+        var createdFile = await _filesDao.CreateAsync(file, cancellationToken);
+
+        return createdFile;
     }
 
     public async Task<(FileEntity File, Stream FileStream)> GetFileStreamAsync(

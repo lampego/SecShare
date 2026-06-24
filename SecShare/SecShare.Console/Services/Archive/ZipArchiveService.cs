@@ -121,7 +121,7 @@ public sealed class ZipArchiveService : IZipArchiveService
                 }
 
                 Directory.CreateDirectory(Path.GetDirectoryName(targetPath)!);
-                await using var source = entry.Open();
+                await using var source = await entry.OpenAsync(cancellationToken);
                 await using var target = new FileStream(
                     targetPath,
                     FileMode.CreateNew,
@@ -154,7 +154,7 @@ public sealed class ZipArchiveService : IZipArchiveService
         IReadOnlyCollection<string>? directoryEntryNames = null)
     {
         await using var stream = new MemoryStream();
-        using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
+        await using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))
         {
             if (rootEntryName is not null)
             {

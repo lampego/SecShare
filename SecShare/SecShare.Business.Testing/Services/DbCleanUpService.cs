@@ -14,6 +14,9 @@ public class DbCleanUpService : IDbCleanUpService
     public async Task CleanUp()
     {
         await _sessionProvider.CurrentSession
+            .CreateSQLQuery("delete from queues where 1=1;")
+            .ExecuteUpdateAsync();
+        await _sessionProvider.CurrentSession
             .CreateSQLQuery("delete from files where 1=1;")
             .ExecuteUpdateAsync();
         _sessionProvider.CurrentSession.Clear();
