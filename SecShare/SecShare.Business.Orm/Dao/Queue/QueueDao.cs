@@ -127,6 +127,7 @@ public class QueueDao : IQueueDao
         catch (Exception e)
         {
             await tx.RollbackAsync(cancellationToken);
+            _logger.LogError(e, "Error occurred in MarkAsProcessed for queue item {Id}", item.Id);
             throw;
         }
     }

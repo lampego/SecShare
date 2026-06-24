@@ -63,6 +63,11 @@ public class FileStorage : IFileStorage
         var file = await _filesDao.GetAsync(fileId, cancellationToken)
             ?? throw new InvalidOperationException($"File was not found: {fileId}");
 
+        if (file.IsDeleted)
+        {
+            throw new InvalidOperationException($"File was not found: {fileId}");
+        }
+
         return (file, await _storageClient.GetAsStream(file.StoragePath, cancellationToken));
     }
 

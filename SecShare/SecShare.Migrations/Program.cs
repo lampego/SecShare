@@ -46,7 +46,7 @@ public class Program
             .ConfigureRunner(runner => runner
                 .AddPostgres()
                 .WithGlobalConnectionString(connectionString)
-                .ScanIn(Assembly.GetExecutingAssembly()).For.Migrations())
+                .ScanIn(Assembly.GetExecutingAssembly()).For.All())
             .AddLogging(loggingBuilder => loggingBuilder.AddFluentMigratorConsole())
             .BuildServiceProvider(false);
 

@@ -151,6 +151,7 @@ Useful test helpers:
 - `FlushAndRefreshEntity(entity)` flushes and reloads an entity.
 - `CreateFormFile()` creates an in-memory `IFormFile`.
 - `IDataFactory<TEntity>` implementations live in `SecShare.Business.Testing/Factories/`.
+- Do not hardcode API route string literals (e.g. `"/api/file/upload"` or `$"/api/file/get/{token}"`) inside test methods. Declare them as `private const string` constants in the test class header instead.
 
 Run checks:
 
