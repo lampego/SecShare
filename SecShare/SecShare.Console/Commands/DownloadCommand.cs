@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
 using SecShare.Business.Services.Crypto;
+using SecShare.Console.Models.Archive;
 using SecShare.Console.Services.Archive;
 using SecShare.Console.Services.Download;
 using SecShare.Console.Services.Http;

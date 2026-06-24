@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using SecShare.Console;
+using SecShare.Console.Models.Http;
 using SecShare.Console.Services.Http;
 
 namespace SecShare.Tests.Unit.Console;

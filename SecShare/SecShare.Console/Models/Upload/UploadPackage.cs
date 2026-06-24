@@ -1,4 +1,4 @@
-namespace SecShare.Console.Services.Upload;
+namespace SecShare.Console.Models.Upload;
 
 public sealed record UploadPackage(
     byte[] EncryptedPayload,

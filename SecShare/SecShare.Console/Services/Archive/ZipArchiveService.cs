@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using System.Text;
+using SecShare.Console.Models.Archive;
 
 namespace SecShare.Console.Services.Archive;
 
@@ -284,5 +285,4 @@ public sealed class ZipArchiveService : IZipArchiveService
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
 
-    private sealed record ArchiveFileItem(string FullPath, string EntryName, long SizeBytes);
 }

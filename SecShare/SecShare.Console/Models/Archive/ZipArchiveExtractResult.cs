@@ -1,4 +1,4 @@
-namespace SecShare.Console.Services.Archive;
+namespace SecShare.Console.Models.Archive;
 
 public sealed record ZipArchiveExtractResult(
     IReadOnlyCollection<string> ExtractedPaths,

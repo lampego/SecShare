@@ -1,4 +1,4 @@
-using SecShare.Console.Services.Http;
+using SecShare.Console.Models.Http;
 using Spectre.Console;
 
 namespace SecShare.Console.Ui;

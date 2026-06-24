@@ -1,4 +1,4 @@
-namespace SecShare.Console.Services.Download;
+namespace SecShare.Console.Models.Download;
 
 public sealed record SecShareDownloadLink(
     Uri ShareUri,

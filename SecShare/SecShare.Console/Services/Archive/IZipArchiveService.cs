@@ -1,3 +1,5 @@
+using SecShare.Console.Models.Archive;
+
 namespace SecShare.Console.Services.Archive;
 
 public interface IZipArchiveService

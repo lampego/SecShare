@@ -1,3 +1,5 @@
+using SecShare.Console.Models.Http;
+
 namespace SecShare.Console.Services.Http;
 
 public interface ISecShareHttpClient

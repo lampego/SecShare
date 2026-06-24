@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Text.Json;
 using SecShare.Business.Services.Crypto;
+using SecShare.Console.Models.Http;
+using SecShare.Console.Models.Upload;
 using SecShare.Console.Services.Archive;
 using SecShare.Console.Services.Http;
 using SecShare.Console.Services.Upload;

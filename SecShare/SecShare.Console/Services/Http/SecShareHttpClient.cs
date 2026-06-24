@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
+using SecShare.Console.Models.Http;
 using SecShare.Console.Services.Archive;
 
 namespace SecShare.Console.Services.Http;

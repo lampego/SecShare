@@ -1,4 +1,4 @@
-namespace SecShare.Console.Services.Http;
+namespace SecShare.Console.Models.Http;
 
 public sealed record TransferProgress(
     long BytesTransferred,
