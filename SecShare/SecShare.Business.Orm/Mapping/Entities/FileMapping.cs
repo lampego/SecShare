@@ -1,4 +1,5 @@
 using SecShare.Business.Orm.Entities;
+using SecShare.Business.Orm.Extensions;
 using SecShare.Business.Orm.Mapping.Common;
 
 namespace SecShare.Business.Orm.Mapping.Entities;
@@ -16,8 +17,8 @@ public class FileMapping : BaseGuidMappings<FileEntity>
         Map(x => x.Size).Not.Nullable();
         Map(x => x.EncryptionAlgorithm).Nullable();
         Map(x => x.EncryptionKeyId).Nullable();
-        Map(x => x.CreatedAt).Not.Nullable();
-        Map(x => x.UpdatedAt).Nullable();
-        Map(x => x.DeletedAt).Nullable();
+        Map(x => x.CreatedAt).DateTime();
+        Map(x => x.UpdatedAt).DateTimeNullable();
+        Map(x => x.DeletedAt).DateTimeNullable();
     }
 }

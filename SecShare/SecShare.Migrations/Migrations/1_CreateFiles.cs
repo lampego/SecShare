@@ -17,9 +17,9 @@ public class _1_CreateFiles : MyMigration
             .WithColumn("size").AsInt64().NotNullable()
             .WithColumn("encryption_algorithm").AsString(128).Nullable()
             .WithColumn("encryption_key_id").AsString(256).Nullable()
-            .WithColumn("created_at").AsCustom("timestamptz").NotNullable()
-            .WithColumn("updated_at").AsCustom("timestamptz").Nullable()
-            .WithColumn("deleted_at").AsCustom("timestamptz").Nullable();
+            .WithColumn("created_at").AsDateTime2().NotNullable()
+            .WithColumn("updated_at").AsDateTime2().Nullable()
+            .WithColumn("deleted_at").AsDateTime2().Nullable();
 
         Create.Index("ix_files_created_at")
             .OnTable("files")

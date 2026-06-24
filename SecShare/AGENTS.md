@@ -79,6 +79,7 @@ The persistence stack is NHibernate + FluentNHibernate against PostgreSQL.
 - `SnakeCaseConvention` converts entity/property/reference names to `snake_case`; add explicit mapping overrides only when needed.
 - DAOs live under `SecShare.Business.Orm/Dao/` and should use `BaseDao` to access the current NHibernate session.
 - Use `DateTime.UtcNow` for new timestamp values.
+- `DateTime` / `DateTime?` properties must be mapped using the `.DateTime()` and `.DateTimeNullable()` extension methods from `SecShare.Business.Orm.Extensions` to ensure timezone-safe UTC operations on columns without time zones.
 
 `CommitPerformerMiddleware` wraps each API request in a transaction: commit/flush on success, rollback/close on exception. Do not manually commit transactions inside handlers unless a task explicitly requires special transaction boundaries.
 
@@ -96,7 +97,7 @@ dotnet run --project ./SecShare.Migrations
 
 The migration app applies `ConnectionStrings:DefaultConnection`. If `ConnectionStrings:TestConnection` is configured, it applies migrations there too. `ASPNETCORE_CONNECTION_STRING` overrides the default connection string for the migration process.
 
-Use PostgreSQL-compatible `snake_case` names. For date/time columns, prefer `timestamptz` unless the existing schema or task explicitly requires a different type.
+Use PostgreSQL-compatible `snake_case` names. For date/time columns, always use `.AsDateTime2()` to create columns without time zone (timestamp). Do NOT use `timestamptz`.
 
 ## Configuration
 
