@@ -7,13 +7,13 @@ namespace SecShare.Business.Services.Storage;
 
 public class FileStorage : IFileStorage
 {
-    public const int MaxFileSize = 1024 * 1024 * 50;
+    public const int MaxFileSize = 1024 * 1024 * 250;
 
     private readonly IFilesDao _filesDao;
-    private readonly IFileStorageS3Client _storageClient;
+    private readonly IFileStorageGarageClient _storageClient;
     private readonly FileExtensionContentTypeProvider _contentTypeProvider = new();
 
-    public FileStorage(IFilesDao filesDao, IFileStorageS3Client storageClient)
+    public FileStorage(IFilesDao filesDao, IFileStorageGarageClient storageClient)
     {
         _filesDao = filesDao;
         _storageClient = storageClient;

@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Json;
+using SecShare.Business.Dto;
+using SecShare.Business.Exceptions;
 using SecShare.Console.Models.Http;
 using SecShare.Console.Services.Archive;
 
@@ -10,6 +12,28 @@ public sealed class SecShareHttpClient(HttpClient httpClient) : ISecShareHttpCli
 {
     public const long MaxEncryptedPayloadSizeBytes =
         ZipArchiveService.MaxSourceSizeBytes + (10L * 1024 * 1024);
+
+    private async Task EnsureSuccessResponseAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        try
+        {
+            var errorResult = await response.Content.ReadFromJsonAsync<JsonCommonResponse>(cancellationToken);
+            if (errorResult != null && errorResult.Status == "fail")
+            {
+                throw new ApiException(errorResult.Message, response.StatusCode);
+            }
+        }
+        catch (System.Text.Json.JsonException)
+        {
+        }
+
+        response.EnsureSuccessStatusCode();
+    }
 
     public async Task<UploadHttpResult> UploadAsync(
         byte[] encryptedPayload,
@@ -26,11 +50,15 @@ public sealed class SecShareHttpClient(HttpClient httpClient) : ISecShareHttpCli
             { fileContent, "file", $"{options.SourceName}.secshare" },
             { JsonContent.Create(options), "metadata" },
         };
-        using var response = await httpClient.PostAsync(
-            SecShareConstants.ApiFilesPath,
-            content,
-            cancellationToken);
-        response.EnsureSuccessStatusCode();
+        using var request = new HttpRequestMessage(HttpMethod.Post, SecShareConstants.ApiFilesPath)
+        {
+            Content = content
+        };
+        request.Headers.Add("X-Client-Type", "Console");
+        request.Headers.UserAgent.ParseAdd("SecShareConsole/1.0");
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessResponseAsync(response, cancellationToken);
 
         var result = await response.Content.ReadFromJsonAsync<UploadHttpResult>(cancellationToken);
         if (result is null || string.IsNullOrWhiteSpace(result.Token))
@@ -49,11 +77,14 @@ public sealed class SecShareHttpClient(HttpClient httpClient) : ISecShareHttpCli
         ArgumentNullException.ThrowIfNull(payloadUri);
 
         using var request = new HttpRequestMessage(HttpMethod.Get, payloadUri);
+        request.Headers.Add("X-Client-Type", "Console");
+        request.Headers.UserAgent.ParseAdd("SecShareConsole/1.0");
+
         using var response = await httpClient.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessResponseAsync(response, cancellationToken);
 
         var totalBytes = response.Content.Headers.ContentLength;
         if (totalBytes > MaxEncryptedPayloadSizeBytes)

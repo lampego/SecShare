@@ -11,5 +11,10 @@ public class StorageModule : Module
             .RegisterType<FileStorageS3Client>()
             .As<IFileStorageS3Client>()
             .InstancePerLifetimeScope();
+
+        builder
+            .RegisterType<FileStorageGarageClient>()
+            .As<IFileStorageGarageClient>()
+            .InstancePerLifetimeScope();
     }
 }

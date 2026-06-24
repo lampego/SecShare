@@ -61,6 +61,7 @@ public class Startup
         app.UseForwardedHeaders();
         app.UseRouting();
         app.UseCors("Cors");
+        app.UseMiddleware<ApiExceptionMiddleware>();
         app.UseMiddleware<CommitPerformerMiddleware>();
         app.UseEndpoints(endpoints => endpoints.MapControllers());
     }

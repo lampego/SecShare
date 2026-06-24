@@ -4,5 +4,6 @@ public class JsonCommonResponse
 {
     public string Status { get; init; } = "ok";
     public string Message { get; init; } = string.Empty;
+    public string ErrorCode { get; init; } = string.Empty;
     public object Data { get; init; } = new { };
 }

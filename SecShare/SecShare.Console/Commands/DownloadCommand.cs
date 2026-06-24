@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
+using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Models.Archive;
 using SecShare.Console.Services.Archive;
@@ -92,7 +93,8 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             or HttpRequestException
             or IOException
             or UnauthorizedAccessException
-            or InvalidOperationException)
+            or InvalidOperationException
+            or ApiException)
         {
             AnsiConsole.MarkupLine($"[red]Download failed:[/] {Markup.Escape(exception.Message)}");
             return 1;

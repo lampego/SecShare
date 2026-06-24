@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
+using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Models.Http;
 using SecShare.Console.Models.Upload;
@@ -113,7 +114,8 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             or IOException
             or JsonException
             or UnauthorizedAccessException
-            or InvalidOperationException)
+            or InvalidOperationException
+            or ApiException)
         {
             AnsiConsole.MarkupLine($"[red]Upload failed:[/] {Markup.Escape(exception.Message)}");
             return 1;
