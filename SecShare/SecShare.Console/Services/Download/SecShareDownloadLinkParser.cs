@@ -30,8 +30,9 @@ public sealed class SecShareDownloadLinkParser : ISecShareDownloadLinkParser
         }
 
         var token = Uri.UnescapeDataString(pathSegments[1]);
+        var baseUri = new Uri(shareUri.GetLeftPart(UriPartial.Authority));
         var payloadUri = new Uri(
-            SecShareConstants.ServiceBaseUri,
+            baseUri,
             $"{SecShareConstants.ApiFilesPath}/{Uri.EscapeDataString(token)}");
 
         return new SecShareDownloadLink(shareUri, payloadUri, encryptionKey);
