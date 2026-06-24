@@ -1,7 +1,10 @@
 using System.ComponentModel;
+using System.Text.Json;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Services.Archive;
+using SecShare.Console.Services.Http;
 using SecShare.Console.Services.Upload;
+using SecShare.Console.Ui;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -41,12 +44,19 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         AnsiConsole.WriteLine();
 
         UploadPackage package;
+        UploadHttpResult uploadResult;
         try
         {
             var archiveService = new ZipArchiveService();
             var uploadPackageService = new UploadPackageService(new CryptoService());
+            using var httpClient = new HttpClient
+            {
+                BaseAddress = SecShareConstants.ServiceBaseUri,
+                Timeout = TimeSpan.FromMinutes(5),
+            };
+            var secShareHttpClient = new SecShareHttpClient(httpClient);
 
-            package = await AnsiConsole.Progress()
+            (package, uploadResult) = await AnsiConsole.Progress()
                 .AutoClear(false)
                 .HideCompleted(false)
                 .Columns(
@@ -69,19 +79,47 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                     encryptTask.Value = 100;
                     encryptTask.StopTask();
 
-                    await RunMockStepAsync(ctx, "Uploading to secshare.me...", cancellationToken);
+                    var uploadTask = ctx.AddTask(
+                        $"Uploading to {SecShareConstants.ServiceBaseUri.Host}...",
+                        autoStart: true,
+                        maxValue: Math.Max(createdPackage.EncryptedPayload.LongLength, 1));
+                    var result = await secShareHttpClient.UploadAsync(
+                        createdPackage.EncryptedPayload,
+                        new UploadHttpOptions(
+                            settings.Expires,
+                            settings.Downloads,
+                            settings.HasPassword,
+                            createdPackage.SourceName),
+                        progress => TransferProgressUi.Update(
+                            uploadTask,
+                            $"Uploading to {SecShareConstants.ServiceBaseUri.Host}...",
+                            progress),
+                        cancellationToken);
+                    Complete(uploadTask);
 
-                    return createdPackage;
+                    return (createdPackage, result);
                 });
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException)
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            AnsiConsole.MarkupLine("[red]Upload failed:[/] The request timed out.");
+            return 1;
+        }
+        catch (Exception exception) when (exception is
+            ArgumentException
+            or HttpRequestException
+            or IOException
+            or JsonException
+            or UnauthorizedAccessException
+            or InvalidOperationException)
         {
             AnsiConsole.MarkupLine($"[red]Upload failed:[/] {Markup.Escape(exception.Message)}");
             return 1;
         }
 
-        var token = $"mock-{Guid.NewGuid():N}"[..21];
-        var link = $"https://secshare.me/f/{token}#{package.EncryptionKey}";
+        var token = Uri.EscapeDataString(uploadResult.Token);
+        var link =
+            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/{token}#{package.EncryptionKey}";
         var details = CreateUploadSummary(settings, package, link);
 
         AnsiConsole.Write(new Panel(details)
@@ -92,19 +130,10 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         return 0;
     }
 
-    private static async Task RunMockStepAsync(
-        ProgressContext context,
-        string description,
-        CancellationToken cancellationToken)
+    private static void Complete(ProgressTask task)
     {
-        var task = context.AddTask(description, autoStart: false, maxValue: 100);
-        task.StartTask();
-
-        while (!task.IsFinished)
-        {
-            await Task.Delay(80, cancellationToken);
-            task.Increment(10);
-        }
+        task.Value = task.MaxValue;
+        task.StopTask();
     }
 
     private static Markup CreateUploadSummary(Settings settings, UploadPackage package, string link)
@@ -115,27 +144,13 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             Link: [link={link}]{link}[/]
             Source: [yellow]{Markup.Escape(package.SourceName)}[/]
             Files: [yellow]{package.FileCount}[/]
-            Source size: [yellow]{FormatBytes(package.SourceSizeBytes)}[/]
-            Archive size: [yellow]{FormatBytes(package.ArchiveSizeBytes)}[/]
-            Encrypted size: [yellow]{FormatBytes(package.EncryptedPayload.LongLength)}[/]
+            Source size: [yellow]{TransferProgressUi.FormatBytes(package.SourceSizeBytes)}[/]
+            Archive size: [yellow]{TransferProgressUi.FormatBytes(package.ArchiveSizeBytes)}[/]
+            Encrypted size: [yellow]{TransferProgressUi.FormatBytes(package.EncryptedPayload.LongLength)}[/]
             Expires: [yellow]{Markup.Escape(settings.Expires)}[/]
             Downloads: [yellow]{settings.Downloads}[/]
             Password: [yellow]{(settings.HasPassword ? "enabled" : "disabled")}[/]
             Mode: [yellow]{(settings.IsText ? "text" : "file")}[/]
             """);
 
-    private static string FormatBytes(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB"];
-        var value = (double)bytes;
-        var unitIndex = 0;
-
-        while (value >= 1024 && unitIndex < units.Length - 1)
-        {
-            value /= 1024;
-            unitIndex++;
-        }
-
-        return $"{value:0.##} {units[unitIndex]}";
-    }
 }

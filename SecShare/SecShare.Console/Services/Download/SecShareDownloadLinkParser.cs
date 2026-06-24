@@ -27,9 +27,10 @@ public sealed class SecShareDownloadLinkParser : ISecShareDownloadLinkParser
             throw new ArgumentException("Download URL does not contain an encryption key.", nameof(url));
         }
 
-        var origin = new Uri(shareUri.GetLeftPart(UriPartial.Authority));
         var token = Uri.UnescapeDataString(pathSegments[1]);
-        var payloadUri = new Uri(origin, $"/api/files/{Uri.EscapeDataString(token)}");
+        var payloadUri = new Uri(
+            SecShareConstants.ServiceBaseUri,
+            $"{SecShareConstants.ApiFilesPath}/{Uri.EscapeDataString(token)}");
 
         return new SecShareDownloadLink(shareUri, payloadUri, encryptionKey);
     }

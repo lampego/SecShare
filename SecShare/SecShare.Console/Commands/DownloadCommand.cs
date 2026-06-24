@@ -3,6 +3,8 @@ using System.Security.Cryptography;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Services.Archive;
 using SecShare.Console.Services.Download;
+using SecShare.Console.Services.Http;
+using SecShare.Console.Ui;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -35,9 +37,10 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             var link = new SecShareDownloadLinkParser().Parse(settings.Url);
             using var httpClient = new HttpClient
             {
+                BaseAddress = SecShareConstants.ServiceBaseUri,
                 Timeout = TimeSpan.FromMinutes(5),
             };
-            var downloadHttpClient = new DownloadHttpClient(httpClient);
+            var secShareHttpClient = new SecShareHttpClient(httpClient);
             var packageService = new DownloadPackageService(new CryptoService());
             var archiveService = new ZipArchiveService();
 
@@ -53,8 +56,12 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                 .StartAsync(async ctx =>
                 {
                     var downloadTask = ctx.AddTask("Downloading encrypted payload...", autoStart: true);
-                    var encryptedPayload = await downloadHttpClient.DownloadAsync(
+                    var encryptedPayload = await secShareHttpClient.DownloadAsync(
                         link.PayloadUri,
+                        progress => TransferProgressUi.Update(
+                            downloadTask,
+                            "Downloading encrypted payload...",
+                            progress),
                         cancellationToken);
                     Complete(downloadTask);
 
@@ -98,7 +105,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             [green]Downloaded content was decrypted and extracted.[/]
 
             Files: [yellow]{result.FileCount}[/]
-            Size: [yellow]{FormatBytes(result.ExtractedSizeBytes)}[/]
+            Size: [yellow]{TransferProgressUi.FormatBytes(result.ExtractedSizeBytes)}[/]
             Saved:
             {extractedPaths}
             """);
@@ -117,18 +124,4 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
         task.StopTask();
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB"];
-        var value = (double)bytes;
-        var unitIndex = 0;
-
-        while (value >= 1024 && unitIndex < units.Length - 1)
-        {
-            value /= 1024;
-            unitIndex++;
-        }
-
-        return $"{value:0.##} {units[unitIndex]}";
-    }
 }

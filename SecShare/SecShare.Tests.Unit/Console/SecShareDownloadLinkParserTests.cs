@@ -1,3 +1,4 @@
+using SecShare.Console;
 using SecShare.Console.Services.Download;
 
 namespace SecShare.Tests.Unit.Console;
@@ -9,9 +10,12 @@ public sealed class SecShareDownloadLinkParserTests
     [Fact]
     public void Parse_WithValidShareUrl_ReturnsPayloadUrlAndEncryptionKey()
     {
-        var result = this.parser.Parse("https://secshare.me/f/file-token#base64UrlKey");
+        var result = this.parser.Parse(
+            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token#base64UrlKey");
 
-        Assert.Equal(new Uri("https://secshare.me/api/files/file-token"), result.PayloadUri);
+        Assert.Equal(
+            new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/file-token"),
+            result.PayloadUri);
         Assert.Equal("base64UrlKey", result.EncryptionKey);
     }
 

@@ -1,3 +1,3 @@
-namespace SecShare.Console.Services.Upload.Http;
+namespace SecShare.Console.Services.Http;
 
 public sealed record UploadHttpResult(string Token);
