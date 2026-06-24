@@ -20,6 +20,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\SecShare.Business\SecShare.Business.csproj" />
+        <ProjectReference Include="..\SecShare.Console\SecShare.Console.csproj" />
     </ItemGroup>
 
 </Project>
