@@ -43,7 +43,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         UploadPackage package;
         try
         {
-            var archiveBuilder = new ZipArchiveBuilder();
+            var archiveService = new ZipArchiveService();
             var uploadPackageService = new UploadPackageService(new CryptoService());
 
             package = await AnsiConsole.Progress()
@@ -59,8 +59,8 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                 {
                     var zipTask = ctx.AddTask("Zipping directory...", autoStart: true, maxValue: 100);
                     var archive = settings.IsText
-                        ? await archiveBuilder.CreateFromTextAsync(settings.Path, cancellationToken)
-                        : await archiveBuilder.CreateFromPathAsync(settings.Path, cancellationToken);
+                        ? await archiveService.CreateFromTextAsync(settings.Path, cancellationToken)
+                        : await archiveService.CreateFromPathAsync(settings.Path, cancellationToken);
                     zipTask.Value = 100;
                     zipTask.StopTask();
 
