@@ -192,7 +192,7 @@ node('build-node') {
         if (effectiveEnvironment == 'Production')
         {
             withCredentials([
-                usernamePassword(credentialsId: "timevic_cloudflaire_api_token", usernameVariable: 'USER_NAME', passwordVariable: 'PASSWORD')
+                usernamePassword(credentialsId: "secshare_cloudflaire_api_token", usernameVariable: 'USER_NAME', passwordVariable: 'PASSWORD')
             ]) {
                 sh '''
                     set -e
