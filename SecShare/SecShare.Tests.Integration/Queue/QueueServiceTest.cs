@@ -26,7 +26,6 @@ public class QueueServiceTest : BaseTest
     [Fact]
     public async Task ShouldPushAndProcessQueueItem()
     {
-        await CleanUpDbAsync();
 
         var content = "This is a temporary file for automatic deletion"u8.ToArray();
         var fileEntity = await _fileStorage.PutFileAsync(
@@ -60,7 +59,6 @@ public class QueueServiceTest : BaseTest
     [Fact]
     public async Task ShouldAutoDeleteFileViaQueue()
     {
-        await CleanUpDbAsync();
 
         var content = "This is a temporary file for automatic deletion"u8.ToArray();
         var fileEntity = await _fileStorage.PutFileAsync(

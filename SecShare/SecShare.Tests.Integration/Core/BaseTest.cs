@@ -10,9 +10,11 @@ using SecShare.Business.Helpers;
 using SecShare.Business.Testing;
 using SecShare.Business.Testing.Services;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace SecShare.Tests.Integration.Core;
 
-public abstract class BaseTest : IDisposable
+public abstract class BaseTest : IDisposable, IAsyncLifetime
 {
     protected readonly ILifetimeScope Scope;
 
@@ -48,6 +50,16 @@ public abstract class BaseTest : IDisposable
 
         _container = builder.Build();
         Scope = _container.BeginLifetimeScope();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await CleanUpDbAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     protected Task CleanUpDbAsync()

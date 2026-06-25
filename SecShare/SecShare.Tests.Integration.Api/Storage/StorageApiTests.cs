@@ -161,7 +161,6 @@ public class StorageApiTests : BaseTest
     [Fact]
     public async Task Upload_WithDeleteDelay_AndProcessingQueue_DeletesFile()
     {
-        await CleanUpDbAsync();
         AddConsoleHeaders();
 
         var originalContent = "File to be automatically deleted by background queue";

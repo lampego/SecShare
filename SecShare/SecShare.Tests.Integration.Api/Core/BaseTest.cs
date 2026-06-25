@@ -9,9 +9,11 @@ using Persistence.Transactions.Behaviors;
 using SecShare.Business.Testing.Services;
 using HttpClient = System.Net.Http.HttpClient;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace SecShare.Tests.Integration.Api.Core;
 
-public abstract class BaseTest : IClassFixture<ApiCustomWebApplicationFactory>, IDisposable
+public abstract class BaseTest : IClassFixture<ApiCustomWebApplicationFactory>, IDisposable, IAsyncLifetime
 {
     protected readonly ApiCustomWebApplicationFactory Factory;
     protected readonly IServiceScope ServiceScope;
@@ -33,6 +35,16 @@ public abstract class BaseTest : IClassFixture<ApiCustomWebApplicationFactory>, 
         HttpClient = Factory.CreateClient();
         ServiceScope = Factory.Services.CreateScope();
         ServiceProvider = ServiceScope.ServiceProvider;
+    }
+
+    public async Task InitializeAsync()
+    {
+        await CleanUpDbAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     public void Dispose()
