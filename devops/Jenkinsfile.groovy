@@ -237,11 +237,11 @@ node('web-node') {
         apiContainer.tagName = "secshare-api-${environmentKey}";
         if (effectiveEnvironment == 'Production')
         {
-            apiContainer.port = '6200:80';
+            apiContainer.port = '8216:80';
         }
         else if (effectiveEnvironment == 'Development')
         {
-            apiContainer.port = '8215:80';
+            apiContainer.port = '8217:80';
         }
 
         apiContainer.envVariables = envVariables.clone()
