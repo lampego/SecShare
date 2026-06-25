@@ -126,6 +126,8 @@ node('build-node') {
             dbName = 'secshare'
             dbPort = '5432'
             dbHost = '192.168.88.41'
+            
+            envVariables.put('Garage__BucketName', "secshare-${environmentKey}")
         }
         else if (effectiveEnvironment == 'Development')
         {
@@ -133,7 +135,10 @@ node('build-node') {
             dbName = 'secshare_dev'
             dbPort = '5432'
             dbHost = '192.168.88.42'
+            
+            envVariables.put('Garage__BucketName', "secshare-${environmentKey}")
         }
+        envVariables.put('Garage__Url', "http://192.168.88.44:3900")
 
         // DB Credentials
         withCredentials([
@@ -152,7 +157,6 @@ node('build-node') {
             envVariables.put('Garage__AccessKey', USER_NAME)
             envVariables.put('Garage__SecretKey', PASSWORD)
         }
-        envVariables.put('Garage__BucketName', "secshare-${environmentKey}")
     }
 
     stage('Build main image') {
