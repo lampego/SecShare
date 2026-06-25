@@ -145,20 +145,6 @@ node('build-node') {
             )
         }
         
-        // JWT Symmetric Security Key
-        withCredentials([string(credentialsId: "secshare_${environmentKey}_user_jwt", variable: 'AUTH_SECRET')]) {
-            envVariables.put('App__Auth__SymmetricSecurityKey', AUTH_SECRET)
-        }
-        
-        // AWS S3 for StorageModule
-        withCredentials([
-            usernamePassword(credentialsId: "secshare_${environmentKey}_aws_s3_credentials", usernameVariable: 'USER_NAME', passwordVariable: 'PASSWORD')
-        ]) {
-            envVariables.put('AWS__S3__AccessKey', USER_NAME)
-            envVariables.put('AWS__S3__SecretKey', PASSWORD)
-        }
-        envVariables.put('AWS__S3__BucketName', "secshare-${environmentKey}")
-
         // Garage
         withCredentials([
             usernamePassword(credentialsId: "secshare_${environmentKey}_garage_credentials", usernameVariable: 'USER_NAME', passwordVariable: 'PASSWORD')
