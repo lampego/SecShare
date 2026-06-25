@@ -180,6 +180,31 @@ Invalid model state returns `400 Bad Request` with validation errors through `Ap
 - Boolean variables/properties should start with `Is`, `Has`, `Can`, or another clear boolean prefix.
 - Interface names must start with `I`.
 - Place nested classes/interfaces/records near the top of the containing type unless local style says otherwise.
+- In multiline parenthesized expressions, place the closing parenthesis on its own line, aligned with the start of the construct. This applies to constructor/method arguments and multiline conditions such as exception filters. Do not leave the closing parenthesis after the final argument or condition operand.
+
+```csharp
+new UploadHttpOptions(
+    settings.Expires,
+    settings.Downloads,
+    settings.HasPassword,
+    createdPackage.SourceName
+),
+
+catch (Exception exception) when (
+    exception is
+        ArgumentException
+        or HttpRequestException
+        or IOException
+        or JsonException
+        or UnauthorizedAccessException
+        or InvalidOperationException
+        or ApiException
+)
+{
+    // ...
+}
+```
+
 - Avoid noisy comments that only restate a trivial action.
 - If a change fixes a subtle bug or a non-obvious edge case, add a concise comment explaining the issue being guarded against.
 - Preserve nullable reference types and implicit usings style used by existing projects.

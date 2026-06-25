@@ -146,6 +146,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             [green]Upload package prepared[/]
 
             Link: [link={link}]{link}[/]
+            Command to download: [yellow]secshare get "{link}"[/]
             Source: [yellow]{Markup.Escape(package.SourceName)}[/]
             Files: [yellow]{package.FileCount}[/]
             Source size: [yellow]{TransferProgressUi.FormatBytes(package.SourceSizeBytes)}[/]
