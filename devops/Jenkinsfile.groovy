@@ -184,6 +184,7 @@ node('build-node') {
                 dotnet publish ${project} \
                     -c Release \
                     --self-contained false \
+                    -p:PublishTrimmed=false \
                     -p:UseAppHost=false \
                     -o ${outputRoot}/any
             """
@@ -320,5 +321,4 @@ def isAutoTriggeredPushBuild() {
             || causeName.contains('SCMTrigger'))
     }
 }
-
 
