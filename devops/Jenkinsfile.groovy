@@ -184,6 +184,39 @@ node('build-node') {
         }
     }
 
+    stage('Publish console artifacts') {
+        if (effectiveEnvironment == 'Production') {
+            def project = 'SecShare.Console/SecShare.Console.csproj'
+            def outputRoot = 'artifacts/console'
+
+            sh """
+                set -e
+                rm -rf ${outputRoot}
+            """
+
+            ['linux-x64', 'linux-arm64', 'win-x64', 'osx-x64', 'osx-arm64'].each { rid ->
+                sh """
+                    dotnet publish ${project} \
+                        -c Release \
+                        -r ${rid} \
+                        --self-contained true \
+                        -p:PublishSingleFile=true \
+                        -o ${outputRoot}/${rid}
+                """
+            }
+
+            sh """
+                dotnet publish ${project} \
+                    -c Release \
+                    --self-contained false \
+                    -p:UseAppHost=false \
+                    -o ${outputRoot}/any
+            """
+
+            archiveArtifacts artifacts: "${outputRoot}/**", fingerprint: true
+        }
+    }
+
     stage("Clean workspace") {
         cleanWs()
     }
