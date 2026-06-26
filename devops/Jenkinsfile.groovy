@@ -159,31 +159,6 @@ node('build-node') {
         }
     }
 
-    stage('Build main image') {
-        dockerHelper.buildAndSave(mainContainer, imageCommonTmpName)
-    }
-
-    stage('Build api image') {
-        dockerHelper.buildAndSave(apiContainer, imageApiTmpName)
-    }
-
-    if (params.NEW_VERSION) {
-        stage('Create GIT tag') {
-            def (VER_MAJOR, VER_MINOR, VER_PATCH, VER_BUILD) = params.NEW_VERSION.tokenize('.').collect { it.toInteger() }
-            env.VERSION_INCREMENT = VER_MAJOR + "." + VER_MINOR + "." + VER_PATCH + "." + VER_BUILD
-
-            withCredentials([sshUserPrivateKey(credentialsId: gitCredentials, keyFileVariable: 'key')]) {
-                sh '''
-                    git config core.sshCommand 'ssh -i ${key}'
-                    git config user.email "lampego@gmail.com"
-                    git config user.name "lampego"
-                    git tag "${VERSION_INCREMENT}"
-                    git push --tags
-                '''
-            }
-        }
-    }
-
     stage('Publish console artifacts') {
         if (effectiveEnvironment == 'Production') {
             def project = 'SecShare.Console/SecShare.Console.csproj'
@@ -214,6 +189,31 @@ node('build-node') {
             """
 
             archiveArtifacts artifacts: "${outputRoot}/**", fingerprint: true
+        }
+    }
+
+    stage('Build main image') {
+        dockerHelper.buildAndSave(mainContainer, imageCommonTmpName)
+    }
+
+    stage('Build api image') {
+        dockerHelper.buildAndSave(apiContainer, imageApiTmpName)
+    }
+
+    if (params.NEW_VERSION) {
+        stage('Create GIT tag') {
+            def (VER_MAJOR, VER_MINOR, VER_PATCH, VER_BUILD) = params.NEW_VERSION.tokenize('.').collect { it.toInteger() }
+            env.VERSION_INCREMENT = VER_MAJOR + "." + VER_MINOR + "." + VER_PATCH + "." + VER_BUILD
+
+            withCredentials([sshUserPrivateKey(credentialsId: gitCredentials, keyFileVariable: 'key')]) {
+                sh '''
+                    git config core.sshCommand 'ssh -i ${key}'
+                    git config user.email "lampego@gmail.com"
+                    git config user.name "lampego"
+                    git tag "${VERSION_INCREMENT}"
+                    git push --tags
+                '''
+            }
         }
     }
 
