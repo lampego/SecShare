@@ -88,23 +88,6 @@ public sealed class UploadFileRequestValidationTests
         Assert.DoesNotContain(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.Expires)));
     }
 
-    [Theory]
-    [InlineData("../secret")]
-    [InlineData("bad\rname")]
-    [InlineData("")]
-    public void Validate_WithUnsafeSourceName_ReturnsSourceNameError(string sourceName)
-    {
-        var request = new UploadFileRequest
-        {
-            File = CreateFormFile([1]),
-            Options = CreateOptions(sourceName: sourceName)
-        };
-
-        var results = Validate(request);
-
-        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.SourceName)));
-    }
-
     [Fact]
     public void UploadFileExpiration_TryParse_WithInvalidValues_ReturnsFalse()
     {
@@ -179,16 +162,14 @@ public sealed class UploadFileRequestValidationTests
     private static UploadFileOptions CreateOptions(
         string expires = "24h",
         int downloads = 1,
-        bool hasPassword = false,
-        string sourceName = "test.txt"
+        bool hasPassword = false
     )
     {
         return new UploadFileOptions
         {
             Expires = expires,
             Downloads = downloads,
-            HasPassword = hasPassword,
-            SourceName = sourceName
+            HasPassword = hasPassword
         };
     }
 

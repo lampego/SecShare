@@ -47,7 +47,7 @@ public class StorageApiTests : BaseTest
         var formFile = CreateFormFile("archive.secshare", fileBytes);
         var response = await PostMultipartFormDataRequestAsync(
             UploadRoute,
-            CreateUploadOptionsData("test"),
+            CreateUploadOptionsData(),
             formFile);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -68,7 +68,7 @@ public class StorageApiTests : BaseTest
         var formFile = CreateFormFile("archive.secshare", fileBytes);
         var response = await PostMultipartFormDataRequestAsync(
             UploadRoute,
-            CreateUploadOptionsData("test"),
+            CreateUploadOptionsData(),
             formFile);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -105,7 +105,7 @@ public class StorageApiTests : BaseTest
         var formFile = CreateFormFile("archive.secshare", fileBytes);
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             UploadRoute,
-            CreateUploadOptionsData("test"),
+            CreateUploadOptionsData(),
             formFile);
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
@@ -134,7 +134,7 @@ public class StorageApiTests : BaseTest
         // Test the alternative POST route: /api/files
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             AlternativeUploadRoute,
-            CreateUploadOptionsData("test"),
+            CreateUploadOptionsData(),
             formFile);
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
@@ -160,7 +160,7 @@ public class StorageApiTests : BaseTest
         var originalContent = "File to be automatically deleted by background queue";
         var fileBytes = Encoding.UTF8.GetBytes(originalContent);
         var formFile = CreateFormFile("autodelete.txt", fileBytes);
-        var data = CreateUploadOptionsData("test_autodelete", expires: "30s");
+        var data = CreateUploadOptionsData(expires: "30s");
 
         // 1. Upload via API
         var uploadResponse = await PostMultipartFormDataRequestAsync(UploadRoute, data, formFile);
@@ -193,7 +193,6 @@ public class StorageApiTests : BaseTest
     }
 
     private static Dictionary<string, object> CreateUploadOptionsData(
-        string sourceName,
         string expires = DefaultExpires,
         int downloads = DefaultDownloads,
         bool hasPassword = false
@@ -203,8 +202,7 @@ public class StorageApiTests : BaseTest
         {
             { "Options.Expires", expires },
             { "Options.Downloads", downloads },
-            { "Options.HasPassword", hasPassword },
-            { "Options.SourceName", sourceName }
+            { "Options.HasPassword", hasPassword }
         };
     }
 }

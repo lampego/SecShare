@@ -6,6 +6,8 @@ namespace SecShare.Console.Services.Http;
 
 public sealed partial class SecShareHttpClient
 {
+    private const string EncryptedUploadFileName = "secret_file";
+
     public async Task<UploadHttpResult> UploadAsync(
         byte[] encryptedPayload,
         UploadFileOptions options,
@@ -19,11 +21,10 @@ public sealed partial class SecShareHttpClient
         using var fileContent = new ProgressByteArrayContent(encryptedPayload, progress);
         using var content = new MultipartFormDataContent
         {
-            { fileContent, "file", $"{options.SourceName}.secshare" },
+            { fileContent, "file", EncryptedUploadFileName },
             { new StringContent(options.Expires), "Options.Expires" },
             { new StringContent(options.Downloads.ToString()), "Options.Downloads" },
-            { new StringContent(options.HasPassword.ToString()), "Options.HasPassword" },
-            { new StringContent(options.SourceName), "Options.SourceName" }
+            { new StringContent(options.HasPassword.ToString()), "Options.HasPassword" }
         };
         using var request = new HttpRequestMessage(HttpMethod.Post, SecShareConstants.ApiFilesPath)
         {

@@ -93,8 +93,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                         {
                             Expires = settings.Expires,
                             Downloads = settings.Downloads,
-                            HasPassword = settings.HasPassword,
-                            SourceName = createdPackage.SourceName
+                            HasPassword = settings.HasPassword
                         },
                         progress => TransferProgressUi.Update(
                             uploadTask,

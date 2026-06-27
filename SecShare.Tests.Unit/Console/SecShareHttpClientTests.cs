@@ -29,7 +29,7 @@ public sealed class SecShareHttpClientTests
             Assert.Equal("24h", formValues["Options.Expires"]);
             Assert.Equal("1", formValues["Options.Downloads"]);
             Assert.Equal("False", formValues["Options.HasPassword"]);
-            Assert.Equal("source", formValues["Options.SourceName"]);
+            Assert.DoesNotContain("Options.SourceName", formValues.Keys);
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -47,8 +47,7 @@ public sealed class SecShareHttpClientTests
             new UploadFileOptions
             {
                 Expires = "24h",
-                Downloads = 1,
-                SourceName = "source"
+                Downloads = 1
             },
             progress.Add,
             CancellationToken.None);
@@ -132,8 +131,7 @@ public sealed class SecShareHttpClientTests
                 new UploadFileOptions
                 {
                     Expires = "24h",
-                    Downloads = 1,
-                    SourceName = "source"
+                    Downloads = 1
                 },
                 progress: null,
                 CancellationToken.None));
@@ -153,8 +151,7 @@ public sealed class SecShareHttpClientTests
                 new UploadFileOptions
                 {
                     Expires = "1w",
-                    Downloads = 0,
-                    SourceName = "source"
+                    Downloads = 0
                 },
                 progress: null,
                 CancellationToken.None));
@@ -188,8 +185,7 @@ public sealed class SecShareHttpClientTests
                 new UploadFileOptions
                 {
                     Expires = "24h",
-                    Downloads = 1,
-                    SourceName = "source"
+                    Downloads = 1
                 },
                 progress: null,
                 CancellationToken.None));

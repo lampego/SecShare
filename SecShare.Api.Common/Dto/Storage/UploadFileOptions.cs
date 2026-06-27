@@ -22,12 +22,4 @@ public class UploadFileOptions
     /// Indicates whether the client requires an additional password before decryption.
     /// </summary>
     public bool HasPassword { get; set; }
-
-    /// <summary>
-    /// Original source name shown to users and used to name the encrypted upload payload.
-    /// </summary>
-    [Required]
-    [StringLength(128, ErrorMessage = "SourceName must be 128 characters or fewer.")]
-    [RegularExpression(@"^[^<>:""/\\|?*\x00-\x1F]+$", ErrorMessage = "SourceName must be a safe file name without path separators or control characters.")]
-    public string SourceName { get; set; } = string.Empty;
 }

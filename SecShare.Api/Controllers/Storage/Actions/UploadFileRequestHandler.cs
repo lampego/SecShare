@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Api.Requests.Abstractions;
 using SecShare.Api.Common.Dto.Storage;
@@ -11,8 +12,6 @@ namespace SecShare.Api.Controllers.Storage.Actions;
 
 public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, UploadFileResponse>
 {
-    private const int MaxSourceNameLength = 128;
-
     private readonly IFileStorage _fileStorage;
     private readonly IQueueService _queueService;
 
@@ -33,13 +32,15 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
             throw new ArgumentException("Upload options are missing.");
         }
 
+        ValidateOptions(request.Options);
+
         using var memoryStream = new MemoryStream();
         await request.File.CopyToAsync(memoryStream);
         var fileData = memoryStream.ToArray();
 
         var fileEntity = await _fileStorage.PutFileAsync(
             fileData,
-            CreateSafeUploadFileName(request.Options.SourceName)
+            $"{Guid.CreateVersion7()}.secshare"
         );
 
         if (!UploadFileExpiration.TryParse(request.Options.Expires, out var expiresIn))
@@ -63,27 +64,41 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
         };
     }
 
-    private static string CreateSafeUploadFileName(string sourceName)
+    private static void ValidateOptions(UploadFileOptions options)
     {
-        var safeNameChars = sourceName
-            .Where(character => !IsUnsafeFileNameCharacter(character))
-            .ToArray();
-        var safeName = new string(safeNameChars).Trim();
-        if (string.IsNullOrWhiteSpace(safeName))
+        var validationResults = new List<ValidationResult>();
+        var isValid = Validator.TryValidateObject(
+            options,
+            new ValidationContext(options),
+            validationResults,
+            validateAllProperties: true
+        );
+
+        if (isValid)
         {
-            safeName = "upload";
+            return;
         }
 
-        if (safeName.Length > MaxSourceNameLength)
-        {
-            safeName = safeName[..MaxSourceNameLength];
-        }
-
-        return $"{safeName}.secshare";
+        var errorMessages = validationResults.SelectMany(FormatValidationResultMessages);
+        throw new ApiException(
+            string.Join("; ", errorMessages),
+            HttpStatusCode.BadRequest
+        );
     }
 
-    private static bool IsUnsafeFileNameCharacter(char character)
+    private static IEnumerable<string> FormatValidationResultMessages(ValidationResult validationResult)
     {
-        return char.IsControl(character) || character is '<' or '>' or ':' or '"' or '/' or '\\' or '|' or '?' or '*';
+        var errorMessage = validationResult.ErrorMessage ?? "Invalid upload option.";
+        var memberNames = validationResult.MemberNames.ToArray();
+        if (memberNames.Length == 0)
+        {
+            yield return $"Options: {errorMessage}";
+            yield break;
+        }
+
+        foreach (var memberName in memberNames)
+        {
+            yield return $"Options.{memberName}: {errorMessage}";
+        }
     }
 }
