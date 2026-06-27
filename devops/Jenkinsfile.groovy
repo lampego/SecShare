@@ -161,6 +161,14 @@ node('build-node') {
         }
     }
 
+    stage('Build main image') {
+        dockerHelper.buildAndSave(mainContainer, imageCommonTmpName)
+    }
+
+    stage('Build api image') {
+        dockerHelper.buildAndSave(apiContainer, imageApiTmpName)
+    }
+
     if (params.NEW_VERSION?.trim() && effectiveEnvironment == 'Production') {
         stage('Build release artifacts') {
             env.VERSION_INCREMENT = params.NEW_VERSION.trim()
@@ -180,18 +188,24 @@ node('build-node') {
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r win-x64 -o publish/win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r linux-x64 -o publish/linux-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r linux-arm64 -o publish/linux-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r linux-musl-x64 -o publish/linux-musl-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r linux-musl-arm64 -o publish/linux-musl-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r osx-x64 -o publish/osx-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r osx-arm64 -o publish/osx-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
                 test -d publish/win-x64
                 test -d publish/linux-x64
                 test -d publish/linux-arm64
+                test -d publish/linux-musl-x64
+                test -d publish/linux-musl-arm64
                 test -d publish/osx-x64
                 test -d publish/osx-arm64
 
                 (cd publish/win-x64 && zip -r ../../artifacts/devshare-win-x64.zip .)
                 tar -czf artifacts/devshare-linux-x64.tar.gz -C publish/linux-x64 .
                 tar -czf artifacts/devshare-linux-arm64.tar.gz -C publish/linux-arm64 .
+                tar -czf artifacts/devshare-linux-musl-x64.tar.gz -C publish/linux-musl-x64 .
+                tar -czf artifacts/devshare-linux-musl-arm64.tar.gz -C publish/linux-musl-arm64 .
                 tar -czf artifacts/devshare-osx-x64.tar.gz -C publish/osx-x64 .
                 tar -czf artifacts/devshare-osx-arm64.tar.gz -C publish/osx-arm64 .
 
@@ -263,6 +277,8 @@ EOF
                     test -f artifacts/devshare-win-x64.zip
                     test -f artifacts/devshare-linux-x64.tar.gz
                     test -f artifacts/devshare-linux-arm64.tar.gz
+                    test -f artifacts/devshare-linux-musl-x64.tar.gz
+                    test -f artifacts/devshare-linux-musl-arm64.tar.gz
                     test -f artifacts/devshare-osx-x64.tar.gz
                     test -f artifacts/devshare-osx-arm64.tar.gz
                     test -f artifacts/checksums.txt
@@ -271,6 +287,8 @@ EOF
                         artifacts/devshare-win-x64.zip \
                         artifacts/devshare-linux-x64.tar.gz \
                         artifacts/devshare-linux-arm64.tar.gz \
+                        artifacts/devshare-linux-musl-x64.tar.gz \
+                        artifacts/devshare-linux-musl-arm64.tar.gz \
                         artifacts/devshare-osx-x64.tar.gz \
                         artifacts/devshare-osx-arm64.tar.gz \
                         artifacts/checksums.txt \
@@ -281,14 +299,6 @@ EOF
                 '''
             }
         }
-    }
-
-    stage('Build main image') {
-        dockerHelper.buildAndSave(mainContainer, imageCommonTmpName)
-    }
-
-    stage('Build api image') {
-        dockerHelper.buildAndSave(apiContainer, imageApiTmpName)
     }
 
     stage("Clean workspace") {
