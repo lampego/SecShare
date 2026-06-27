@@ -33,6 +33,7 @@ def apiContainer = new DockerContainer(
 
 def repositoryUrl = scm.userRemoteConfigs[0].url;
 def gitCredentials="gitea-jenkins-ssh-key"
+def githubReleaseRepository = 'lampego/SecShare'
 
 properties([
     pipelineTriggers([
@@ -53,6 +54,7 @@ node('build-node') {
         echo "Repository: ${repositoryUrl}"
         echo "Requested environment: ${params.ENVIRONMENT}"
         echo "Tag: ${params.GIT_TAG}"
+        echo "GitHub release repository: ${githubReleaseRepository}"
     }
 
     if (!params.GIT_TAG?.trim())
@@ -159,38 +161,68 @@ node('build-node') {
         }
     }
 
-    stage('Publish console artifacts') {
-        if (effectiveEnvironment == 'Production') {
-            def project = 'SecShare.Console/SecShare.Console.csproj'
-            def outputRoot = 'artifacts/console'
+    if (params.NEW_VERSION?.trim() && effectiveEnvironment == 'Production') {
+        stage('Build release artifacts') {
+            env.VERSION_INCREMENT = params.NEW_VERSION.trim()
 
-            sh """
-                set -e
-                rm -rf ${outputRoot}
-            """
+            sh '''
+                set -eux
 
-            ['linux-x64', 'linux-arm64', 'win-x64', 'osx-x64', 'osx-arm64'].each { rid ->
-                sh """
-                    dotnet publish ${project} \
-                        -c Release \
-                        -r ${rid} \
-                        --self-contained true \
-                        -p:PublishSingleFile=true \
-                        -p:PublishTrimmed=false \
-                        -o ${outputRoot}/${rid}
-                """
+                rm -rf publish artifacts
+                mkdir -p artifacts
+
+                dotnet restore ./SecShare.sln
+
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r win-x64 -o publish/win-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r linux-x64 -o publish/linux-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r linux-arm64 -o publish/linux-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r osx-x64 -o publish/osx-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+                dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r osx-arm64 -o publish/osx-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
+
+                cd publish/win-x64 && zip -r ../../artifacts/devshare-win-x64.zip . && cd ../..
+                tar -czf artifacts/devshare-linux-x64.tar.gz -C publish/linux-x64 .
+                tar -czf artifacts/devshare-linux-arm64.tar.gz -C publish/linux-arm64 .
+                tar -czf artifacts/devshare-osx-x64.tar.gz -C publish/osx-x64 .
+                tar -czf artifacts/devshare-osx-arm64.tar.gz -C publish/osx-arm64 .
+
+                sha256sum artifacts/* > artifacts/checksums.txt
+            '''
+
+            archiveArtifacts artifacts: 'artifacts/*', fingerprint: true
+        }
+
+        stage('Create GIT tag') {
+            withCredentials([sshUserPrivateKey(credentialsId: gitCredentials, keyFileVariable: 'key')]) {
+                sh '''
+                    git config core.sshCommand 'ssh -i ${key}'
+                    git config user.email "lampego@gmail.com"
+                    git config user.name "lampego"
+                    git tag "${VERSION_INCREMENT}"
+                    git push origin "${VERSION_INCREMENT}"
+                '''
             }
+        }
 
-            sh """
-                dotnet publish ${project} \
-                    -c Release \
-                    --self-contained false \
-                    -p:PublishTrimmed=false \
-                    -p:UseAppHost=false \
-                    -o ${outputRoot}/any
-            """
+        stage('Publish GitHub release') {
+            env.GITHUB_RELEASE_REPOSITORY = githubReleaseRepository
 
-            archiveArtifacts artifacts: "${outputRoot}/**", fingerprint: true
+            withCredentials([string(credentialsId: 'secshare_github_release_token', variable: 'GH_TOKEN')]) {
+                sh '''
+                    set -eux
+
+                    gh release create "${VERSION_INCREMENT}" \
+                        artifacts/devshare-win-x64.zip \
+                        artifacts/devshare-linux-x64.tar.gz \
+                        artifacts/devshare-linux-arm64.tar.gz \
+                        artifacts/devshare-osx-x64.tar.gz \
+                        artifacts/devshare-osx-arm64.tar.gz \
+                        artifacts/checksums.txt \
+                        --repo "${GITHUB_RELEASE_REPOSITORY}" \
+                        --title "${VERSION_INCREMENT}" \
+                        --generate-notes \
+                        --verify-tag
+                '''
+            }
         }
     }
 
@@ -200,23 +232,6 @@ node('build-node') {
 
     stage('Build api image') {
         dockerHelper.buildAndSave(apiContainer, imageApiTmpName)
-    }
-
-    if (params.NEW_VERSION) {
-        stage('Create GIT tag') {
-            def (VER_MAJOR, VER_MINOR, VER_PATCH, VER_BUILD) = params.NEW_VERSION.tokenize('.').collect { it.toInteger() }
-            env.VERSION_INCREMENT = VER_MAJOR + "." + VER_MINOR + "." + VER_PATCH + "." + VER_BUILD
-
-            withCredentials([sshUserPrivateKey(credentialsId: gitCredentials, keyFileVariable: 'key')]) {
-                sh '''
-                    git config core.sshCommand 'ssh -i ${key}'
-                    git config user.email "lampego@gmail.com"
-                    git config user.name "lampego"
-                    git tag "${VERSION_INCREMENT}"
-                    git push --tags
-                '''
-            }
-        }
     }
 
     stage("Clean workspace") {
