@@ -20,21 +20,18 @@ public sealed class SecShareDownloadLinkParser : ISecShareDownloadLinkParser
             || !string.Equals(pathSegments[0], "f", StringComparison.OrdinalIgnoreCase)
             || string.IsNullOrWhiteSpace(pathSegments[1]))
         {
-            throw new ArgumentException("Download URL must have the format '/f/{token}#key'.", nameof(url));
+            throw new ArgumentException("Download URL must have the format '/f/{fileId}' with an optional '#key' fragment.", nameof(url));
         }
 
-        var encryptionKey = Uri.UnescapeDataString(shareUri.Fragment.TrimStart('#'));
-        if (string.IsNullOrWhiteSpace(encryptionKey))
-        {
-            throw new ArgumentException("Download URL does not contain an encryption key.", nameof(url));
-        }
-
-        var token = Uri.UnescapeDataString(pathSegments[1]);
+        var encryptionKey = shareUri.Fragment.Length == 0
+            ? null
+            : Uri.UnescapeDataString(shareUri.Fragment.TrimStart('#'));
+        var fileId = Uri.UnescapeDataString(pathSegments[1]);
         var baseUri = new Uri(shareUri.GetLeftPart(UriPartial.Authority));
         var payloadUri = new Uri(
             baseUri,
-            $"{SecShareConstants.ApiFilesPath}/{Uri.EscapeDataString(token)}");
+            $"{SecShareConstants.ApiFilesPath}/{Uri.EscapeDataString(fileId)}");
 
-        return new SecShareDownloadLink(shareUri, payloadUri, encryptionKey);
+        return new SecShareDownloadLink(shareUri, payloadUri, fileId, encryptionKey);
     }
 }

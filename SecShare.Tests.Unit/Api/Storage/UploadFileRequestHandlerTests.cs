@@ -26,8 +26,7 @@ public sealed class UploadFileRequestHandlerTests
             Options = new UploadFileOptions
             {
                 Expires = "24h",
-                Downloads = 5,
-                HasPassword = false
+                Downloads = 5
             }
         };
 
@@ -56,8 +55,7 @@ public sealed class UploadFileRequestHandlerTests
             Options = new UploadFileOptions
             {
                 Expires = "24h",
-                Downloads = downloads,
-                HasPassword = false
+                Downloads = downloads
             }
         };
 

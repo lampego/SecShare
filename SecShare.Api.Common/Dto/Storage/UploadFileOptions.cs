@@ -18,8 +18,4 @@ public class UploadFileOptions
     [Range(1, int.MaxValue, ErrorMessage = "Downloads must be greater than zero.")]
     public int Downloads { get; set; } = 1;
 
-    /// <summary>
-    /// Indicates whether the client requires an additional password before decryption.
-    /// </summary>
-    public bool HasPassword { get; set; }
 }

@@ -161,15 +161,13 @@ public sealed class UploadFileRequestValidationTests
 
     private static UploadFileOptions CreateOptions(
         string expires = "24h",
-        int downloads = 1,
-        bool hasPassword = false
+        int downloads = 1
     )
     {
         return new UploadFileOptions
         {
             Expires = expires,
-            Downloads = downloads,
-            HasPassword = hasPassword
+            Downloads = downloads
         };
     }
 

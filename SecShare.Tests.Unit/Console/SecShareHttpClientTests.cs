@@ -28,8 +28,13 @@ public sealed class SecShareHttpClientTests
             Assert.Contains("file", formValues.Keys);
             Assert.Equal("24h", formValues["Options.Expires"]);
             Assert.Equal("1", formValues["Options.Downloads"]);
-            Assert.Equal("False", formValues["Options.HasPassword"]);
             Assert.DoesNotContain("Options.SourceName", formValues.Keys);
+            Assert.DoesNotContain("Options.HasPassword", formValues.Keys);
+            Assert.DoesNotContain(
+                formValues,
+                item => item.Key.Contains("Key", StringComparison.OrdinalIgnoreCase)
+                    || item.Value.Contains("base64UrlKey", StringComparison.Ordinal)
+            );
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {

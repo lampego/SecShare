@@ -23,8 +23,7 @@ public sealed partial class SecShareHttpClient
         {
             { fileContent, "file", EncryptedUploadFileName },
             { new StringContent(options.Expires), "Options.Expires" },
-            { new StringContent(options.Downloads.ToString()), "Options.Downloads" },
-            { new StringContent(options.HasPassword.ToString()), "Options.HasPassword" }
+            { new StringContent(options.Downloads.ToString()), "Options.Downloads" }
         };
         using var request = new HttpRequestMessage(HttpMethod.Post, SecShareConstants.ApiFilesPath)
         {

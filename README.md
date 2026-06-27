@@ -15,7 +15,7 @@ Sending secrets through Slack, Telegram, or email is easy, but it leaves sensiti
 - Download and decrypt shared content from a link.
 - Client-side AES-256-GCM encryption in the CLI.
 - Linux, macOS, and Windows installer scripts.
-- TTL enforcement. Download limits, password prompts, and delete-after-read enforcement: planned.
+- TTL enforcement and download-limit deletion.
 
 ## Installation
 
@@ -70,7 +70,7 @@ secshare get "https://secshare.me/f/<token>#<key>" ./downloads
 
 SecShare is intended to make temporary link-based sharing safer and more convenient, but it should not be treated as an absolute security guarantee. The CLI encrypts uploaded content client-side with AES-256-GCM and puts the decryption key in the URL fragment, which is not sent to the API during normal HTTP requests.
 
-Do not post production secrets in GitHub issues, discussions, logs, or screenshots. TTL and download-limit deletion are enforced by backend queue jobs; password behavior should be treated as planned until backend enforcement is complete.
+Do not post production secrets in GitHub issues, discussions, logs, or screenshots. TTL and download-limit deletion are enforced by backend queue jobs.
 
 ## License
 

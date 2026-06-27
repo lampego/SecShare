@@ -32,10 +32,6 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         [Description("Maximum number of downloads.")]
         public int Downloads { get; init; } = 1;
 
-        [CommandOption("-p|--password")]
-        [Description("Require an additional password before decryption.")]
-        public bool HasPassword { get; init; }
-
         [CommandOption("--text")]
         [Description("Treat input as plain text instead of a file path.")]
         public bool IsText { get; init; }
@@ -92,8 +88,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                         new UploadFileOptions
                         {
                             Expires = settings.Expires,
-                            Downloads = settings.Downloads,
-                            HasPassword = settings.HasPassword
+                            Downloads = settings.Downloads
                         },
                         progress => TransferProgressUi.Update(
                             uploadTask,
@@ -123,10 +118,8 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             return 1;
         }
 
-        var token = Uri.EscapeDataString(uploadResult.Token);
-        var link =
-            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/{token}#{package.EncryptionKey}";
-        var details = CreateUploadSummary(settings, package, link);
+        var links = UploadShareLinkBuilder.Create(uploadResult.Token, package.EncryptionKey);
+        var details = CreateUploadSummary(settings, package, links);
 
         AnsiConsole.Write(new Panel(details)
             .Header("[bold green]SecShare[/]")
@@ -142,7 +135,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         task.StopTask();
     }
 
-    private static Markup CreateUploadSummary(Settings settings, UploadPackage package, string link)
+    private static Markup CreateUploadSummary(Settings settings, UploadPackage package, UploadShareLinks links)
         => new(
             $"""
             [green]Upload package prepared[/]
@@ -156,11 +149,11 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             Encrypted size: [yellow]{TransferProgressUi.FormatBytes(package.EncryptedPayload.LongLength)}[/]
 
             [bold]Upload information[/]
-            Web link: [link={link}]{link}[/]
-            Download command: [yellow]secshare get "{link}"[/]
+            {Markup.Escape(UploadShareOutputFormatter.Format(links))}
+
+            Download command: [yellow]secshare get "{Markup.Escape(links.FullSecureLink)}"[/]
             Expires: [yellow]{Markup.Escape(settings.Expires)}[/]
             Downloads before deletion: [yellow]{settings.Downloads}[/]
-            Password protection: [yellow]{(settings.HasPassword ? "enabled" : "disabled")}[/]
             """);
 
 }

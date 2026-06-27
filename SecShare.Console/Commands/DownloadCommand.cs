@@ -17,7 +17,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
     public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<url>")]
-        [Description("SecShare URL to download.")]
+        [Description("SecShare file URL with #key, or URL without key to enter the key interactively.")]
         public string Url { get; init; } = string.Empty;
 
         [CommandArgument(1, "[path]")]
@@ -28,15 +28,18 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        AnsiConsole.MarkupLine("[bold]SecShare[/] secure download");
-        AnsiConsole.MarkupLine($"Source: [cyan]{Markup.Escape(settings.Url)}[/]");
-        AnsiConsole.MarkupLine($"Destination: [cyan]{Markup.Escape(settings.Path)}[/]");
-        AnsiConsole.WriteLine();
-
         ZipArchiveExtractResult result;
         try
         {
             var link = new SecShareDownloadLinkParser().Parse(settings.Url);
+
+            AnsiConsole.MarkupLine("[bold]SecShare[/] secure download");
+            AnsiConsole.MarkupLine($"Source: [cyan]{Markup.Escape(link.ShareUri.GetLeftPart(UriPartial.Path))}[/]");
+            AnsiConsole.MarkupLine($"Destination: [cyan]{Markup.Escape(settings.Path)}[/]");
+            AnsiConsole.WriteLine();
+
+            var decryptionKey = new DecryptionKeyResolver(new ConsoleDecryptionKeyReader()).Resolve(link);
+
             using var httpClient = new HttpClient
             {
                 BaseAddress = SecShareConstants.ServiceBaseUri,
@@ -68,7 +71,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                     Complete(downloadTask);
 
                     var decryptTask = ctx.AddTask("Decrypting data...", autoStart: true);
-                    var archiveBytes = packageService.Decrypt(encryptedPayload, link.EncryptionKey);
+                    var archiveBytes = packageService.Decrypt(encryptedPayload, decryptionKey);
                     Complete(decryptTask);
 
                     var extractTask = ctx.AddTask("Extracting files...", autoStart: true);
@@ -86,10 +89,17 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             AnsiConsole.MarkupLine("[red]Download failed:[/] The request timed out.");
             return 1;
         }
+        catch (Exception exception) when (
+            exception is
+                CryptographicException
+                or FormatException
+        )
+        {
+            AnsiConsole.MarkupLine("[red]Download failed:[/] Could not decrypt this file. Check the decryption key and try again.");
+            return 1;
+        }
         catch (Exception exception) when (exception is
             ArgumentException
-            or FormatException
-            or CryptographicException
             or HttpRequestException
             or IOException
             or UnauthorizedAccessException
