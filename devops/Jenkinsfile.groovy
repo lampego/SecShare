@@ -176,6 +176,7 @@ node('build-node') {
                         -r ${rid} \
                         --self-contained true \
                         -p:PublishSingleFile=true \
+                        -p:PublishTrimmed=false \
                         -o ${outputRoot}/${rid}
                 """
             }
@@ -321,4 +322,3 @@ def isAutoTriggeredPushBuild() {
             || causeName.contains('SCMTrigger'))
     }
 }
-

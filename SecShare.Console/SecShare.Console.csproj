@@ -6,7 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <AssemblyName>secshare</AssemblyName>
-        <PublishTrimmed>true</PublishTrimmed>
+        <!-- Spectre.Console.Cli and System.Text.Json paths use reflection, so trimmed binaries can fail at runtime. -->
+        <PublishTrimmed>false</PublishTrimmed>
         <InvariantGlobalization>true</InvariantGlobalization>
     </PropertyGroup>
 
