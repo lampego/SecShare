@@ -201,13 +201,13 @@ node('build-node') {
                 test -d publish/osx-x64
                 test -d publish/osx-arm64
 
-                (cd publish/win-x64 && zip -r ../../artifacts/devshare-win-x64.zip .)
-                tar -czf artifacts/devshare-linux-x64.tar.gz -C publish/linux-x64 .
-                tar -czf artifacts/devshare-linux-arm64.tar.gz -C publish/linux-arm64 .
-                tar -czf artifacts/devshare-linux-musl-x64.tar.gz -C publish/linux-musl-x64 .
-                tar -czf artifacts/devshare-linux-musl-arm64.tar.gz -C publish/linux-musl-arm64 .
-                tar -czf artifacts/devshare-osx-x64.tar.gz -C publish/osx-x64 .
-                tar -czf artifacts/devshare-osx-arm64.tar.gz -C publish/osx-arm64 .
+                (cd publish/win-x64 && zip -r ../../artifacts/secshare-win-x64.zip .)
+                tar -czf artifacts/secshare-linux-x64.tar.gz -C publish/linux-x64 .
+                tar -czf artifacts/secshare-linux-arm64.tar.gz -C publish/linux-arm64 .
+                tar -czf artifacts/secshare-linux-musl-x64.tar.gz -C publish/linux-musl-x64 .
+                tar -czf artifacts/secshare-linux-musl-arm64.tar.gz -C publish/linux-musl-arm64 .
+                tar -czf artifacts/secshare-osx-x64.tar.gz -C publish/osx-x64 .
+                tar -czf artifacts/secshare-osx-arm64.tar.gz -C publish/osx-arm64 .
 
                 sha256sum artifacts/* > artifacts/checksums.txt
             '''
@@ -274,23 +274,23 @@ EOF
                 sh '''
                     set -eux
 
-                    test -f artifacts/devshare-win-x64.zip
-                    test -f artifacts/devshare-linux-x64.tar.gz
-                    test -f artifacts/devshare-linux-arm64.tar.gz
-                    test -f artifacts/devshare-linux-musl-x64.tar.gz
-                    test -f artifacts/devshare-linux-musl-arm64.tar.gz
-                    test -f artifacts/devshare-osx-x64.tar.gz
-                    test -f artifacts/devshare-osx-arm64.tar.gz
+                    test -f artifacts/secshare-win-x64.zip
+                    test -f artifacts/secshare-linux-x64.tar.gz
+                    test -f artifacts/secshare-linux-arm64.tar.gz
+                    test -f artifacts/secshare-linux-musl-x64.tar.gz
+                    test -f artifacts/secshare-linux-musl-arm64.tar.gz
+                    test -f artifacts/secshare-osx-x64.tar.gz
+                    test -f artifacts/secshare-osx-arm64.tar.gz
                     test -f artifacts/checksums.txt
 
                     gh release create "${VERSION_INCREMENT}" \
-                        artifacts/devshare-win-x64.zip \
-                        artifacts/devshare-linux-x64.tar.gz \
-                        artifacts/devshare-linux-arm64.tar.gz \
-                        artifacts/devshare-linux-musl-x64.tar.gz \
-                        artifacts/devshare-linux-musl-arm64.tar.gz \
-                        artifacts/devshare-osx-x64.tar.gz \
-                        artifacts/devshare-osx-arm64.tar.gz \
+                        artifacts/secshare-win-x64.zip \
+                        artifacts/secshare-linux-x64.tar.gz \
+                        artifacts/secshare-linux-arm64.tar.gz \
+                        artifacts/secshare-linux-musl-x64.tar.gz \
+                        artifacts/secshare-linux-musl-arm64.tar.gz \
+                        artifacts/secshare-osx-x64.tar.gz \
+                        artifacts/secshare-osx-arm64.tar.gz \
                         artifacts/checksums.txt \
                         --repo "${GITHUB_RELEASE_REPOSITORY}" \
                         --title "${VERSION_INCREMENT}" \

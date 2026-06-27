@@ -1,13 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 
-APP_NAME="${SECSHARE_INSTALL_NAME:-devshare}"
-ASSET_PREFIX="${SECSHARE_ASSET_PREFIX:-devshare}"
+APP_NAME="${SECSHARE_INSTALL_NAME:-secshare}"
+ASSET_PREFIX="${SECSHARE_ASSET_PREFIX:-secshare}"
 REPO="${SECSHARE_REPO:-lampego/SecShare}"
 VERSION="${SECSHARE_VERSION:-latest}"
 INSTALL_DIR="${SECSHARE_INSTALL_DIR:-}"
 SKIP_CHECKSUM="${SECSHARE_SKIP_CHECKSUM:-0}"
-BINARY_CANDIDATES="${SECSHARE_BINARY_CANDIDATES:-$APP_NAME secshare devshare SecShare.Console}"
+BINARY_CANDIDATES="${SECSHARE_BINARY_CANDIDATES:-$APP_NAME secshare SecShare.Console}"
 ACTION="${SECSHARE_ACTION:-install}"
 
 case "${SECSHARE_UNINSTALL:-0}" in
@@ -182,7 +182,7 @@ find_binary() {
     fi
   done
 
-  BINARY_PATH="$(find "$TMP_DIR" -type f \( -name "$APP_NAME" -o -name secshare -o -name devshare -o -name SecShare.Console \) 2>/dev/null | head -n 1 || true)"
+  BINARY_PATH="$(find "$TMP_DIR" -type f \( -name "$APP_NAME" -o -name secshare -o -name SecShare.Console \) 2>/dev/null | head -n 1 || true)"
 
   if [ -n "$BINARY_PATH" ] && [ -f "$BINARY_PATH" ]; then
     return 0

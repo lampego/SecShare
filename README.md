@@ -2,7 +2,7 @@
 
 SecShare is a secure file and secret sharing tool for developers, built around a CLI-first workflow. It lets you upload a file, directory, or text secret from the terminal, get a link, and send that link to another person.
 
-The project is named SecShare, while the current CLI command and release assets use the `devshare` name.
+The CLI command and release assets use the `secshare` name.
 
 ## Why
 
@@ -22,13 +22,13 @@ Sending secrets through Slack, Telegram, or email is easy, but it leaves sensiti
 Linux and macOS:
 
 ```bash
-curl -fsSL https://devshare.me/install.sh | sh
+curl -fsSL https://secshare.me/install.sh | sh
 ```
 
 Windows:
 
 ```powershell
-irm https://devshare.me/install.ps1 | iex
+irm https://secshare.me/install.ps1 | iex
 ```
 
 See [Installation Guide](docs/install.md).
@@ -40,31 +40,31 @@ Uninstall commands are also available in the installation guide.
 Upload a file:
 
 ```bash
-devshare upload ./backup.zip
+secshare upload ./backup.zip
 ```
 
 Upload a directory:
 
 ```bash
-devshare upload ./logs
+secshare upload ./logs
 ```
 
 Share a text secret:
 
 ```bash
-devshare upload "DATABASE_URL=postgres://user:pass@example/db" --text
+secshare upload "DATABASE_URL=postgres://user:pass@example/db" --text
 ```
 
 Send expiry/download metadata with an upload:
 
 ```bash
-devshare upload ./report.pdf --expires 1h --downloads 1
+secshare upload ./report.pdf --expires 1h --downloads 1
 ```
 
 Download and decrypt a shared link:
 
 ```bash
-devshare get "https://secshare.me/f/<token>#<key>" ./downloads
+secshare get "https://secshare.me/f/<token>#<key>" ./downloads
 ```
 ## Security Note
 

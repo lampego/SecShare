@@ -6,8 +6,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$AppName = if ($env:SECSHARE_INSTALL_NAME) { $env:SECSHARE_INSTALL_NAME } else { "devshare" }
-$AssetPrefix = if ($env:SECSHARE_ASSET_PREFIX) { $env:SECSHARE_ASSET_PREFIX } else { "devshare" }
+$AppName = if ($env:SECSHARE_INSTALL_NAME) { $env:SECSHARE_INSTALL_NAME } else { "secshare" }
+$AssetPrefix = if ($env:SECSHARE_ASSET_PREFIX) { $env:SECSHARE_ASSET_PREFIX } else { "secshare" }
 $Repo = if ($env:SECSHARE_REPO) { $env:SECSHARE_REPO } else { "lampego/SecShare" }
 $Version = if ($env:SECSHARE_VERSION) { $env:SECSHARE_VERSION } else { "latest" }
 $InstallDir = if ($env:SECSHARE_INSTALL_DIR) { $env:SECSHARE_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA "Programs\SecShare\bin" }
@@ -146,7 +146,7 @@ try {
 
     Expand-Archive -Path $ArchivePath -DestinationPath $TempDir -Force
 
-    $candidates = @("$AppName.exe", "secshare.exe", "devshare.exe", "SecShare.Console.exe")
+    $candidates = @("$AppName.exe", "secshare.exe", "SecShare.Console.exe")
     $binary = $null
 
     foreach ($candidate in $candidates) {
