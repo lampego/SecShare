@@ -147,17 +147,20 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             $"""
             [green]Upload package prepared[/]
 
-            Link: [link={link}]{link}[/]
-            Command to download: [yellow]secshare get "{link}"[/]
+            [bold]Metadata[/]
             Source: [yellow]{Markup.Escape(package.SourceName)}[/]
+            Mode: [yellow]{(settings.IsText ? "text" : "file")}[/]
             Files: [yellow]{package.FileCount}[/]
             Source size: [yellow]{TransferProgressUi.FormatBytes(package.SourceSizeBytes)}[/]
             Archive size: [yellow]{TransferProgressUi.FormatBytes(package.ArchiveSizeBytes)}[/]
             Encrypted size: [yellow]{TransferProgressUi.FormatBytes(package.EncryptedPayload.LongLength)}[/]
+
+            [bold]Upload information[/]
+            Web link: [link={link}]{link}[/]
+            Download command: [yellow]secshare get "{link}"[/]
             Expires: [yellow]{Markup.Escape(settings.Expires)}[/]
-            Downloads: [yellow]{settings.Downloads}[/]
-            Password: [yellow]{(settings.HasPassword ? "enabled" : "disabled")}[/]
-            Mode: [yellow]{(settings.IsText ? "text" : "file")}[/]
+            Downloads before deletion: [yellow]{settings.Downloads}[/]
+            Password protection: [yellow]{(settings.HasPassword ? "enabled" : "disabled")}[/]
             """);
 
 }
