@@ -168,6 +168,10 @@ node('build-node') {
             sh '''
                 set -eux
 
+                command -v zip >/dev/null 2>&1 || { echo "zip is required to build Windows release artifact"; exit 1; }
+                command -v tar >/dev/null 2>&1 || { echo "tar is required to build Unix release artifacts"; exit 1; }
+                command -v sha256sum >/dev/null 2>&1 || { echo "sha256sum is required to build release checksums"; exit 1; }
+
                 rm -rf publish artifacts
                 mkdir -p artifacts
 
@@ -179,7 +183,13 @@ node('build-node') {
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r osx-x64 -o publish/osx-x64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
                 dotnet publish ./SecShare.Console/SecShare.Console.csproj -c Release -r osx-arm64 -o publish/osx-arm64 --self-contained true -p:PublishSingleFile=true -p:PublishTrimmed=false
 
-                cd publish/win-x64 && zip -r ../../artifacts/devshare-win-x64.zip . && cd ../..
+                test -d publish/win-x64
+                test -d publish/linux-x64
+                test -d publish/linux-arm64
+                test -d publish/osx-x64
+                test -d publish/osx-arm64
+
+                (cd publish/win-x64 && zip -r ../../artifacts/devshare-win-x64.zip .)
                 tar -czf artifacts/devshare-linux-x64.tar.gz -C publish/linux-x64 .
                 tar -czf artifacts/devshare-linux-arm64.tar.gz -C publish/linux-arm64 .
                 tar -czf artifacts/devshare-osx-x64.tar.gz -C publish/osx-x64 .
@@ -209,6 +219,13 @@ node('build-node') {
             withCredentials([string(credentialsId: 'secshare_github_release_token', variable: 'GH_TOKEN')]) {
                 sh '''
                     set -eux
+
+                    test -f artifacts/devshare-win-x64.zip
+                    test -f artifacts/devshare-linux-x64.tar.gz
+                    test -f artifacts/devshare-linux-arm64.tar.gz
+                    test -f artifacts/devshare-osx-x64.tar.gz
+                    test -f artifacts/devshare-osx-arm64.tar.gz
+                    test -f artifacts/checksums.txt
 
                     gh release create "${VERSION_INCREMENT}" \
                         artifacts/devshare-win-x64.zip \
