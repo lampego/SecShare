@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.StaticFiles;
 using SecShare.Business.Orm.Dao.Files;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Services.Storage.Client;
-using SecShare.Business.Services.Queue;
-using SecShare.Business.Services.Queue.Handlers;
 
 namespace SecShare.Business.Services.Storage;
 
@@ -75,6 +73,11 @@ public class FileStorage : IFileStorage
     {
         var file = await _filesDao.GetAsync(fileId, cancellationToken)
             ?? throw new InvalidOperationException($"File was not found: {fileId}");
+
+        if (file.IsDeleted)
+        {
+            return;
+        }
 
         await _storageClient.Delete(file.StoragePath, cancellationToken);
         file.DeletedAt = DateTime.UtcNow;

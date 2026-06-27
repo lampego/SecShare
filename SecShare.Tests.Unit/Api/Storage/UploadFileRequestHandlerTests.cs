@@ -14,6 +14,32 @@ namespace SecShare.Tests.Unit.Api.Storage;
 
 public sealed class UploadFileRequestHandlerTests
 {
+    [Fact]
+    public async Task ExecuteAsync_WithValidOptions_StoresDownloadLimitAndSchedulesExpiration()
+    {
+        var fileStorage = new TestFileStorage();
+        var queueService = new TestQueueService();
+        var handler = new UploadFileRequestHandler(fileStorage, queueService);
+        var request = new UploadFileRequest
+        {
+            File = CreateFormFile([1]),
+            Options = new UploadFileOptions
+            {
+                Expires = "24h",
+                Downloads = 5,
+                HasPassword = false
+            }
+        };
+
+        var response = await handler.ExecuteAsync(request);
+
+        Assert.True(Guid.TryParse(response.Token, out _));
+        Assert.True(fileStorage.HasPutFileBeenCalled);
+        Assert.NotNull(fileStorage.CreatedFile);
+        Assert.Equal(request.Options.Downloads, fileStorage.CreatedFile.DownloadsRemaining);
+        Assert.True(queueService.HasPushDefaultBeenCalled);
+    }
+
     [Theory]
     [InlineData(0)]
     [InlineData(-1)]
@@ -47,6 +73,7 @@ public sealed class UploadFileRequestHandlerTests
     private sealed class TestFileStorage : IFileStorage
     {
         public bool HasPutFileBeenCalled { get; private set; }
+        public FileEntity? CreatedFile { get; private set; }
 
         public Task<FileEntity> PutFileAsync(
             byte[] fileData,
@@ -58,18 +85,18 @@ public sealed class UploadFileRequestHandlerTests
         {
             HasPutFileBeenCalled = true;
 
-            return Task.FromResult(
-                new FileEntity
-                {
-                    Id = Guid.NewGuid(),
-                    StoragePath = "files/test.secshare",
-                    MimeType = "application/octet-stream",
-                    OriginalFileName = fileName,
-                    Size = fileData.Length,
-                    EncryptionAlgorithm = encryptionAlgorithm,
-                    EncryptionKeyId = encryptionKeyId
-                }
-            );
+            CreatedFile = new FileEntity
+            {
+                Id = Guid.NewGuid(),
+                StoragePath = "files/test.secshare",
+                MimeType = "application/octet-stream",
+                OriginalFileName = fileName,
+                Size = fileData.Length,
+                EncryptionAlgorithm = encryptionAlgorithm,
+                EncryptionKeyId = encryptionKeyId
+            };
+
+            return Task.FromResult(CreatedFile);
         }
 
         public Task<(FileEntity File, Stream FileStream)> GetFileStreamAsync(

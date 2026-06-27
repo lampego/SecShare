@@ -15,6 +15,7 @@ internal class FileEntityFactory : IDataFactory<FileEntity>
             .RuleFor(file => file.MimeType, "application/octet-stream")
             .RuleFor(file => file.OriginalFileName, faker => faker.System.FileName("bin"))
             .RuleFor(file => file.Size, faker => faker.Random.Long(1, 1024))
+            .RuleFor(file => file.DownloadsRemaining, faker => faker.Random.Int(1, 10))
             .RuleFor(file => file.CreatedAt, faker => faker.Date.Past().ToUniversalTime());
     }
 

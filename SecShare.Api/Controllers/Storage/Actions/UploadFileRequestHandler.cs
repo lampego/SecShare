@@ -42,6 +42,7 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
             fileData,
             $"{Guid.CreateVersion7()}.secshare"
         );
+        fileEntity.DownloadsRemaining = request.Options.Downloads;
 
         if (!UploadFileExpiration.TryParse(request.Options.Expires, out var expiresIn))
         {

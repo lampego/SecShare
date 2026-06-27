@@ -15,6 +15,7 @@ public class FileMapping : BaseGuidMappings<FileEntity>
         Map(x => x.MimeType).Not.Nullable();
         Map(x => x.OriginalFileName).Not.Nullable();
         Map(x => x.Size).Not.Nullable();
+        Map(x => x.DownloadsRemaining).Not.Nullable();
         Map(x => x.EncryptionAlgorithm).Nullable();
         Map(x => x.EncryptionKeyId).Nullable();
         Map(x => x.DeleteAt).DateTimeNullable();

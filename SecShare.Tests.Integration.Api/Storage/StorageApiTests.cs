@@ -160,7 +160,7 @@ public class StorageApiTests : BaseTest
         var originalContent = "File to be automatically deleted by background queue";
         var fileBytes = Encoding.UTF8.GetBytes(originalContent);
         var formFile = CreateFormFile("autodelete.txt", fileBytes);
-        var data = CreateUploadOptionsData(expires: "30s");
+        var data = CreateUploadOptionsData(expires: "30s", downloads: 2);
 
         // 1. Upload via API
         var uploadResponse = await PostMultipartFormDataRequestAsync(UploadRoute, data, formFile);
@@ -190,6 +190,39 @@ public class StorageApiTests : BaseTest
         // 4. Verify we cannot download it anymore
         var downloadResponseAfter = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
         Assert.NotEqual(HttpStatusCode.OK, downloadResponseAfter.StatusCode);
+    }
+
+    [Fact]
+    public async Task Download_WhenDownloadLimitIsReached_SchedulesDeletionAndRejectsNextDownload()
+    {
+        AddConsoleHeaders();
+
+        var originalContent = "File deleted after first successful download";
+        var fileBytes = Encoding.UTF8.GetBytes(originalContent);
+        var formFile = CreateFormFile("delete-after-read.secshare", fileBytes);
+        var uploadResponse = await PostMultipartFormDataRequestAsync(
+            UploadRoute,
+            CreateUploadOptionsData(downloads: 1),
+            formFile);
+        Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+        var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
+        Assert.NotNull(uploadResponseDto);
+        var fileToken = uploadResponseDto.Token;
+
+        var firstDownloadResponse = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
+        Assert.Equal(HttpStatusCode.OK, firstDownloadResponse.StatusCode);
+        Assert.Equal(fileBytes, await firstDownloadResponse.Content.ReadAsByteArrayAsync());
+
+        var secondDownloadResponse = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
+        Assert.NotEqual(HttpStatusCode.OK, secondDownloadResponse.StatusCode);
+
+        var queueService = ServiceProvider.GetRequiredService<IQueueService>();
+        var processedCount = await queueService.ProcessAsync(QueueChannel.Default);
+        Assert.Equal(1, processedCount);
+
+        var downloadResponseAfterDeletion = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
+        Assert.NotEqual(HttpStatusCode.OK, downloadResponseAfterDeletion.StatusCode);
     }
 
     private static Dictionary<string, object> CreateUploadOptionsData(
