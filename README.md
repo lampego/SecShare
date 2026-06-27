@@ -33,6 +33,8 @@ irm https://devshare.me/install.ps1 | iex
 
 See [Installation Guide](docs/install.md).
 
+Uninstall commands are also available in the installation guide.
+
 ## Usage Examples
 
 Upload a file:

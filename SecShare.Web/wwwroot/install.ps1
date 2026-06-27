@@ -1,3 +1,9 @@
+param(
+    [ValidateSet("install", "uninstall")]
+    [string]$Action = "install",
+    [switch]$Uninstall
+)
+
 $ErrorActionPreference = "Stop"
 
 $AppName = if ($env:SECSHARE_INSTALL_NAME) { $env:SECSHARE_INSTALL_NAME } else { "devshare" }
@@ -6,6 +12,18 @@ $Repo = if ($env:SECSHARE_REPO) { $env:SECSHARE_REPO } else { "lampego/SecShare"
 $Version = if ($env:SECSHARE_VERSION) { $env:SECSHARE_VERSION } else { "latest" }
 $InstallDir = if ($env:SECSHARE_INSTALL_DIR) { $env:SECSHARE_INSTALL_DIR } else { Join-Path $env:LOCALAPPDATA "Programs\SecShare\bin" }
 $SkipChecksum = $env:SECSHARE_SKIP_CHECKSUM -eq "1"
+
+if ($env:SECSHARE_ACTION) {
+    if ($env:SECSHARE_ACTION -notin @("install", "uninstall")) {
+        throw "Unsupported action: $($env:SECSHARE_ACTION)"
+    }
+
+    $Action = $env:SECSHARE_ACTION
+}
+
+if ($Uninstall -or $env:SECSHARE_UNINSTALL -match "^(1|true|yes)$") {
+    $Action = "uninstall"
+}
 
 function Get-ReleaseUrl {
     param([string]$Asset)
@@ -32,6 +50,48 @@ function Add-UserPath {
         [Environment]::SetEnvironmentVariable("Path", $newPath, "User")
         Write-Warning "$PathToAdd was added to the user PATH. Restart the terminal before running $AppName."
     }
+}
+
+function Remove-UserPath {
+    param([string]$PathToRemove)
+
+    $currentPath = [Environment]::GetEnvironmentVariable("Path", "User")
+
+    if (-not $currentPath) {
+        return
+    }
+
+    $oldParts = @($currentPath -split ";" | Where-Object { $_ })
+    $newParts = @($oldParts | Where-Object { $_ -ne $PathToRemove })
+
+    if ($newParts.Count -ne $oldParts.Count) {
+        [Environment]::SetEnvironmentVariable("Path", ($newParts -join ";"), "User")
+        Write-Warning "$PathToRemove was removed from the user PATH. Restart the terminal to apply the change."
+    }
+}
+
+function Uninstall-Binary {
+    $target = Join-Path $InstallDir "$AppName.exe"
+
+    if (-not (Test-Path -LiteralPath $target)) {
+        Write-Host "$AppName is not installed at $target"
+        return
+    }
+
+    Remove-Item -LiteralPath $target -Force
+    Write-Host "$AppName removed from $target"
+
+    $remainingFiles = Get-ChildItem -LiteralPath $InstallDir -Force -ErrorAction SilentlyContinue | Select-Object -First 1
+
+    if (-not $remainingFiles) {
+        Remove-Item -LiteralPath $InstallDir -Force -ErrorAction SilentlyContinue
+        Remove-UserPath $InstallDir
+    }
+}
+
+if ($Action -eq "uninstall") {
+    Uninstall-Binary
+    return
 }
 
 if (-not [Environment]::Is64BitOperatingSystem) {
