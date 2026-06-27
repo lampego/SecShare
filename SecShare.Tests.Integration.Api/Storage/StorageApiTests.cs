@@ -5,7 +5,7 @@ using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Dto;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Orm.Dao.Queue;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using SecShare.Tests.Integration.Api.Core;
 

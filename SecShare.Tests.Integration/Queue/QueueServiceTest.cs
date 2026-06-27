@@ -1,6 +1,6 @@
 using Autofac;
 using NHibernate.Linq;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Dao.Queue;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Services.Queue;

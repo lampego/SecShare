@@ -1,5 +1,5 @@
 using Domain.Abstractions;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Entities;
 
 namespace SecShare.Business.Orm.Dao.Queue;

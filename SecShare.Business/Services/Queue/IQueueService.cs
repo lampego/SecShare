@@ -1,5 +1,5 @@
 using Domain.Abstractions;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 
 namespace SecShare.Business.Services.Queue;
 

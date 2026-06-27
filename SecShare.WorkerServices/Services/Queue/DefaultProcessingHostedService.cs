@@ -1,6 +1,6 @@
 using Autofac;
 using Persistence.Transactions.Behaviors;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Services.Queue;
 using SecShare.WorkerServices.Core;
 

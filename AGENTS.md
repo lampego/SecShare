@@ -179,6 +179,8 @@ Invalid model state returns `400 Bad Request` with validation errors through `Ap
 - Keep controllers thin; put logic in handlers, DAOs, or domain services.
 - Boolean variables/properties should start with `Is`, `Has`, `Can`, or another clear boolean prefix.
 - Interface names must start with `I`.
+- Non-private top-level types such as classes, interfaces, records, structs, and enums should be placed in separate files instead of being declared after another top-level type. Multiple related records may share one file when that keeps the model cohesive.
+- Non-private enums must live in a common `Enums/` directory for their project (for example, `SecShare.Business.Orm/Enums/`). Private enums may remain nested in the type that owns them.
 - Place nested classes/interfaces/records near the top of the containing type unless local style says otherwise.
 - In multiline parenthesized expressions, place the closing parenthesis on its own line, aligned with the start of the construct. This applies to constructor/method arguments and multiline conditions such as exception filters. Do not leave the closing parenthesis after the final argument or condition operand.
 

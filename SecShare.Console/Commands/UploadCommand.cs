@@ -59,12 +59,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             (package, uploadResult) = await AnsiConsole.Progress()
                 .AutoClear(false)
                 .HideCompleted(false)
-                .Columns(
-                    new SpinnerColumn(),
-                    new TaskDescriptionColumn(),
-                    new ProgressBarColumn(),
-                    new PercentageColumn(),
-                    new ElapsedTimeColumn())
+                .Columns(TransferProgressUi.CreateColumns())
                 .StartAsync(async ctx =>
                 {
                     var zipTask = ctx.AddTask("Zipping directory...", autoStart: true, maxValue: 100);
@@ -119,12 +114,13 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         }
 
         var links = UploadShareLinkBuilder.Create(uploadResult.Token, package.EncryptionKey);
-        var details = CreateUploadSummary(settings, package, links);
-
-        AnsiConsole.Write(new Panel(details)
-            .Header("[bold green]SecShare[/]")
-            .Border(BoxBorder.Rounded)
-            .BorderColor(Color.Green));
+        UploadShareOutputWriter.Write(
+            package,
+            links,
+            settings.IsText ? "text" : "file",
+            settings.Expires,
+            settings.Downloads
+        );
 
         return 0;
     }
@@ -134,26 +130,5 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         task.Value = task.MaxValue;
         task.StopTask();
     }
-
-    private static Markup CreateUploadSummary(Settings settings, UploadPackage package, UploadShareLinks links)
-        => new(
-            $"""
-            [green]Upload package prepared[/]
-
-            [bold]Metadata[/]
-            Source: [yellow]{Markup.Escape(package.SourceName)}[/]
-            Mode: [yellow]{(settings.IsText ? "text" : "file")}[/]
-            Files: [yellow]{package.FileCount}[/]
-            Source size: [yellow]{TransferProgressUi.FormatBytes(package.SourceSizeBytes)}[/]
-            Archive size: [yellow]{TransferProgressUi.FormatBytes(package.ArchiveSizeBytes)}[/]
-            Encrypted size: [yellow]{TransferProgressUi.FormatBytes(package.EncryptedPayload.LongLength)}[/]
-
-            [bold]Upload information[/]
-            {Markup.Escape(UploadShareOutputFormatter.Format(links))}
-
-            Download command: [yellow]secshare get "{Markup.Escape(links.FullSecureLink)}"[/]
-            Expires: [yellow]{Markup.Escape(settings.Expires)}[/]
-            Downloads before deletion: [yellow]{settings.Downloads}[/]
-            """);
 
 }

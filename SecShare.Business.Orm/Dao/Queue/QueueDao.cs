@@ -3,7 +3,7 @@ using NHibernate;
 using NHibernate.Linq;
 using NHibernate.Transform;
 using Persistence.Transactions.Behaviors;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Entities;
 using System.Text.Json;
 

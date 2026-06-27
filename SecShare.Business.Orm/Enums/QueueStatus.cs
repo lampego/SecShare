@@ -1,4 +1,4 @@
-namespace SecShare.Business.Orm.Constants;
+namespace SecShare.Business.Orm.Enums;
 
 public enum QueueStatus : short
 {

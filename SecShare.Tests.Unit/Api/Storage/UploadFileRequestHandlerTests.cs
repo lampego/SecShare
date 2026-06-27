@@ -5,7 +5,7 @@ using SecShare.Api.Common.Dto.Storage;
 using SecShare.Api.Controllers.Storage.Actions;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Exceptions;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Services.Storage;

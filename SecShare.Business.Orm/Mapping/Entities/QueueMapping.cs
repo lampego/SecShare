@@ -1,4 +1,4 @@
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Orm.Extensions;
 using SecShare.Business.Orm.Mapping.Common;

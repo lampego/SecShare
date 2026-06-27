@@ -1,10 +1,14 @@
 using SecShare.Console.Models.Http;
 using Spectre.Console;
+using Spectre.Console.Rendering;
 
 namespace SecShare.Console.Ui;
 
 public static class TransferProgressUi
 {
+    public static ProgressColumn[] CreateColumns()
+        => [new MultilineTransferProgressColumn()];
+
     public static void Update(
         ProgressTask task,
         string operation,
@@ -39,4 +43,32 @@ public static class TransferProgressUi
         => totalBytes.HasValue
             ? FormatBytes(totalBytes.Value)
             : "?";
+
+    private sealed class MultilineTransferProgressColumn : ProgressColumn
+    {
+        private readonly ProgressBarColumn progressBarColumn = new();
+        private readonly PercentageColumn percentageColumn = new();
+        private readonly ElapsedTimeColumn elapsedTimeColumn = new();
+
+        protected override bool NoWrap => true;
+
+        public override IRenderable Render(
+            RenderOptions options,
+            ProgressTask task,
+            TimeSpan deltaTime
+        )
+        {
+            return new Rows(
+                new Markup(task.Description),
+                new Columns(
+                    progressBarColumn.Render(options, task, deltaTime),
+                    percentageColumn.Render(options, task, deltaTime),
+                    elapsedTimeColumn.Render(options, task, deltaTime)
+                )
+            );
+        }
+
+        public override int? GetColumnWidth(RenderOptions options)
+            => null;
+    }
 }

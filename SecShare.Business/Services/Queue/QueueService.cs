@@ -3,7 +3,7 @@ using Autofac;
 using Domain.Abstractions;
 using Microsoft.Extensions.Logging;
 using Persistence.Transactions.Behaviors;
-using SecShare.Business.Orm.Constants;
+using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Dao.Queue;
 using SecShare.Business.Orm.Entities;
 using System.Text.Json;

@@ -52,12 +52,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             result = await AnsiConsole.Progress()
                 .AutoClear(false)
                 .HideCompleted(false)
-                .Columns(
-                    new SpinnerColumn(),
-                    new TaskDescriptionColumn(),
-                    new ProgressBarColumn(),
-                    new PercentageColumn(),
-                    new ElapsedTimeColumn())
+                .Columns(TransferProgressUi.CreateColumns())
                 .StartAsync(async ctx =>
                 {
                     var downloadTask = ctx.AddTask("Downloading encrypted payload...", autoStart: true);
