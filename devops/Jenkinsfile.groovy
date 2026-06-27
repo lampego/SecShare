@@ -43,7 +43,7 @@ properties([
         // https://plugins.jenkins.io/git-parameter/
         gitParameter (name: 'GIT_TAG', type: 'PT_TAG', sortMode: 'DESCENDING_SMART', selectedValue: 'NONE', defaultValue: 'main'),
         string (name: 'NEW_VERSION', defaultValue: '', description: 'Provide version to create GIT tag'),
-        choice(name: 'ENVIRONMENT', choices: ['Development', 'Production'], description: 'Select environment to deploy'),
+        choice(name: 'ENVIRONMENT', choices: ['Production', 'Development'], description: 'Select environment to deploy'),
     ]),
     disableConcurrentBuilds()
 ])
