@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
+using SecShare.Api.Common.Dto.Storage;
 using SecShare.Api.Dto.RequestResponse.Storage;
 
 namespace SecShare.Tests.Unit.Api.Storage;
@@ -9,7 +10,10 @@ public sealed class UploadFileRequestValidationTests
     [Fact]
     public void Validate_WithMissingFile_ReturnsFileRequiredError()
     {
-        var request = new UploadFileRequest();
+        var request = new UploadFileRequest
+        {
+            Options = CreateOptions()
+        };
 
         var results = Validate(request);
 
@@ -21,7 +25,8 @@ public sealed class UploadFileRequestValidationTests
     {
         var request = new UploadFileRequest
         {
-            File = CreateFormFile([])
+            File = CreateFormFile([]),
+            Options = CreateOptions()
         };
 
         var results = Validate(request);
@@ -32,41 +37,103 @@ public sealed class UploadFileRequestValidationTests
     [Theory]
     [InlineData(-1)]
     [InlineData(0)]
-    public void Validate_WithNonPositiveDeleteDelay_ReturnsDeleteDelayError(int deleteDelayInSeconds)
+    public void Validate_WithInvalidDownloads_ReturnsDownloadsError(int downloads)
     {
         var request = new UploadFileRequest
         {
             File = CreateFormFile([1]),
-            DeleteDelayInSeconds = deleteDelayInSeconds
+            Options = CreateOptions(downloads: downloads)
         };
 
         var results = Validate(request);
 
-        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileRequest.DeleteDelayInSeconds)));
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.Downloads)));
     }
 
-    [Fact]
-    public void Validate_WithInvalidMetadata_ReturnsMetadataError()
+    [Theory]
+    [InlineData("")]
+    [InlineData("0h")]
+    [InlineData("24")]
+    [InlineData("1w")]
+    [InlineData("999999d")]
+    [InlineData("999999999999999999999999d")]
+    public void Validate_WithInvalidExpires_ReturnsExpiresError(string expires)
     {
         var request = new UploadFileRequest
         {
             File = CreateFormFile([1]),
-            Metadata = "{invalid"
+            Options = CreateOptions(expires: expires)
         };
 
         var results = Validate(request);
 
-        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileRequest.Metadata)));
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.Expires)));
     }
 
-    [Fact]
-    public void Validate_WithRequiredValuesAndPositiveDeleteDelay_ReturnsNoErrors()
+    [Theory]
+    [InlineData("365d")]
+    [InlineData("8760h")]
+    [InlineData("525600m")]
+    [InlineData("31536000s")]
+    public void Validate_WithBoundaryValidExpires_ReturnsNoExpiresError(string expires)
     {
         var request = new UploadFileRequest
         {
             File = CreateFormFile([1]),
-            Metadata = "{\"source\":\"console\"}",
-            DeleteDelayInSeconds = 1
+            Options = CreateOptions(expires: expires)
+        };
+
+        var results = Validate(request);
+
+        Assert.DoesNotContain(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.Expires)));
+    }
+
+    [Theory]
+    [InlineData("../secret")]
+    [InlineData("bad\rname")]
+    [InlineData("")]
+    public void Validate_WithUnsafeSourceName_ReturnsSourceNameError(string sourceName)
+    {
+        var request = new UploadFileRequest
+        {
+            File = CreateFormFile([1]),
+            Options = CreateOptions(sourceName: sourceName)
+        };
+
+        var results = Validate(request);
+
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.SourceName)));
+    }
+
+    [Fact]
+    public void UploadFileExpiration_TryParse_WithInvalidValues_ReturnsFalse()
+    {
+        Assert.False(UploadFileExpiration.TryParse("", out _));
+        Assert.False(UploadFileExpiration.TryParse("1w", out _));
+        Assert.False(UploadFileExpiration.TryParse("999999d", out _));
+        Assert.False(UploadFileExpiration.TryParse("999999999999999999999999d", out _));
+    }
+
+    [Fact]
+    public void Validate_WithMissingOptions_ReturnsOptionsError()
+    {
+        var request = new UploadFileRequest
+        {
+            File = CreateFormFile([1])
+        };
+
+        var results = Validate(request);
+
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileRequest.Options)));
+    }
+
+    [Fact]
+    public void Validate_WithRequiredFileAndOptions_ReturnsNoErrors()
+    {
+        var request = new UploadFileRequest
+        {
+            File = CreateFormFile([1]),
+            Options = CreateOptions()
         };
 
         var results = Validate(request);
@@ -78,14 +145,51 @@ public sealed class UploadFileRequestValidationTests
     {
         var results = new List<ValidationResult>();
 
-        Validator.TryValidateObject(
+        TryValidateObject(
             request,
             new ValidationContext(request),
+            results
+        );
+        if (request.Options != null)
+        {
+            TryValidateObject(
+                request.Options,
+                new ValidationContext(request.Options),
+                results
+            );
+        }
+
+        return results;
+    }
+
+    private static void TryValidateObject(
+        object instance,
+        ValidationContext validationContext,
+        ICollection<ValidationResult> results
+    )
+    {
+        Validator.TryValidateObject(
+            instance,
+            validationContext,
             results,
             validateAllProperties: true
         );
+    }
 
-        return results;
+    private static UploadFileOptions CreateOptions(
+        string expires = "24h",
+        int downloads = 1,
+        bool hasPassword = false,
+        string sourceName = "test.txt"
+    )
+    {
+        return new UploadFileOptions
+        {
+            Expires = expires,
+            Downloads = downloads,
+            HasPassword = hasPassword,
+            SourceName = sourceName
+        };
     }
 
     private static IFormFile CreateFormFile(byte[] bytes)

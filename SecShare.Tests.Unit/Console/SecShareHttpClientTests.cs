@@ -1,5 +1,7 @@
 using System.Net;
 using System.Text;
+using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Exceptions;
 using SecShare.Console;
 using SecShare.Console.Models.Http;
 using SecShare.Console.Services.Http;
@@ -20,9 +22,14 @@ public sealed class SecShareHttpClientTests
             Assert.Equal(
                 new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}"),
                 request.RequestUri);
-            Assert.IsType<MultipartFormDataContent>(request.Content);
+            var multipartContent = Assert.IsType<MultipartFormDataContent>(request.Content);
 
-            _ = await request.Content.ReadAsByteArrayAsync(cancellationToken);
+            var formValues = await ReadMultipartFormValuesAsync(multipartContent, cancellationToken);
+            Assert.Contains("file", formValues.Keys);
+            Assert.Equal("24h", formValues["Options.Expires"]);
+            Assert.Equal("1", formValues["Options.Downloads"]);
+            Assert.Equal("False", formValues["Options.HasPassword"]);
+            Assert.Equal("source", formValues["Options.SourceName"]);
 
             return new HttpResponseMessage(HttpStatusCode.OK)
             {
@@ -37,7 +44,12 @@ public sealed class SecShareHttpClientTests
 
         var result = await client.UploadAsync(
             encryptedPayload,
-            new UploadHttpOptions("24h", 1, false, "source"),
+            new UploadFileOptions
+            {
+                Expires = "24h",
+                Downloads = 1,
+                SourceName = "source"
+            },
             progress.Add,
             CancellationToken.None);
 
@@ -117,9 +129,72 @@ public sealed class SecShareHttpClientTests
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => client.UploadAsync(
                 "payload"u8.ToArray(),
-                new UploadHttpOptions("24h", 1, false, "source"),
+                new UploadFileOptions
+                {
+                    Expires = "24h",
+                    Downloads = 1,
+                    SourceName = "source"
+                },
                 progress: null,
                 CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task UploadAsync_WithInvalidOptions_ThrowsArgumentExceptionWithFieldNames()
+    {
+        var handler = new StubHttpMessageHandler((_, _) =>
+            throw new InvalidOperationException("Request should not be sent when options are invalid."));
+        using var httpClient = CreateHttpClient(handler);
+        var client = new SecShareHttpClient(httpClient);
+
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => client.UploadAsync(
+                "payload"u8.ToArray(),
+                new UploadFileOptions
+                {
+                    Expires = "1w",
+                    Downloads = 0,
+                    SourceName = "source"
+                },
+                progress: null,
+                CancellationToken.None));
+
+        Assert.Contains("Expires: Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d.", exception.Message);
+        Assert.Contains("Downloads: Downloads must be greater than zero.", exception.Message);
+        Assert.Contains(Environment.NewLine, exception.Message);
+    }
+
+    [Fact]
+    public async Task UploadAsync_WhenApiReturnsValidationErrors_ThrowsApiExceptionWithValidationMessage()
+    {
+        var handler = new StubHttpMessageHandler(async (request, cancellationToken) =>
+        {
+            _ = await request.Content!.ReadAsByteArrayAsync(cancellationToken);
+
+            return new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent(
+                    """{"Options.Expires":["Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d."]}""",
+                    Encoding.UTF8,
+                    "application/json"),
+            };
+        });
+        using var httpClient = CreateHttpClient(handler);
+        var client = new SecShareHttpClient(httpClient);
+
+        var exception = await Assert.ThrowsAsync<ApiException>(
+            () => client.UploadAsync(
+                "payload"u8.ToArray(),
+                new UploadFileOptions
+                {
+                    Expires = "24h",
+                    Downloads = 1,
+                    SourceName = "source"
+                },
+                progress: null,
+                CancellationToken.None));
+
+        Assert.Contains("Options.Expires: Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d.", exception.Message);
     }
 
     private static HttpClient CreateHttpClient(HttpMessageHandler handler)
@@ -127,6 +202,33 @@ public sealed class SecShareHttpClientTests
         {
             BaseAddress = SecShareConstants.ServiceBaseUri,
         };
+
+    private static async Task<Dictionary<string, string>> ReadMultipartFormValuesAsync(
+        MultipartFormDataContent multipartContent,
+        CancellationToken cancellationToken
+    )
+    {
+        var values = new Dictionary<string, string>();
+        foreach (var content in multipartContent)
+        {
+            var name = content.Headers.ContentDisposition?.Name?.Trim('"');
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            if (content.Headers.ContentDisposition?.FileName == null)
+            {
+                values[name] = await content.ReadAsStringAsync(cancellationToken);
+                continue;
+            }
+
+            _ = await content.ReadAsByteArrayAsync(cancellationToken);
+            values[name] = string.Empty;
+        }
+
+        return values;
+    }
 
     private sealed class StubHttpMessageHandler(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)

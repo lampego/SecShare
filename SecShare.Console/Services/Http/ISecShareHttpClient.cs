@@ -1,3 +1,4 @@
+using SecShare.Api.Common.Dto.Storage;
 using SecShare.Console.Models.Http;
 
 namespace SecShare.Console.Services.Http;
@@ -6,7 +7,7 @@ public interface ISecShareHttpClient
 {
     Task<UploadHttpResult> UploadAsync(
         byte[] encryptedPayload,
-        UploadHttpOptions options,
+        UploadFileOptions options,
         Action<TransferProgress>? progress,
         CancellationToken cancellationToken);
 

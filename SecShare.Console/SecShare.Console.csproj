@@ -17,6 +17,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\SecShare.Api.Common\SecShare.Api.Common.csproj" />
       <ProjectReference Include="..\SecShare.Business\SecShare.Business.csproj" />
     </ItemGroup>
 

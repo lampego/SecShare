@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Text.Json;
+using SecShare.Api.Common.Dto.Storage;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Models.Http;
@@ -88,11 +89,13 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                         maxValue: Math.Max(createdPackage.EncryptedPayload.LongLength, 1));
                     var result = await secShareHttpClient.UploadAsync(
                         createdPackage.EncryptedPayload,
-                        new UploadHttpOptions(
-                            settings.Expires,
-                            settings.Downloads,
-                            settings.HasPassword,
-                            createdPackage.SourceName),
+                        new UploadFileOptions
+                        {
+                            Expires = settings.Expires,
+                            Downloads = settings.Downloads,
+                            HasPassword = settings.HasPassword,
+                            SourceName = createdPackage.SourceName
+                        },
                         progress => TransferProgressUi.Update(
                             uploadTask,
                             $"Uploading to {SecShareConstants.ServiceBaseUri.Host}...",

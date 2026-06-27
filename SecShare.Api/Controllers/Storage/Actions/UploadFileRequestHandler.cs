@@ -1,14 +1,18 @@
+using System.Net;
 using Api.Requests.Abstractions;
+using SecShare.Api.Common.Dto.Storage;
 using SecShare.Api.Dto.RequestResponse.Storage;
+using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Services.Queue.Handlers;
 using SecShare.Business.Services.Storage;
-using System.Text.Json;
 
 namespace SecShare.Api.Controllers.Storage.Actions;
 
 public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, UploadFileResponse>
 {
+    private const int MaxSourceNameLength = 128;
+
     private readonly IFileStorage _fileStorage;
     private readonly IQueueService _queueService;
 
@@ -24,19 +28,9 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
         {
             throw new ArgumentException("Uploaded file is empty or missing.");
         }
-
-        // Validate metadata if provided
-        if (!string.IsNullOrWhiteSpace(request.Metadata))
+        if (request.Options == null)
         {
-            try
-            {
-                using var doc = JsonDocument.Parse(request.Metadata);
-                // Optionally validate structure or log metadata details
-            }
-            catch (JsonException)
-            {
-                throw new ArgumentException("Invalid metadata JSON format.");
-            }
+            throw new ArgumentException("Upload options are missing.");
         }
 
         using var memoryStream = new MemoryStream();
@@ -45,22 +39,51 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
 
         var fileEntity = await _fileStorage.PutFileAsync(
             fileData,
-            request.File.FileName
+            CreateSafeUploadFileName(request.Options.SourceName)
         );
 
-        if (request.DeleteDelayInSeconds.HasValue && request.DeleteDelayInSeconds.Value > 0)
+        if (!UploadFileExpiration.TryParse(request.Options.Expires, out var expiresIn))
         {
-            fileEntity.DeleteAt = DateTime.UtcNow.AddSeconds(request.DeleteDelayInSeconds.Value);
-
-            await _queueService.PushDefaultAsync(
-                new DeleteFileQueueContext { FileId = fileEntity.Id },
-                processAt: fileEntity.DeleteAt.Value
+            throw new ApiException(
+                $"Options.Expires: {UploadFileExpiration.ValidationErrorMessage}",
+                HttpStatusCode.BadRequest
             );
         }
+
+        fileEntity.DeleteAt = DateTime.UtcNow.Add(expiresIn);
+
+        await _queueService.PushDefaultAsync(
+            new DeleteFileQueueContext { FileId = fileEntity.Id },
+            processAt: fileEntity.DeleteAt.Value
+        );
 
         return new UploadFileResponse
         {
             Token = fileEntity.Id.ToString()
         };
+    }
+
+    private static string CreateSafeUploadFileName(string sourceName)
+    {
+        var safeNameChars = sourceName
+            .Where(character => !IsUnsafeFileNameCharacter(character))
+            .ToArray();
+        var safeName = new string(safeNameChars).Trim();
+        if (string.IsNullOrWhiteSpace(safeName))
+        {
+            safeName = "upload";
+        }
+
+        if (safeName.Length > MaxSourceNameLength)
+        {
+            safeName = safeName[..MaxSourceNameLength];
+        }
+
+        return $"{safeName}.secshare";
+    }
+
+    private static bool IsUnsafeFileNameCharacter(char character)
+    {
+        return char.IsControl(character) || character is '<' or '>' or ':' or '"' or '/' or '\\' or '|' or '?' or '*';
     }
 }

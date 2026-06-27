@@ -17,6 +17,8 @@ public class StorageApiTests : BaseTest
     private const string GetRoutePrefix = "/api/file/get/";
     private const string AlternativeUploadRoute = "/api/files";
     private const string AlternativeGetRoutePrefix = "/api/files/";
+    private const string DefaultExpires = "24h";
+    private const int DefaultDownloads = 1;
 
     public StorageApiTests(ApiCustomWebApplicationFactory factory) : base(factory)
     {
@@ -43,12 +45,10 @@ public class StorageApiTests : BaseTest
 
         var fileBytes = Encoding.UTF8.GetBytes("Test file contents");
         var formFile = CreateFormFile("archive.secshare", fileBytes);
-        var data = new Dictionary<string, object>
-        {
-            { "metadata", "{\"Expires\":\"24h\",\"Downloads\":1,\"HasPassword\":false,\"SourceName\":\"test\"}" }
-        };
-
-        var response = await PostMultipartFormDataRequestAsync(UploadRoute, data, formFile);
+        var response = await PostMultipartFormDataRequestAsync(
+            UploadRoute,
+            CreateUploadOptionsData("test"),
+            formFile);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
 
@@ -66,12 +66,10 @@ public class StorageApiTests : BaseTest
 
         var fileBytes = Encoding.UTF8.GetBytes("Test file contents");
         var formFile = CreateFormFile("archive.secshare", fileBytes);
-        var data = new Dictionary<string, object>
-        {
-            { "metadata", "{\"Expires\":\"24h\",\"Downloads\":1,\"HasPassword\":false,\"SourceName\":\"test\"}" }
-        };
-
-        var response = await PostMultipartFormDataRequestAsync(UploadRoute, data, formFile);
+        var response = await PostMultipartFormDataRequestAsync(
+            UploadRoute,
+            CreateUploadOptionsData("test"),
+            formFile);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
@@ -105,12 +103,10 @@ public class StorageApiTests : BaseTest
         var originalContent = "Secure secret data to share";
         var fileBytes = Encoding.UTF8.GetBytes(originalContent);
         var formFile = CreateFormFile("archive.secshare", fileBytes);
-        var data = new Dictionary<string, object>
-        {
-            { "metadata", "{\"Expires\":\"24h\",\"Downloads\":1,\"HasPassword\":false,\"SourceName\":\"test\"}" }
-        };
-
-        var uploadResponse = await PostMultipartFormDataRequestAsync(UploadRoute, data, formFile);
+        var uploadResponse = await PostMultipartFormDataRequestAsync(
+            UploadRoute,
+            CreateUploadOptionsData("test"),
+            formFile);
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
@@ -135,13 +131,11 @@ public class StorageApiTests : BaseTest
         var originalContent = "Dual route validation test contents";
         var fileBytes = Encoding.UTF8.GetBytes(originalContent);
         var formFile = CreateFormFile("archive.secshare", fileBytes);
-        var data = new Dictionary<string, object>
-        {
-            { "metadata", "{\"Expires\":\"24h\",\"Downloads\":1,\"HasPassword\":false,\"SourceName\":\"test\"}" }
-        };
-
         // Test the alternative POST route: /api/files
-        var uploadResponse = await PostMultipartFormDataRequestAsync(AlternativeUploadRoute, data, formFile);
+        var uploadResponse = await PostMultipartFormDataRequestAsync(
+            AlternativeUploadRoute,
+            CreateUploadOptionsData("test"),
+            formFile);
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
@@ -166,11 +160,7 @@ public class StorageApiTests : BaseTest
         var originalContent = "File to be automatically deleted by background queue";
         var fileBytes = Encoding.UTF8.GetBytes(originalContent);
         var formFile = CreateFormFile("autodelete.txt", fileBytes);
-        var data = new Dictionary<string, object>
-        {
-            { "metadata", "{\"SourceName\":\"test_autodelete\"}" },
-            { "deleteDelayInSeconds", 30 }
-        };
+        var data = CreateUploadOptionsData("test_autodelete", expires: "30s");
 
         // 1. Upload via API
         var uploadResponse = await PostMultipartFormDataRequestAsync(UploadRoute, data, formFile);
@@ -200,5 +190,21 @@ public class StorageApiTests : BaseTest
         // 4. Verify we cannot download it anymore
         var downloadResponseAfter = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
         Assert.NotEqual(HttpStatusCode.OK, downloadResponseAfter.StatusCode);
+    }
+
+    private static Dictionary<string, object> CreateUploadOptionsData(
+        string sourceName,
+        string expires = DefaultExpires,
+        int downloads = DefaultDownloads,
+        bool hasPassword = false
+    )
+    {
+        return new Dictionary<string, object>
+        {
+            { "Options.Expires", expires },
+            { "Options.Downloads", downloads },
+            { "Options.HasPassword", hasPassword },
+            { "Options.SourceName", sourceName }
+        };
     }
 }

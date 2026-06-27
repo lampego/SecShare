@@ -1,5 +1,7 @@
+using System.ComponentModel.DataAnnotations;
 using Api.Requests.Abstractions;
 using Microsoft.AspNetCore.Http;
+using SecShare.Api.Common.Dto.Storage;
 using SecShare.Api.Mvc.Attribute.Validation;
 
 namespace SecShare.Api.Dto.RequestResponse.Storage;
@@ -13,14 +15,8 @@ public class UploadFileRequest : IRequest<UploadFileResponse>
     public IFormFile? File { get; set; }
 
     /// <summary>
-    /// Optional metadata encoded as a JSON string. When supplied, it must be valid JSON.
+    /// Required upload options supplied as multipart form fields under the "Options" prefix.
     /// </summary>
-    [IsJson(ErrorMessage = "Metadata must be a valid JSON string when provided.")]
-    public string? Metadata { get; set; }
-
-    /// <summary>
-    /// Optional lifetime in seconds before the uploaded file is deleted. When supplied, it must be greater than zero.
-    /// </summary>
-    [IsPositive(ErrorMessage = "DeleteDelayInSeconds must be greater than zero when provided.")]
-    public int? DeleteDelayInSeconds { get; set; }
+    [Required(ErrorMessage = "Options are required.")]
+    public UploadFileOptions? Options { get; set; }
 }

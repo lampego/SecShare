@@ -15,7 +15,7 @@ Sending secrets through Slack, Telegram, or email is easy, but it leaves sensiti
 - Download and decrypt shared content from a link.
 - Client-side AES-256-GCM encryption in the CLI.
 - Linux, macOS, and Windows installer scripts.
-- TTL, download limits, password prompts, and delete-after-read enforcement: planned. The CLI already sends some related metadata, but backend enforcement is not complete yet.
+- TTL enforcement. Download limits, password prompts, and delete-after-read enforcement: planned.
 
 ## Installation
 
@@ -55,7 +55,7 @@ Share a text secret:
 secshare upload "DATABASE_URL=postgres://user:pass@example/db" --text
 ```
 
-Send expiry/download metadata with an upload:
+Send expiry/download options with an upload:
 
 ```bash
 secshare upload ./report.pdf --expires 1h --downloads 1
