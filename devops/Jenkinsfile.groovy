@@ -204,11 +204,51 @@ node('build-node') {
         stage('Create GIT tag') {
             withCredentials([sshUserPrivateKey(credentialsId: gitCredentials, keyFileVariable: 'key')]) {
                 sh '''
+                    set -eu
+
                     git config core.sshCommand 'ssh -i ${key}'
                     git config user.email "lampego@gmail.com"
                     git config user.name "lampego"
-                    git tag "${VERSION_INCREMENT}"
-                    git push origin "${VERSION_INCREMENT}"
+
+                    if git rev-parse -q --verify "refs/tags/${VERSION_INCREMENT}" >/dev/null; then
+                        TAG_COMMIT="$(git rev-list -n 1 "${VERSION_INCREMENT}")"
+                        HEAD_COMMIT="$(git rev-parse HEAD)"
+
+                        if [ "$TAG_COMMIT" != "$HEAD_COMMIT" ]; then
+                            echo "Tag ${VERSION_INCREMENT} already exists but points to ${TAG_COMMIT}; current HEAD is ${HEAD_COMMIT}"
+                            exit 1
+                        fi
+                    else
+                        git tag "${VERSION_INCREMENT}"
+                    fi
+
+                    git push origin "refs/tags/${VERSION_INCREMENT}:refs/tags/${VERSION_INCREMENT}"
+                '''
+            }
+        }
+
+        stage('Push GIT tag to GitHub') {
+            env.GITHUB_RELEASE_REPOSITORY = githubReleaseRepository
+
+            withCredentials([string(credentialsId: 'secshare_github_release_token', variable: 'GH_TOKEN')]) {
+                sh '''
+                    set -eu
+
+                    GIT_ASKPASS_FILE="$(mktemp)"
+                    trap 'rm -f "$GIT_ASKPASS_FILE"' EXIT
+
+                    cat > "$GIT_ASKPASS_FILE" <<'EOF'
+#!/bin/sh
+case "$1" in
+    *Username*) echo "x-access-token" ;;
+    *Password*) echo "$GH_TOKEN" ;;
+esac
+EOF
+                    chmod 700 "$GIT_ASKPASS_FILE"
+
+                    GIT_ASKPASS="$GIT_ASKPASS_FILE" GIT_TERMINAL_PROMPT=0 git push \
+                        "https://github.com/${GITHUB_RELEASE_REPOSITORY}.git" \
+                        "refs/tags/${VERSION_INCREMENT}:refs/tags/${VERSION_INCREMENT}"
                 '''
             }
         }
