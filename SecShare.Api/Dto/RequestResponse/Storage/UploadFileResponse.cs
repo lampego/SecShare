@@ -1,6 +1,6 @@
 using Api.Requests.Abstractions;
 
-namespace SecShare.Api.Controllers.Storage.Actions;
+namespace SecShare.Api.Dto.RequestResponse.Storage;
 
 public class UploadFileResponse : IResponse
 {

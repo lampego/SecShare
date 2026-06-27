@@ -1,6 +1,6 @@
 using Api.Requests.Abstractions;
 
-namespace SecShare.Api.Controllers.Ping.Actions;
+namespace SecShare.Api.Dto.RequestResponse.Ping;
 
 public class PingRequest : IRequest<PingResponse>
 {

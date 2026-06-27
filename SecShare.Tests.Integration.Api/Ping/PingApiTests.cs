@@ -1,5 +1,5 @@
 using System.Net;
-using SecShare.Api.Controllers.Ping.Actions;
+using SecShare.Api.Dto.RequestResponse.Ping;
 using SecShare.Tests.Integration.Api.Core;
 
 namespace SecShare.Tests.Integration.Api.Ping;

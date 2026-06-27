@@ -3,7 +3,7 @@ using AspNetCore.ApiControllers.Extensions;
 using Autofac;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using SecShare.Api.Controllers.Storage.Actions;
+using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Mvc.Controllers;
 
 namespace SecShare.Api.Controllers.Storage;

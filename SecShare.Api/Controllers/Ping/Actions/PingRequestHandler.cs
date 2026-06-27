@@ -1,4 +1,5 @@
 using Api.Requests.Abstractions;
+using SecShare.Api.Dto.RequestResponse.Ping;
 
 namespace SecShare.Api.Controllers.Ping.Actions;
 

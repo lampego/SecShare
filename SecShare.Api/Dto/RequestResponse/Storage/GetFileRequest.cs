@@ -1,7 +1,7 @@
 using Api.Requests.Abstractions;
 using AspNetCore.ApiControllers.Abstractions;
 
-namespace SecShare.Api.Controllers.Storage.Actions;
+namespace SecShare.Api.Dto.RequestResponse.Storage;
 
 public class GetFileRequest : IRequest<FileResponse>
 {

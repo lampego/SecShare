@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using SecShare.Api.Controllers.Storage.Actions;
+using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Dto;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Orm.Dao.Queue;

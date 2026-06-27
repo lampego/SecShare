@@ -1,7 +1,7 @@
 using AspNetCore.ApiControllers.Extensions;
 using Autofac;
 using Microsoft.AspNetCore.Mvc;
-using SecShare.Api.Controllers.Ping.Actions;
+using SecShare.Api.Dto.RequestResponse.Ping;
 using SecShare.Business.Mvc.Controllers;
 
 namespace SecShare.Api.Controllers.Ping;
