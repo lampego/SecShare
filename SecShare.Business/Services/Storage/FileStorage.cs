@@ -1,4 +1,6 @@
+using System.Net;
 using Microsoft.AspNetCore.StaticFiles;
+using SecShare.Business.Exceptions;
 using SecShare.Business.Orm.Dao.Files;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Services.Storage.Client;
@@ -59,11 +61,11 @@ public class FileStorage : IFileStorage
     )
     {
         var file = await _filesDao.GetAsync(fileId, cancellationToken)
-            ?? throw new InvalidOperationException($"File was not found: {fileId}");
+            ?? throw new FileNotFoundDomainException("Decrypted data is unavailable");
 
         if (file.IsDeleted)
         {
-            throw new InvalidOperationException($"File was not found: {fileId}");
+            throw new FileDeletedDomainException("Decrypted data is unavailable");
         }
 
         return (file, await _storageClient.GetAsStream(file.StoragePath, cancellationToken));

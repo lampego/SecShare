@@ -19,9 +19,9 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
-        [CommandArgument(0, "<path>")]
+        [CommandArgument(0, "[path]")]
         [Description("Path to a file or directory to upload.")]
-        public string Path { get; init; } = string.Empty;
+        public string? Path { get; init; }
 
         [CommandOption("-e|--expires <expires>")]
         [DefaultValue("24h")]
@@ -40,11 +40,30 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
+        var inputToProcess = settings.Path;
+        var isFromStdin = false;
+
+        if (string.IsNullOrWhiteSpace(inputToProcess))
+        {
+            if (System.Console.IsInputRedirected)
+            {
+                inputToProcess = await System.Console.In.ReadToEndAsync(cancellationToken);
+                isFromStdin = true;
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[red]Error:[/] Specify a file or directory path, or pipe text via standard input.");
+                return 1;
+            }
+        }
+
         AnsiConsole.MarkupLine("[bold]SecShare[/] client-side encrypted upload");
-        AnsiConsole.MarkupLine($"Target: [cyan]{Markup.Escape(settings.Path)}[/]");
+        var displayTarget = isFromStdin ? "Standard Input" : inputToProcess;
+        AnsiConsole.MarkupLine($"Target: [cyan]{Markup.Escape(displayTarget)}[/]");
         AnsiConsole.WriteLine();
 
-        var contentType = ResolveContentType(settings);
+        var isText = settings.IsText || isFromStdin;
+        var contentType = ResolveContentType(inputToProcess, isText);
         UploadPackage package;
         UploadHttpResult uploadResult;
         try
@@ -65,9 +84,9 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                 .StartAsync(async ctx =>
                 {
                     var zipTask = ctx.AddTask("Zipping directory...", autoStart: true, maxValue: 100);
-                    var archive = settings.IsText
-                        ? await archiveService.CreateFromTextAsync(settings.Path, cancellationToken)
-                        : await archiveService.CreateFromPathAsync(settings.Path, cancellationToken);
+                    var archive = isText
+                        ? await archiveService.CreateFromTextAsync(inputToProcess, cancellationToken)
+                        : await archiveService.CreateFromPathAsync(inputToProcess, cancellationToken);
                     zipTask.Value = 100;
                     zipTask.StopTask();
 
@@ -103,16 +122,19 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             AnsiConsole.MarkupLine("[red]Upload failed:[/] The request timed out.");
             return 1;
         }
-        catch (Exception exception) when (exception is
-            ArgumentException
-            or HttpRequestException
-            or IOException
-            or JsonException
-            or UnauthorizedAccessException
-            or InvalidOperationException
-            or ApiException)
+        catch (Exception exception) when (
+            exception is
+                ArgumentException
+                or HttpRequestException
+                or IOException
+                or JsonException
+                or UnauthorizedAccessException
+                or InvalidOperationException
+                or ApiException
+        )
         {
-            AnsiConsole.MarkupLine($"[red]Upload failed:[/] {Markup.Escape(exception.Message)}");
+            var errorMessage = ConsoleErrorParser.ResolveFriendlyUploadErrorMessage(exception);
+            AnsiConsole.MarkupLine($"[red]Upload failed:[/] {Markup.Escape(errorMessage)}");
             return 1;
         }
 
@@ -134,14 +156,14 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         task.StopTask();
     }
 
-    private static StorageContentType ResolveContentType(Settings settings)
+    private static StorageContentType ResolveContentType(string path, bool isText)
     {
-        if (settings.IsText)
+        if (isText)
         {
             return StorageContentType.Text;
         }
 
-        return Directory.Exists(settings.Path)
+        return Directory.Exists(path)
             ? StorageContentType.Folder
             : StorageContentType.File;
     }

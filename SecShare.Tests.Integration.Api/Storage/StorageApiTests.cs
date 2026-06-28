@@ -247,14 +247,24 @@ public class StorageApiTests : BaseTest
         Assert.Equal(fileBytes, await firstDownloadResponse.Content.ReadAsByteArrayAsync());
 
         var secondDownloadResponse = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
-        Assert.NotEqual(HttpStatusCode.OK, secondDownloadResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, secondDownloadResponse.StatusCode);
+        var secondDownloadError = await secondDownloadResponse.Content.ReadFromJsonAsync<JsonCommonResponse>();
+        Assert.NotNull(secondDownloadError);
+        Assert.Equal("fail", secondDownloadError.Status);
+        Assert.Equal("Decrypted data is unavailable", secondDownloadError.Message);
+        Assert.Equal("DownloadLimitExhaustedDomainException", secondDownloadError.ErrorCode);
 
         var queueService = ServiceProvider.GetRequiredService<IQueueService>();
         var processedCount = await queueService.ProcessAsync(QueueChannel.Default);
         Assert.Equal(1, processedCount);
 
         var downloadResponseAfterDeletion = await HttpClient.GetAsync($"{GetRoutePrefix}{fileToken}");
-        Assert.NotEqual(HttpStatusCode.OK, downloadResponseAfterDeletion.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, downloadResponseAfterDeletion.StatusCode);
+        var afterDeletionError = await downloadResponseAfterDeletion.Content.ReadFromJsonAsync<JsonCommonResponse>();
+        Assert.NotNull(afterDeletionError);
+        Assert.Equal("fail", afterDeletionError.Status);
+        Assert.Equal("Decrypted data is unavailable", afterDeletionError.Message);
+        Assert.Equal("FileDeletedDomainException", afterDeletionError.ErrorCode);
     }
 
     private static Dictionary<string, object> CreateUploadOptionsData(

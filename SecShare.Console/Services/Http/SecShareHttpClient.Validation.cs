@@ -53,25 +53,13 @@ public sealed partial class SecShareHttpClient
         out ApiException error
     )
     {
-        error = null!;
-        try
-        {
-            var errorResult = JsonSerializer.Deserialize<JsonCommonResponse>(
-                errorContent,
-                JsonOptions
-            );
-            if (errorResult is not { Status: "fail" })
-            {
-                return false;
-            }
-
-            error = new ApiException(errorResult.Message, statusCode);
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
+        var isParsed = ConsoleErrorParser.TryParseCommonError(
+            errorContent,
+            statusCode,
+            out var parsedException
+        );
+        error = parsedException!;
+        return isParsed;
     }
 
     private static bool TryReadValidationError(

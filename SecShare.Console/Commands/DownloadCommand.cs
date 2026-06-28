@@ -109,24 +109,38 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             AnsiConsole.MarkupLine("[red]Download failed:[/] Could not decrypt this file. Check the decryption key and try again.");
             return 1;
         }
-        catch (Exception exception) when (exception is
-            ArgumentException
-            or HttpRequestException
-            or IOException
-            or UnauthorizedAccessException
-            or InvalidOperationException
-            or ApiException)
+        catch (Exception exception) when (
+            exception is
+                ArgumentException
+                or HttpRequestException
+                or IOException
+                or UnauthorizedAccessException
+                or InvalidOperationException
+                or ApiException
+        )
         {
-            AnsiConsole.MarkupLine($"[red]Download failed:[/] {Markup.Escape(exception.Message)}");
+            var errorMessage = ConsoleErrorParser.ResolveFriendlyDownloadErrorMessage(exception);
+            AnsiConsole.MarkupLine($"[red]Download failed:[/] {Markup.Escape(errorMessage)}");
             return 1;
         }
 
         if (result.ContentType == StorageContentType.Text)
         {
-            AnsiConsole.Write(new Panel(Markup.Escape(result.Text ?? string.Empty))
-                .Header("[bold green]Downloaded text[/]")
+            var rawText = result.Text ?? string.Empty;
+            var longestLineLength = rawText
+                .Split('\n')
+                .Select(line => line.TrimEnd('\r').Length)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            var panel = new Panel(Markup.Escape(rawText))
+                .Header("[bold green]Decrypted text[/]")
                 .Border(BoxBorder.Rounded)
-                .BorderColor(Color.Green));
+                .BorderColor(Color.Green);
+
+            panel.Width = Math.Max(20, longestLineLength + 4);
+
+            AnsiConsole.Write(panel);
 
             return 0;
         }

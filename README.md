@@ -31,7 +31,7 @@ Windows:
 irm https://secshare.me/install.ps1 | iex
 ```
 
-See [Installation Guide](docs/install.md).
+See [Installation Guide](docs/install.md) and [CLI Usage Guide](docs/cli-usage.md).
 
 Uninstall commands are also available in the installation guide.
 

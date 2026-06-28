@@ -47,9 +47,8 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
 
         if (!UploadFileExpiration.TryParse(request.Options.Expires, out var expiresIn))
         {
-            throw new ApiException(
-                $"Options.Expires: {UploadFileExpiration.ValidationErrorMessage}",
-                HttpStatusCode.BadRequest
+            throw new UploadOptionsValidationDomainException(
+                $"Options.Expires: {UploadFileExpiration.ValidationErrorMessage}"
             );
         }
 
@@ -82,9 +81,8 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
         }
 
         var errorMessages = validationResults.SelectMany(FormatValidationResultMessages);
-        throw new ApiException(
-            string.Join("; ", errorMessages),
-            HttpStatusCode.BadRequest
+        throw new UploadOptionsValidationDomainException(
+            string.Join("; ", errorMessages)
         );
     }
 

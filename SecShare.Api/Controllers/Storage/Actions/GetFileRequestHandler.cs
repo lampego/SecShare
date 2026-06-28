@@ -1,6 +1,8 @@
+using System.Net;
 using Api.Requests.Abstractions;
 using AspNetCore.ApiControllers.Abstractions;
 using SecShare.Business.Common.Headers;
+using SecShare.Business.Exceptions;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Orm.Dao.Files;
 using SecShare.Business.Services.Queue;
@@ -39,7 +41,7 @@ public class GetFileRequestHandler : IAsyncRequestHandler<GetFileRequest, FileRe
         if (downloadsRemaining == null)
         {
             await fileStream.DisposeAsync();
-            throw new InvalidOperationException($"File was not found: {fileId}");
+            throw new DownloadLimitExhaustedDomainException("Decrypted data is unavailable");
         }
 
         if (downloadsRemaining == 0)

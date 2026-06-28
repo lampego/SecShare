@@ -62,7 +62,7 @@ public sealed class UploadFileRequestHandlerTests
             }
         };
 
-        var exception = await Assert.ThrowsAsync<ApiException>(() => handler.ExecuteAsync(request));
+        var exception = await Assert.ThrowsAsync<UploadOptionsValidationDomainException>(() => handler.ExecuteAsync(request));
 
         Assert.Equal(HttpStatusCode.BadRequest, exception.StatusCode);
         Assert.Contains("Options.Downloads", exception.Message);
