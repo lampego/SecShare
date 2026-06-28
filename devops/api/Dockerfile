@@ -1,6 +1,15 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Install Node.js for the Web project's Tailwind build.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends apt-transport-https wget ca-certificates curl \
+    && curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && node -v \
+    && npm -v \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy all files
 COPY . .
 
@@ -43,4 +52,3 @@ RUN chmod +x /usr/local/bin/boot.sh
 EXPOSE 80
 
 CMD ["sh", "/usr/local/bin/boot.sh"]
-
