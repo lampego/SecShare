@@ -6,34 +6,37 @@
                 Private files should not live forever in chat history
             </h2>
             <p class="mt-5 text-lg leading-8 text-[#52625d]">
-                Instead of sending private files directly in chats, share a temporary encrypted SecShare link.
+                People usually send private files straight through Telegram, Slack, Discord, or email because it is fast. The problem is that the file can stay in chat history, attachments, backups, and forwarded threads much longer than you wanted.
+            </p>
+            <p class="mt-4 text-lg leading-8 text-[#52625d]">
+                Instead of sending the original file, share a temporary encrypted SecShare link.
             </p>
         </div>
 
         <div class="grid gap-3 sm:grid-cols-2">
             <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-5">
                 <h3 class="font-semibold text-[#13201d]">Config files</h3>
-                <p class="mt-2 text-sm leading-6 text-[#52625d]">Share environment-specific config without attaching raw files.</p>
+                <p class="mt-2 text-sm leading-6 text-[#52625d]">Pass environment-specific config without leaving the raw file in chat.</p>
             </div>
             <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-5">
                 <h3 class="font-semibold text-[#13201d]">Logs</h3>
-                <p class="mt-2 text-sm leading-6 text-[#52625d]">Send production logs with an expiration window.</p>
+                <p class="mt-2 text-sm leading-6 text-[#52625d]">Send logs for debugging and let the link expire after the handoff.</p>
             </div>
             <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-5">
                 <h3 class="font-semibold text-[#13201d]">Database dumps</h3>
-                <p class="mt-2 text-sm leading-6 text-[#52625d]">Move sensitive dumps through encrypted temporary links.</p>
+                <p class="mt-2 text-sm leading-6 text-[#52625d]">Move a dump to someone who needs it without attaching it directly.</p>
             </div>
             <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-5">
                 <h3 class="font-semibold text-[#13201d]">Credentials and secrets</h3>
-                <p class="mt-2 text-sm leading-6 text-[#52625d]">Use one-time handoff flows for short-lived secrets.</p>
+                <p class="mt-2 text-sm leading-6 text-[#52625d]">Share a secret once, with a short expiration and download limit.</p>
             </div>
             <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-5">
                 <h3 class="font-semibold text-[#13201d]">Private documents</h3>
-                <p class="mt-2 text-sm leading-6 text-[#52625d]">Avoid permanent raw attachments in shared inboxes.</p>
+                <p class="mt-2 text-sm leading-6 text-[#52625d]">Send PDFs, archives, and other private files as temporary links.</p>
             </div>
             <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-5">
                 <h3 class="font-semibold text-[#13201d]">Team handoff</h3>
-                <p class="mt-2 text-sm leading-6 text-[#52625d]">Pass a file to a teammate without creating a long-lived artifact.</p>
+                <p class="mt-2 text-sm leading-6 text-[#52625d]">Move one file between teammates, machines, or clients and be done.</p>
             </div>
         </div>
     </div>

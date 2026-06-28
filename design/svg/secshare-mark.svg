@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SecShare mark">
+  <title>SecShare mark</title>
+  <path d="M128 22 L202 54 V112 C202 166 171 207 128 229 C85 207 54 166 54 112 V54 Z"
+        fill="none" stroke="#2563EB" stroke-width="14" stroke-linejoin="round"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
+    <path d="M112 142 L98 156 C87 167 70 150 81 139 L95 125 C104 116 118 116 128 124"
+          stroke="#2563EB"/>
+    <path d="M142 113 L158 97 C169 86 186 103 175 114 L159 130 C150 139 136 139 126 131"
+          stroke="#0EA5A4"/>
+    <path d="M106 134 L151 123" stroke="#2563EB"/>
+  </g>
+</svg>

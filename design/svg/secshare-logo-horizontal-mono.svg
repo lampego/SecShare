@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 180" role="img" aria-label="SecShare logo">
+  <title>SecShare logo</title>
+  <g transform="translate(24 18) scale(0.56)">
+    <path d="M128 22 L202 54 V112 C202 166 171 207 128 229 C85 207 54 166 54 112 V54 Z"
+          fill="none" stroke="#111827" stroke-width="14" stroke-linejoin="round"/>
+    <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
+      <path d="M112 142 L98 156 C87 167 70 150 81 139 L95 125 C104 116 118 116 128 124" stroke="#111827"/>
+      <path d="M142 113 L158 97 C169 86 186 103 175 114 L159 130 C150 139 136 139 126 131" stroke="#111827"/>
+      <path d="M106 134 L151 123" stroke="#111827"/>
+    </g>
+  </g>
+  <text x="185" y="114"
+        font-family="Inter, Segoe UI, Roboto, Arial, sans-serif"
+        font-size="68"
+        font-weight="700"
+        letter-spacing="0"
+        fill="#111827">SecShare</text>
+</svg>

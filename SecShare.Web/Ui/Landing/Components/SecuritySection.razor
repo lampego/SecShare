@@ -7,9 +7,9 @@
             </h2>
             <ul class="mt-6 space-y-3 text-base leading-7 text-[#52625d]">
                 <li>Files are encrypted before upload.</li>
-                <li>Decryption key is stored in the URL fragment after #.</li>
-                <li>URL fragment is not sent to the server in normal HTTP requests.</li>
                 <li>Server stores only encrypted blobs.</li>
+                <li>The decryption key is kept after # in the link.</li>
+                <li>The key is not sent to the server in normal HTTP requests.</li>
                 <li>Expiration and download limits reduce long-term exposure.</li>
                 <li>If the key is lost, the file cannot be decrypted.</li>
             </ul>
@@ -24,11 +24,11 @@
                 <div class="grid gap-0 sm:grid-cols-2">
                     <div class="border-b border-[#dce5da] p-4 sm:border-b-0 sm:border-r">
                         <p class="font-semibold text-[#13201d]">file-id</p>
-                        <p class="mt-2 text-sm leading-6 text-[#52625d]">Sent to server to locate the encrypted blob.</p>
+                        <p class="mt-2 text-sm leading-6 text-[#52625d]">Used to find the encrypted file.</p>
                     </div>
                     <div class="p-4">
                         <p class="font-semibold text-[#13201d]">decryption-key</p>
-                        <p class="mt-2 text-sm leading-6 text-[#52625d]">Stays in browser or CLI as the URL fragment.</p>
+                        <p class="mt-2 text-sm leading-6 text-[#52625d]">Used by the browser or CLI to decrypt it.</p>
                     </div>
                 </div>
             </div>
