@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
 
-namespace SecShare.Api.Common.Validation;
+namespace SecShare.Business.Common.Validation;
 
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 public class ExpirationDurationAttribute : ValidationAttribute

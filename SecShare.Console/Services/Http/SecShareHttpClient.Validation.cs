@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.Json;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Dto;
 using SecShare.Business.Exceptions;
 

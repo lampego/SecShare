@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Text.Json;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
+using SecShare.Business.Common.Enums;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Models.Http;
@@ -43,6 +44,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         AnsiConsole.MarkupLine($"Target: [cyan]{Markup.Escape(settings.Path)}[/]");
         AnsiConsole.WriteLine();
 
+        var contentType = ResolveContentType(settings);
         UploadPackage package;
         UploadHttpResult uploadResult;
         try
@@ -83,7 +85,8 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                         new UploadFileOptions
                         {
                             Expires = settings.Expires,
-                            Downloads = settings.Downloads
+                            Downloads = settings.Downloads,
+                            ContentType = contentType
                         },
                         progress => TransferProgressUi.Update(
                             uploadTask,
@@ -117,7 +120,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         UploadShareOutputWriter.Write(
             package,
             links,
-            settings.IsText ? "text" : "file",
+            contentType.ToString().ToLowerInvariant(),
             settings.Expires,
             settings.Downloads
         );
@@ -131,4 +134,15 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         task.StopTask();
     }
 
+    private static StorageContentType ResolveContentType(Settings settings)
+    {
+        if (settings.IsText)
+        {
+            return StorageContentType.Text;
+        }
+
+        return Directory.Exists(settings.Path)
+            ? StorageContentType.Folder
+            : StorageContentType.File;
+    }
 }

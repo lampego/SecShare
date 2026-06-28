@@ -1,7 +1,7 @@
 using System.Net;
 using Domain.Abstractions;
 using Microsoft.AspNetCore.Http;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Api.Controllers.Storage.Actions;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Exceptions;
@@ -9,6 +9,7 @@ using SecShare.Business.Orm.Enums;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Services.Storage;
+using StorageContentType = SecShare.Business.Common.Enums.StorageContentType;
 
 namespace SecShare.Tests.Unit.Api.Storage;
 
@@ -26,7 +27,8 @@ public sealed class UploadFileRequestHandlerTests
             Options = new UploadFileOptions
             {
                 Expires = "24h",
-                Downloads = 5
+                Downloads = 5,
+                ContentType = StorageContentType.Text
             }
         };
 
@@ -36,6 +38,7 @@ public sealed class UploadFileRequestHandlerTests
         Assert.True(fileStorage.HasPutFileBeenCalled);
         Assert.NotNull(fileStorage.CreatedFile);
         Assert.Equal(request.Options.Downloads, fileStorage.CreatedFile.DownloadsRemaining);
+        Assert.Equal(StorageContentType.Text, fileStorage.CreatedFile.ContentType);
         Assert.True(queueService.HasPushDefaultBeenCalled);
     }
 

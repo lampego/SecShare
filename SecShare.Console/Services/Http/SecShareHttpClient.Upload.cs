@@ -1,5 +1,5 @@
 using System.Net.Http.Json;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Console.Models.Http;
 
 namespace SecShare.Console.Services.Http;
@@ -23,7 +23,8 @@ public sealed partial class SecShareHttpClient
         {
             { fileContent, "file", EncryptedUploadFileName },
             { new StringContent(options.Expires), "Options.Expires" },
-            { new StringContent(options.Downloads.ToString()), "Options.Downloads" }
+            { new StringContent(options.Downloads.ToString()), "Options.Downloads" },
+            { new StringContent(options.ContentType.ToString()), "Options.ContentType" }
         };
         using var request = new HttpRequestMessage(HttpMethod.Post, SecShareConstants.ApiFilesPath)
         {

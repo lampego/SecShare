@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Api.Requests.Abstractions;
 using Microsoft.AspNetCore.Http;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Api.Mvc.Attribute.Validation;
 
 namespace SecShare.Api.Dto.RequestResponse.Storage;

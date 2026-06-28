@@ -19,7 +19,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Api.Requests.Base\Api.Requests.Base.csproj" />
         <ProjectReference Include="..\AspNetCore.ApiControllers.Extensions\AspNetCore.ApiControllers.Extensions.csproj" />
-        <ProjectReference Include="..\SecShare.Api.Common\SecShare.Api.Common.csproj" />
+        <ProjectReference Include="..\SecShare.Business.Common\SecShare.Business.Common.csproj" />
         <ProjectReference Include="..\SecShare.Business\SecShare.Business.csproj" />
     </ItemGroup>
 

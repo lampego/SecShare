@@ -1,7 +1,8 @@
 using System.ComponentModel.DataAnnotations;
-using SecShare.Api.Common.Validation;
+using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Validation;
 
-namespace SecShare.Api.Common.Dto.Storage;
+namespace SecShare.Business.Common.Dto.Storage;
 
 public class UploadFileOptions
 {
@@ -18,4 +19,6 @@ public class UploadFileOptions
     [Range(1, int.MaxValue, ErrorMessage = "Downloads must be greater than zero.")]
     public int Downloads { get; set; } = 1;
 
+    [EnumDataType(typeof(StorageContentType))]
+    public StorageContentType ContentType { get; set; } = StorageContentType.File;
 }

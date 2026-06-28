@@ -42,7 +42,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.WorkerServices", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Web", "SecShare.Web\SecShare.Web.csproj", "{8D6490A2-DACA-4AF5-8F38-5E34FA476588}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Api.Common", "SecShare.Api.Common\SecShare.Api.Common.csproj", "{DD5FD324-B22F-49F5-89B8-CC94588FACDF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Business.Common", "SecShare.Business.Common\SecShare.Business.Common.csproj", "{DD5FD324-B22F-49F5-89B8-CC94588FACDF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

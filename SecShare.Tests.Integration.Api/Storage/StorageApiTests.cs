@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using SecShare.Business.Common.Headers;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Dto;
 using SecShare.Business.Services.Queue;
@@ -8,6 +9,7 @@ using SecShare.Business.Orm.Dao.Queue;
 using SecShare.Business.Orm.Enums;
 using Microsoft.Extensions.DependencyInjection;
 using SecShare.Tests.Integration.Api.Core;
+using StorageContentType = SecShare.Business.Common.Enums.StorageContentType;
 
 namespace SecShare.Tests.Integration.Api.Storage;
 
@@ -124,6 +126,36 @@ public class StorageApiTests : BaseTest
     }
 
     [Fact]
+    public async Task Download_WithTextContentType_ReturnsFileMetadataHeaders()
+    {
+        AddConsoleHeaders();
+
+        var originalContent = "Shared text archive payload";
+        var fileBytes = Encoding.UTF8.GetBytes(originalContent);
+        var formFile = CreateFormFile("archive.secshare", fileBytes);
+        var uploadResponse = await PostMultipartFormDataRequestAsync(
+            UploadRoute,
+            CreateUploadOptionsData(contentType: StorageContentType.Text),
+            formFile);
+        Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+        var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
+        Assert.NotNull(uploadResponseDto);
+
+        var downloadResponse = await HttpClient.GetAsync($"{GetRoutePrefix}{uploadResponseDto.Token}");
+
+        Assert.Equal(HttpStatusCode.OK, downloadResponse.StatusCode);
+        Assert.Equal(fileBytes, await downloadResponse.Content.ReadAsByteArrayAsync());
+        Assert.Equal(StorageContentType.Text.ToString(), GetHeader(downloadResponse, SecShareFileHeaders.ContentType));
+        Assert.Equal(uploadResponseDto.Token, GetHeader(downloadResponse, SecShareFileHeaders.FileId));
+        Assert.Equal("secshare", GetHeader(downloadResponse, SecShareFileHeaders.FileExtension));
+        Assert.Equal(fileBytes.LongLength.ToString(), GetHeader(downloadResponse, SecShareFileHeaders.FileSize));
+        Assert.Equal("0", GetHeader(downloadResponse, SecShareFileHeaders.DownloadsRemaining));
+        Assert.Equal(SecShareFileHeaders.EncryptedArchivePayloadType, GetHeader(downloadResponse, SecShareFileHeaders.PayloadType));
+        Assert.False(string.IsNullOrWhiteSpace(GetHeader(downloadResponse, SecShareFileHeaders.DeleteAt)));
+    }
+
+    [Fact]
     public async Task DualRoutes_UploadAndGet_WorkPerfectly()
     {
         AddConsoleHeaders();
@@ -228,14 +260,23 @@ public class StorageApiTests : BaseTest
     private static Dictionary<string, object> CreateUploadOptionsData(
         string expires = DefaultExpires,
         int downloads = DefaultDownloads,
-        bool hasPassword = false
+        bool hasPassword = false,
+        StorageContentType contentType = StorageContentType.File
     )
     {
         return new Dictionary<string, object>
         {
             { "Options.Expires", expires },
             { "Options.Downloads", downloads },
-            { "Options.HasPassword", hasPassword }
+            { "Options.HasPassword", hasPassword },
+            { "Options.ContentType", contentType }
         };
+    }
+
+    private static string? GetHeader(HttpResponseMessage response, string name)
+    {
+        return response.Headers.TryGetValues(name, out var values)
+            ? values.SingleOrDefault()
+            : null;
     }
 }

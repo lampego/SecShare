@@ -1,10 +1,12 @@
 using Api.Requests.Abstractions;
 using AspNetCore.ApiControllers.Abstractions;
+using SecShare.Business.Common.Headers;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Orm.Dao.Files;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Services.Queue.Handlers;
 using SecShare.Business.Services.Storage;
+using System.Globalization;
 
 namespace SecShare.Api.Controllers.Storage.Actions;
 
@@ -45,9 +47,26 @@ public class GetFileRequestHandler : IAsyncRequestHandler<GetFileRequest, FileRe
             await _queueService.PushDefaultAsync(new DeleteFileQueueContext { FileId = fileEntity.Id });
         }
 
-        return new FileResponse(fileStream, fileEntity.MimeType)
+        var response = new FileResponse(fileStream, fileEntity.MimeType)
         {
             FileDownloadName = fileEntity.OriginalFileName
         };
+        response.Headers[SecShareFileHeaders.ContentType] = fileEntity.ContentType.ToString();
+        response.Headers[SecShareFileHeaders.FileId] = fileEntity.Id.ToString();
+        response.Headers[SecShareFileHeaders.FileSize] = fileEntity.Size.ToString(CultureInfo.InvariantCulture);
+        response.Headers[SecShareFileHeaders.DownloadsRemaining] = downloadsRemaining.Value.ToString(CultureInfo.InvariantCulture);
+        response.Headers[SecShareFileHeaders.PayloadType] = SecShareFileHeaders.EncryptedArchivePayloadType;
+
+        if (!string.IsNullOrWhiteSpace(fileEntity.Extension))
+        {
+            response.Headers[SecShareFileHeaders.FileExtension] = fileEntity.Extension;
+        }
+
+        if (fileEntity.DeleteAt.HasValue)
+        {
+            response.Headers[SecShareFileHeaders.DeleteAt] = fileEntity.DeleteAt.Value.ToString("O", CultureInfo.InvariantCulture);
+        }
+
+        return response;
     }
 }

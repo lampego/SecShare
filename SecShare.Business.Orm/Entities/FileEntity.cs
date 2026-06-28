@@ -1,3 +1,4 @@
+using SecShare.Business.Common.Enums;
 using SecShare.Business.Orm.Core;
 
 namespace SecShare.Business.Orm.Entities;
@@ -10,6 +11,7 @@ public class FileEntity : AEntity
     public virtual required string OriginalFileName { get; set; }
     public virtual long Size { get; set; }
     public virtual int DownloadsRemaining { get; set; }
+    public virtual StorageContentType ContentType { get; set; } = StorageContentType.File;
     public virtual string? EncryptionAlgorithm { get; set; }
     public virtual string? EncryptionKeyId { get; set; }
     public virtual DateTime? DeleteAt { get; set; }

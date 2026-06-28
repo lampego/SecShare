@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
+using SecShare.Business.Common.Enums;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
 using SecShare.Console.Models.Archive;
@@ -14,6 +15,12 @@ namespace SecShare.Console.Commands;
 
 public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
 {
+    private sealed record DownloadCommandResult(
+        StorageContentType ContentType,
+        ZipArchiveExtractResult? ExtractResult,
+        string? Text
+    );
+
     public sealed class Settings : CommandSettings
     {
         [CommandArgument(0, "<url>")]
@@ -28,7 +35,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        ZipArchiveExtractResult result;
+        DownloadCommandResult result;
         try
         {
             var link = new SecShareDownloadLinkParser().Parse(settings.Url);
@@ -56,7 +63,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                 .StartAsync(async ctx =>
                 {
                     var downloadTask = ctx.AddTask("Downloading encrypted payload...", autoStart: true);
-                    var encryptedPayload = await secShareHttpClient.DownloadAsync(
+                    var downloadResult = await secShareHttpClient.DownloadAsync(
                         link.PayloadUri,
                         progress => TransferProgressUi.Update(
                             downloadTask,
@@ -66,8 +73,17 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                     Complete(downloadTask);
 
                     var decryptTask = ctx.AddTask("Decrypting data...", autoStart: true);
-                    var archiveBytes = packageService.Decrypt(encryptedPayload, decryptionKey);
+                    var archiveBytes = packageService.Decrypt(downloadResult.EncryptedPayload, decryptionKey);
                     Complete(decryptTask);
+
+                    if (downloadResult.ContentType == StorageContentType.Text)
+                    {
+                        var textTask = ctx.AddTask("Reading text...", autoStart: true);
+                        var text = await archiveService.ReadTextAsync(archiveBytes, cancellationToken);
+                        Complete(textTask);
+
+                        return new DownloadCommandResult(StorageContentType.Text, null, text);
+                    }
 
                     var extractTask = ctx.AddTask("Extracting files...", autoStart: true);
                     var extractResult = await archiveService.ExtractAsync(
@@ -76,7 +92,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                         cancellationToken);
                     Complete(extractTask);
 
-                    return extractResult;
+                    return new DownloadCommandResult(downloadResult.ContentType, extractResult, null);
                 });
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
@@ -105,15 +121,27 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             return 1;
         }
 
+        if (result.ContentType == StorageContentType.Text)
+        {
+            AnsiConsole.Write(new Panel(Markup.Escape(result.Text ?? string.Empty))
+                .Header("[bold green]Downloaded text[/]")
+                .Border(BoxBorder.Rounded)
+                .BorderColor(Color.Green));
+
+            return 0;
+        }
+
+        var extractResult = result.ExtractResult
+            ?? throw new InvalidOperationException("Download did not produce extracted files.");
         var extractedPaths = string.Join(
             Environment.NewLine,
-            result.ExtractedPaths.Select(path => $"[cyan]{Markup.Escape(path)}[/]"));
+            extractResult.ExtractedPaths.Select(path => $"[cyan]{Markup.Escape(path)}[/]"));
         var summary = new Markup(
             $"""
             [green]Downloaded content was decrypted and extracted.[/]
 
-            Files: [yellow]{result.FileCount}[/]
-            Size: [yellow]{TransferProgressUi.FormatBytes(result.ExtractedSizeBytes)}[/]
+            Files: [yellow]{extractResult.FileCount}[/]
+            Size: [yellow]{TransferProgressUi.FormatBytes(extractResult.ExtractedSizeBytes)}[/]
             Saved:
             {extractedPaths}
             """);

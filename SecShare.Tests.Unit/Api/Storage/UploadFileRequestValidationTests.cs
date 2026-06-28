@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
+using SecShare.Business.Common.Enums;
 using SecShare.Api.Dto.RequestResponse.Storage;
 
 namespace SecShare.Tests.Unit.Api.Storage;
@@ -111,6 +112,20 @@ public sealed class UploadFileRequestValidationTests
     }
 
     [Fact]
+    public void Validate_WithInvalidContentType_ReturnsContentTypeError()
+    {
+        var request = new UploadFileRequest
+        {
+            File = CreateFormFile([1]),
+            Options = CreateOptions(contentType: (StorageContentType)999)
+        };
+
+        var results = Validate(request);
+
+        Assert.Contains(results, result => result.MemberNames.Contains(nameof(UploadFileOptions.ContentType)));
+    }
+
+    [Fact]
     public void Validate_WithRequiredFileAndOptions_ReturnsNoErrors()
     {
         var request = new UploadFileRequest
@@ -161,13 +176,15 @@ public sealed class UploadFileRequestValidationTests
 
     private static UploadFileOptions CreateOptions(
         string expires = "24h",
-        int downloads = 1
+        int downloads = 1,
+        StorageContentType contentType = StorageContentType.File
     )
     {
         return new UploadFileOptions
         {
             Expires = expires,
-            Downloads = downloads
+            Downloads = downloads,
+            ContentType = contentType
         };
     }
 

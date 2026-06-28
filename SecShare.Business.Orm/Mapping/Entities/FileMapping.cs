@@ -1,3 +1,4 @@
+using SecShare.Business.Common.Enums;
 using SecShare.Business.Orm.Entities;
 using SecShare.Business.Orm.Extensions;
 using SecShare.Business.Orm.Mapping.Common;
@@ -16,6 +17,7 @@ public class FileMapping : BaseGuidMappings<FileEntity>
         Map(x => x.OriginalFileName).Not.Nullable();
         Map(x => x.Size).Not.Nullable();
         Map(x => x.DownloadsRemaining).Not.Nullable();
+        Map(x => x.ContentType).Enum<StorageContentType>();
         Map(x => x.EncryptionAlgorithm).Nullable();
         Map(x => x.EncryptionKeyId).Nullable();
         Map(x => x.DeleteAt).DateTimeNullable();

@@ -19,5 +19,6 @@
     <ItemGroup>
       <ProjectReference Include="..\Domain.Abstractions\Domain.Abstractions.csproj" />
       <ProjectReference Include="..\Persistence.Transactions.Behaviors\Persistence.Transactions.Behaviors.csproj" />
+      <ProjectReference Include="..\SecShare.Business.Common\SecShare.Business.Common.csproj" />
     </ItemGroup>
 </Project>

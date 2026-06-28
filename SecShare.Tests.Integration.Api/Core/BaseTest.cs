@@ -9,7 +9,6 @@ using Persistence.Transactions.Behaviors;
 using SecShare.Business.Testing.Services;
 using HttpClient = System.Net.Http.HttpClient;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace SecShare.Tests.Integration.Api.Core;
 

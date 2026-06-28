@@ -1,4 +1,4 @@
-namespace SecShare.Api.Common.Dto.Storage;
+namespace SecShare.Business.Common.Dto.Storage;
 
 public static class UploadFileExpiration
 {

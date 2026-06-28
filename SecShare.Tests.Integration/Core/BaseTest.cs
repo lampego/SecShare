@@ -10,7 +10,6 @@ using SecShare.Business.Helpers;
 using SecShare.Business.Testing;
 using SecShare.Business.Testing.Services;
 
-[assembly: CollectionBehavior(DisableTestParallelization = true)]
 
 namespace SecShare.Tests.Integration.Core;
 

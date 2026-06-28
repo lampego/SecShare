@@ -12,4 +12,6 @@ public interface IZipArchiveService
         byte[] archiveBytes,
         string destinationPath,
         CancellationToken cancellationToken);
+
+    Task<string> ReadTextAsync(byte[] archiveBytes, CancellationToken cancellationToken);
 }

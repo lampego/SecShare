@@ -147,6 +147,32 @@ public sealed class ZipArchiveService : IZipArchiveService
         }
     }
 
+    public async Task<string> ReadTextAsync(byte[] archiveBytes, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(archiveBytes);
+
+        await using var stream = new MemoryStream(archiveBytes, writable: false);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+        var fileEntries = archive.Entries
+            .Where(entry => !IsDirectory(entry))
+            .ToArray();
+
+        if (fileEntries.Length != 1)
+        {
+            throw new InvalidDataException("Text archive must contain exactly one file.");
+        }
+
+        var entry = fileEntries[0];
+        if (entry.Length > MaxSourceSizeBytes)
+        {
+            throw new InvalidOperationException("Text content size must not exceed 200 MB.");
+        }
+
+        await using var entryStream = await entry.OpenAsync(cancellationToken);
+        using var reader = new StreamReader(entryStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return await reader.ReadToEndAsync(cancellationToken);
+    }
+
     private static async Task<byte[]> CreateArchiveAsync(
         IReadOnlyCollection<ArchiveFileItem> items,
         CancellationToken cancellationToken,

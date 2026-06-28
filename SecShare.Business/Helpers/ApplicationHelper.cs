@@ -22,7 +22,7 @@ public static class ApplicationHelper
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json")
 #if DEBUG
-            .AddJsonFile("appsettings.Debug.json", optional: true, reloadOnChange: true)
+            .AddJsonFile("appsettings.Debug.json", optional: true, reloadOnChange: false)
 #endif
             .AddJsonFile($"appsettings.{HostingEnvironment}.json", optional: true)
             .AddJsonFile("appsettings.Testing.json", optional: true)

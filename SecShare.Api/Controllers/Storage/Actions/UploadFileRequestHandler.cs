@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Api.Requests.Abstractions;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Queue;
@@ -43,6 +43,7 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
             $"{Guid.CreateVersion7()}.secshare"
         );
         fileEntity.DownloadsRemaining = request.Options.Downloads;
+        fileEntity.ContentType = request.Options.ContentType;
 
         if (!UploadFileExpiration.TryParse(request.Options.Expires, out var expiresIn))
         {
@@ -102,4 +103,5 @@ public class UploadFileRequestHandler : IAsyncRequestHandler<UploadFileRequest, 
             yield return $"Options.{memberName}: {errorMessage}";
         }
     }
+
 }

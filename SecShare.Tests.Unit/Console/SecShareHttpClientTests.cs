@@ -1,6 +1,8 @@
 using System.Net;
 using System.Text;
-using SecShare.Api.Common.Dto.Storage;
+using SecShare.Business.Common.Dto.Storage;
+using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Headers;
 using SecShare.Business.Exceptions;
 using SecShare.Console;
 using SecShare.Console.Models.Http;
@@ -28,6 +30,7 @@ public sealed class SecShareHttpClientTests
             Assert.Contains("file", formValues.Keys);
             Assert.Equal("24h", formValues["Options.Expires"]);
             Assert.Equal("1", formValues["Options.Downloads"]);
+            Assert.Equal("File", formValues["Options.ContentType"]);
             Assert.DoesNotContain("Options.SourceName", formValues.Keys);
             Assert.DoesNotContain("Options.HasPassword", formValues.Keys);
             Assert.DoesNotContain(
@@ -85,16 +88,54 @@ public sealed class SecShareHttpClientTests
         using var httpClient = CreateHttpClient(handler);
         var client = new SecShareHttpClient(httpClient);
 
-        var payload = await client.DownloadAsync(
+        var result = await client.DownloadAsync(
             new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/token"),
             progress.Add,
             CancellationToken.None);
 
-        Assert.Equal(expectedPayload, payload);
+        Assert.Equal(expectedPayload, result.EncryptedPayload);
+        Assert.Equal(StorageContentType.File, result.ContentType);
         Assert.NotEmpty(progress);
         Assert.Equal(expectedPayload.LongLength, progress[^1].BytesTransferred);
         Assert.Equal(expectedPayload.LongLength, progress[^1].TotalBytes);
         Assert.True(progress[^1].BytesPerSecond >= 0);
+    }
+
+    [Fact]
+    public async Task DownloadAsync_ReadsMetadataHeaders()
+    {
+        var expectedDeleteAt = DateTime.UtcNow;
+        var handler = new StubHttpMessageHandler((_, _) =>
+        {
+            var response = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent("payload"u8.ToArray()),
+            };
+            response.Headers.Add(SecShareFileHeaders.ContentType, StorageContentType.Text.ToString());
+            response.Headers.Add(SecShareFileHeaders.FileId, "file-id");
+            response.Headers.Add(SecShareFileHeaders.FileExtension, "secshare");
+            response.Headers.Add(SecShareFileHeaders.FileSize, "123");
+            response.Headers.Add(SecShareFileHeaders.DownloadsRemaining, "4");
+            response.Headers.Add(SecShareFileHeaders.DeleteAt, expectedDeleteAt.ToString("O"));
+            response.Headers.Add(SecShareFileHeaders.PayloadType, SecShareFileHeaders.EncryptedArchivePayloadType);
+
+            return Task.FromResult(response);
+        });
+        using var httpClient = CreateHttpClient(handler);
+        var client = new SecShareHttpClient(httpClient);
+
+        var result = await client.DownloadAsync(
+            new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/token"),
+            progress: null,
+            CancellationToken.None);
+
+        Assert.Equal(StorageContentType.Text, result.ContentType);
+        Assert.Equal("file-id", result.FileId);
+        Assert.Equal("secshare", result.Extension);
+        Assert.Equal(123, result.Size);
+        Assert.Equal(4, result.DownloadsRemaining);
+        Assert.Equal(expectedDeleteAt, result.DeleteAt);
+        Assert.Equal(SecShareFileHeaders.EncryptedArchivePayloadType, result.PayloadType);
     }
 
     [Fact]

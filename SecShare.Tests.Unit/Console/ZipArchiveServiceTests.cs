@@ -71,6 +71,22 @@ public sealed class ZipArchiveServiceTests
     }
 
     [Fact]
+    public async Task CreateFromTextAndReadText_RestoresOriginalTextWithoutExtractingFiles()
+    {
+        var archive = await this.zipArchiveService.CreateFromTextAsync(
+            "secret message",
+            CancellationToken.None);
+
+        var text = await this.zipArchiveService.ReadTextAsync(
+            archive.ArchiveBytes,
+            CancellationToken.None);
+
+        Assert.Equal("secret message", text);
+        Assert.Equal(1, archive.FileCount);
+        Assert.Equal("message.txt", archive.SourceName);
+    }
+
+    [Fact]
     public async Task CreateFromPathAsync_WhenTotalSizeExceedsLimit_ThrowsInvalidOperationException()
     {
         var directory = CreateTempDirectory();
