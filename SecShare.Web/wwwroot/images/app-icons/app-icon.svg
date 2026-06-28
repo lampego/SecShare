@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="SecShare app icon">
+  <title>SecShare app icon</title>
+  <rect width="256" height="256" rx="52" fill="#2563EB"/>
+  <path d="M128 32 L198 62 V116 C198 166 169 204 128 224 C87 204 58 166 58 116 V62 Z"
+        fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linejoin="round"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="12">
+    <path d="M112 142 L98 156 C87 167 70 150 81 139 L95 125 C104 116 118 116 128 124"
+          stroke="#FFFFFF"/>
+    <path d="M142 113 L158 97 C169 86 186 103 175 114 L159 130 C150 139 136 139 126 131"
+          stroke="#B6F3EE"/>
+    <path d="M106 134 L151 123" stroke="#FFFFFF"/>
+  </g>
+</svg>
