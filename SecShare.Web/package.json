@@ -1,0 +1,13 @@
+{
+  "name": "secshare-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "build:css": "npx @tailwindcss/cli -i ./styles/app.css -o ./wwwroot/css/app.min.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "~4.2.1",
+    "tailwindcss": "~4.2.1"
+  }
+}

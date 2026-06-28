@@ -1,7 +1,33 @@
-﻿@page "/"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>SecShare - Secure file and secret sharing for developers</PageTitle>
+<HeadContent>
+    <meta name="description" content="Share encrypted files and secrets from the terminal with client-side encryption, expiring links, and browser-friendly receive flows." />
+    <script type="application/ld+json">
+        {
+          "@@context": "https://schema.org",
+          "@@type": "SoftwareApplication",
+          "name": "SecShare",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Linux, macOS, Windows",
+          "description": "CLI-first secure file and secret sharing with client-side encryption and temporary links.",
+          "url": "https://secshare.me/",
+          "license": "https://www.apache.org/licenses/LICENSE-2.0"
+        }
+    </script>
+</HeadContent>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+<div class="min-h-screen overflow-hidden bg-[#f7f8f5] text-[#13201d]">
+    <SiteHeader />
+    <main>
+        <HeroSection />
+        <UseCasesSection />
+        <MessengerSection />
+        <HowItWorksSection />
+        <CliExamplesSection />
+        <SecuritySection />
+        <FeaturesSection />
+        <FinalCtaSection />
+    </main>
+    <SiteFooter />
+</div>

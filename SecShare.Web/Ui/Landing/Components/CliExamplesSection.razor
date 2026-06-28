@@ -1,0 +1,18 @@
+<section id="cli" class="border-b border-[#dce5da] py-16">
+    <div class="section-shell grid gap-10 lg:grid-cols-[0.82fr_1.18fr]">
+        <div>
+            <p class="font-mono text-sm font-semibold uppercase tracking-normal text-[#0f766e]">CLI</p>
+            <h2 class="mt-3 text-3xl font-semibold tracking-normal text-[#13201d] md:text-4xl">Built around short commands</h2>
+            <p class="mt-5 text-lg leading-8 text-[#52625d]">
+                Commands are examples and may change as the CLI stabilizes. The intended workflow stays simple: install, upload, share, expire.
+            </p>
+        </div>
+
+        <div class="space-y-4">
+            <CodeExample Title="Install" Command="curl -fsSL https://secshare.me/install.sh | sh" />
+            <CodeExample Title="Upload file" Command="secshare upload ./report.zip --expires 24h" />
+            <CodeExample Title="Upload secret" Command="secshare upload &quot;DATABASE_URL=postgres://...&quot; --text --expires 1h --downloads 1" />
+            <CodeExample Title="Download" Command="secshare get &quot;https://secshare.me/f/019f...#key&quot;" />
+        </div>
+    </div>
+</section>

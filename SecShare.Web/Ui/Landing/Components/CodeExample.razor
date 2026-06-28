@@ -1,0 +1,15 @@
+<div class="rounded-lg border border-[#dce5da] bg-white p-4 shadow-sm">
+    <div class="mb-3 flex items-center justify-between gap-4">
+        <p class="text-sm font-semibold text-[#13201d]">@Title</p>
+        <span class="rounded-md bg-[#eef8f2] px-2 py-1 font-mono text-[11px] font-semibold uppercase text-[#0f766e]">CLI</span>
+    </div>
+    <pre class="overflow-x-auto rounded-md bg-[#101816] p-4 text-sm leading-6 text-[#d7f5ea]"><code><span class="text-[#74c69d]">$</span> @Command</code></pre>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Command { get; set; } = string.Empty;
+}

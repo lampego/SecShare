@@ -1,0 +1,40 @@
+<section id="security" class="border-b border-[#dce5da] bg-white/55 py-16">
+    <div class="section-shell grid gap-10 lg:grid-cols-[1fr_1fr] lg:items-start">
+        <div>
+            <p class="font-mono text-sm font-semibold uppercase tracking-normal text-[#0f766e]">Security model</p>
+            <h2 class="mt-3 text-3xl font-semibold tracking-normal text-[#13201d] md:text-4xl">
+                Designed so the server cannot read your files
+            </h2>
+            <ul class="mt-6 space-y-3 text-base leading-7 text-[#52625d]">
+                <li>Files are encrypted before upload.</li>
+                <li>Decryption key is stored in the URL fragment after #.</li>
+                <li>URL fragment is not sent to the server in normal HTTP requests.</li>
+                <li>Server stores only encrypted blobs.</li>
+                <li>Expiration and download limits reduce long-term exposure.</li>
+                <li>If the key is lost, the file cannot be decrypted.</li>
+            </ul>
+        </div>
+
+        <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-6 shadow-sm">
+            <p class="font-mono text-sm font-semibold text-[#13201d]">URL anatomy</p>
+            <div class="mt-5 overflow-hidden rounded-lg border border-[#dce5da] bg-white">
+                <div class="break-all border-b border-[#dce5da] p-4 font-mono text-sm leading-7">
+                    <span class="text-[#52625d]">https://secshare.me/f/</span><span class="rounded bg-[#dff5ea] px-1 text-[#0f766e]">file-id</span><span class="rounded bg-[#fff0cc] px-1 text-[#8a5b12]">#decryption-key</span>
+                </div>
+                <div class="grid gap-0 sm:grid-cols-2">
+                    <div class="border-b border-[#dce5da] p-4 sm:border-b-0 sm:border-r">
+                        <p class="font-semibold text-[#13201d]">file-id</p>
+                        <p class="mt-2 text-sm leading-6 text-[#52625d]">Sent to server to locate the encrypted blob.</p>
+                    </div>
+                    <div class="p-4">
+                        <p class="font-semibold text-[#13201d]">decryption-key</p>
+                        <p class="mt-2 text-sm leading-6 text-[#52625d]">Stays in browser or CLI as the URL fragment.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-5 text-sm leading-6 text-[#6d5521]">
+                SecShare reduces risk. It does not remove the need to protect the full link.
+            </p>
+        </div>
+    </div>
+</section>

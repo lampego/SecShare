@@ -5,6 +5,7 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+        <LangVersion>14</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -15,5 +16,30 @@
     <ItemGroup>
       <_ContentIncludedByDefault Remove="wwwroot\installer\install.md" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <TailwindInputCss>$(ProjectDir)styles\app.css</TailwindInputCss>
+        <TailwindOutputCss>$(ProjectDir)wwwroot\css\app.min.css</TailwindOutputCss>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <TailwindSourceFiles Include="**\*.razor;wwwroot\index.html" Exclude="bin\**;obj\**;node_modules\**" />
+    </ItemGroup>
+
+    <Target Name="Npm" BeforeTargets="TailwindCssBuild" Condition="!Exists('$(ProjectDir)node_modules')">
+        <Message Text="Running npm install..." Importance="high" />
+        <Exec Command="npm install" WorkingDirectory="$(ProjectDir)" />
+    </Target>
+
+    <Target
+        Name="TailwindCssBuild"
+        BeforeTargets="CoreCompile;PrepareForPublish"
+        DependsOnTargets="Npm"
+        Inputs="$(TailwindInputCss);@(TailwindSourceFiles)"
+        Outputs="$(TailwindOutputCss)">
+        <Message Text="Building Tailwind CSS..." Importance="high" />
+        <Exec Command="npx @tailwindcss/cli -i $(TailwindInputCss) -o $(TailwindOutputCss) --minify" WorkingDirectory="$(ProjectDir)" />
+        <Touch Files="$(TailwindOutputCss)" AlwaysCreate="true" />
+    </Target>
 
 </Project>

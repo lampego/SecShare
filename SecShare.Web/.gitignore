@@ -1,2 +1,9 @@
 bin/*
 obj/*
+package-lock.json
+node_modules
+wwwroot/css/**/*
+wwwroot/lib/**/*
+Ui/Shared/**/*.razor.css
+Ui/Pages/**/*.razor.css
+Ignore/**/*.razor.css

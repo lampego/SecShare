@@ -1,0 +1,67 @@
+<section class="relative border-b border-[#dce5da]">
+    <div class="section-shell grid gap-12 py-16 md:py-20 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
+        <div>
+            <p class="inline-flex rounded-md border border-[#bfd7c9] bg-[#eef8f2] px-3 py-1 font-mono text-xs font-semibold uppercase tracking-normal text-[#0f766e]">
+                CLI-first, browser-friendly, encrypted before upload
+            </p>
+            <h1 class="mt-7 max-w-3xl text-5xl font-semibold leading-[1.04] tracking-normal text-[#13201d] md:text-6xl">
+                Share encrypted files from terminal or browser
+            </h1>
+            <p class="mt-6 max-w-2xl text-lg leading-8 text-[#52625d]">
+                SecShare lets you upload files and secrets with client-side encryption, expiring links, and a simple CLI workflow.
+            </p>
+            <div class="mt-9 flex flex-col gap-3 sm:flex-row">
+                <a href="#cli" class="focus-ring inline-flex justify-center rounded-md bg-[#13201d] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530]">
+                    Install CLI
+                </a>
+                <a href="#example" class="focus-ring inline-flex justify-center rounded-md border border-[#cbd8cf] bg-white px-5 py-3 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+                    See example
+                </a>
+            </div>
+            <dl class="mt-10 grid max-w-2xl grid-cols-3 gap-3 text-sm">
+                <div class="rounded-lg border border-[#dce5da] bg-white/70 p-4">
+                    <dt class="font-mono text-xs uppercase text-[#6b7c75]">Server</dt>
+                    <dd class="mt-1 font-semibold text-[#13201d]">No key</dd>
+                </div>
+                <div class="rounded-lg border border-[#dce5da] bg-white/70 p-4">
+                    <dt class="font-mono text-xs uppercase text-[#6b7c75]">Links</dt>
+                    <dd class="mt-1 font-semibold text-[#13201d]">Temporary</dd>
+                </div>
+                <div class="rounded-lg border border-[#dce5da] bg-white/70 p-4">
+                    <dt class="font-mono text-xs uppercase text-[#6b7c75]">Flow</dt>
+                    <dd class="mt-1 font-semibold text-[#13201d]">CLI-first</dd>
+                </div>
+            </dl>
+        </div>
+
+        <div id="example" class="rounded-lg border border-[#263a36] bg-[#101816] p-4 shadow-2xl shadow-[#4b665d]/20 terminal-grid">
+            <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                <div class="flex gap-2" aria-hidden="true">
+                    <span class="h-3 w-3 rounded-full bg-[#f0a35b]"></span>
+                    <span class="h-3 w-3 rounded-full bg-[#e3d65c]"></span>
+                    <span class="h-3 w-3 rounded-full bg-[#74c69d]"></span>
+                </div>
+                <span class="font-mono text-xs text-[#8ba39b]">secshare upload</span>
+            </div>
+            <div class="space-y-6 p-2 pt-6 font-mono text-sm leading-7 text-[#d7f5ea] sm:text-base">
+                <p><span class="text-[#74c69d]">$</span> secshare upload ./backup.zip --expires 24h</p>
+                <div class="rounded-md border border-white/10 bg-black/20 p-4">
+                    <p class="text-[#8ba39b]">Encrypted locally. Uploaded encrypted blob.</p>
+                    <p class="mt-3 break-all">
+                        <span class="text-[#c4f1da]">https://secshare.me/f/019f0969-3c88-7ab7-96fc-d94d82c41c40</span><span class="text-[#f0a35b]">#PoO4eeGS...</span>
+                    </p>
+                </div>
+                <div class="grid gap-3 text-xs sm:grid-cols-2">
+                    <div class="rounded-md border border-[#2d5147] bg-[#14221f] p-3">
+                        <p class="font-semibold text-[#c4f1da]">file id</p>
+                        <p class="mt-1 text-[#8ba39b]">sent to server</p>
+                    </div>
+                    <div class="rounded-md border border-[#6b4b25] bg-[#241b12] p-3">
+                        <p class="font-semibold text-[#ffd7a1]">#decryption key</p>
+                        <p class="mt-1 text-[#c0a783]">stays in fragment</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

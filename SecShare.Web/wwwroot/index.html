@@ -4,29 +4,40 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SecShare.Web</title>
+    <title>SecShare - Secure file and secret sharing for developers</title>
+    <meta name="description" content="SecShare is a CLI-first service for sharing encrypted files and secrets with client-side encryption, expiring links, and browser-friendly downloads." />
+    <meta name="keywords" content="secure file sharing, encrypted file sharing, CLI file sharing, secret sharing, developer tools" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:title" content="SecShare - Secure file and secret sharing for developers" />
+    <meta property="og:description" content="Upload files from the terminal, encrypt before upload, and share temporary links that keep the decryption key out of server requests." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://secshare.me/" />
+    <meta property="og:image" content="https://secshare.me/icon-192.png" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="SecShare" />
+    <meta name="twitter:description" content="CLI-first, browser-friendly encrypted file sharing for developers." />
+    <link rel="canonical" href="https://secshare.me/" />
     <base href="/" />
     <link rel="preload" id="webassembly" />
-    <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/app.min.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="SecShare.Web.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
 </head>
 
 <body>
-    <div id="app">
-        <svg class="loading-progress">
-            <circle r="40%" cx="50%" cy="50%" />
-            <circle r="40%" cx="50%" cy="50%" />
-        </svg>
-        <div class="loading-progress-text"></div>
+    <div id="app" class="min-h-screen bg-[#f7f8f5] text-[#13201d]">
+        <div class="flex min-h-screen items-center justify-center px-6">
+            <div class="w-full max-w-sm rounded-lg border border-[#d8e2d7] bg-white/80 p-6 text-center shadow-sm">
+                <img src="icon-192.png" alt="SecShare" class="mx-auto mb-4 h-12 w-12" />
+                <p class="font-mono text-sm text-[#52625d]">Loading SecShare...</p>
+            </div>
+        </div>
     </div>
 
-    <div id="blazor-error-ui">
+    <div id="blazor-error-ui" class="fixed inset-x-0 bottom-0 z-50 hidden border-t border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 shadow-lg">
         An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
+        <a href="." class="reload underline">Reload</a>
+        <span class="dismiss absolute right-4 top-3 cursor-pointer">x</span>
     </div>
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
