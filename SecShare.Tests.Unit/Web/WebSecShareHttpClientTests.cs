@@ -1,8 +1,10 @@
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Exceptions;
 
 namespace SecShare.Tests.Unit.Web;
 
@@ -132,6 +134,67 @@ public sealed class WebSecShareHttpClientTests
         Assert.Equal(HttpStatusCode.Forbidden, ex.StatusCode);
     }
 
+    [Fact]
+    public async Task DownloadAsync_WhenApiReturnsFileNotFoundError_ThrowsDomainException()
+    {
+        var handler = new StubHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent(
+                    """{"status":"fail","message":"Decrypted data is unavailable","errorCode":"FileNotFoundDomainException"}""",
+                    Encoding.UTF8,
+                    "application/json"),
+            }));
+
+        var client = CreateClient(handler);
+
+        var ex = await Assert.ThrowsAsync<FileNotFoundDomainException>(
+            () => client.DownloadAsync("missing", progress: null, CancellationToken.None));
+
+        Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
+    }
+
+    [Fact]
+    public async Task DownloadAsync_WhenApiReturnsDownloadLimitError_ThrowsDomainException()
+    {
+        var handler = new StubHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
+            {
+                Content = new StringContent(
+                    """{"status":"fail","message":"Decrypted data is unavailable","errorCode":"DownloadLimitExhaustedDomainException"}""",
+                    Encoding.UTF8,
+                    "application/json"),
+            }));
+
+        var client = CreateClient(handler);
+
+        var ex = await Assert.ThrowsAsync<DownloadLimitExhaustedDomainException>(
+            () => client.DownloadAsync("token", progress: null, CancellationToken.None));
+
+        Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
+    }
+
+    [Fact]
+    public async Task DownloadAsync_WhenApiReturnsValidationError_ThrowsApiExceptionWithValidationMessage()
+    {
+        var handler = new StubHttpMessageHandler((_, _) =>
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.BadRequest)
+            {
+                Content = new StringContent(
+                    """{"Id":["Invalid file identifier format."]}""",
+                    Encoding.UTF8,
+                    "application/json"),
+            }));
+
+        var client = CreateClient(handler);
+
+        var ex = await Assert.ThrowsAsync<ApiException>(
+            () => client.DownloadAsync("bad-token", progress: null, CancellationToken.None));
+
+        Assert.Equal(HttpStatusCode.BadRequest, ex.StatusCode);
+        Assert.Contains("Id: Invalid file identifier format.", ex.Message);
+    }
+
     private static WebSecShareHttpClient CreateClient(HttpMessageHandler handler)
         => new(new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) });
 
@@ -145,4 +208,3 @@ public sealed class WebSecShareHttpClientTests
             => handler(request, cancellationToken);
     }
 }
-

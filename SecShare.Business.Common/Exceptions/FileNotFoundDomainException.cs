@@ -2,9 +2,9 @@ using System.Net;
 
 namespace SecShare.Business.Exceptions;
 
-public class FileDeletedDomainException : ApiException
+public class FileNotFoundDomainException : ApiException
 {
-    public FileDeletedDomainException(string message = "Decrypted data is unavailable")
+    public FileNotFoundDomainException(string message = "Decrypted data is unavailable")
         : base(
             message,
             HttpStatusCode.NotFound
@@ -12,4 +12,3 @@ public class FileDeletedDomainException : ApiException
     {
     }
 }
-

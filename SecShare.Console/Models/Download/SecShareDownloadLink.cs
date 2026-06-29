@@ -4,4 +4,5 @@ public sealed record SecShareDownloadLink(
     Uri ShareUri,
     Uri PayloadUri,
     string FileId,
-    string? EncryptionKey);
+    string? EncryptionKey
+);

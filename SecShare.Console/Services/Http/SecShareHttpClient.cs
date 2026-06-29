@@ -1,5 +1,3 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using SecShare.Business.Common.Http;
 using SecShare.Console.Services.Archive;
 
@@ -12,10 +10,4 @@ public sealed partial class SecShareHttpClient(HttpClient httpClient)
         ZipArchiveService.MaxSourceSizeBytes + (10L * 1024 * 1024);
 
     private readonly HttpClient _httpClient = httpClient;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true,
-        Converters = { new JsonStringEnumConverter() }
-    };
 }

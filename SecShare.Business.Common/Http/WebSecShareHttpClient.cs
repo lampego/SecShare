@@ -28,13 +28,7 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
 
-        if (!response.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException(
-                $"Download failed with status {(int)response.StatusCode}.",
-                inner: null,
-                statusCode: response.StatusCode);
-        }
+        await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
 
         var totalBytes = response.Content.Headers.ContentLength;
         if (totalBytes > MaxEncryptedPayloadSizeBytes)
@@ -68,4 +62,3 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
         return SecShareResponseParser.ParseDownloadResult(response, target.ToArray());
     }
 }
-

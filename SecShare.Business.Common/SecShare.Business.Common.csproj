@@ -7,4 +7,8 @@
         <LangVersion>14</LangVersion>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Domain.Abstractions\Domain.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

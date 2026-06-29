@@ -9,6 +9,7 @@ using SecShare.Business.Common.Crypto;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Exceptions;
 
 namespace SecShare.Web.Pages;
 
@@ -126,6 +127,11 @@ public partial class Receive : IAsyncDisposable
             });
             return;
         }
+        catch (ApiException ex)
+        {
+            SetError(ResolveDownloadErrorMessage(ex));
+            return;
+        }
         catch (OperationCanceledException)
         {
             return;
@@ -145,6 +151,22 @@ public partial class Receive : IAsyncDisposable
             _state = PageState.NeedKey;
             StateHasChanged();
         }
+    }
+
+    private static string ResolveDownloadErrorMessage(ApiException exception)
+    {
+        return exception switch
+        {
+            FileNotFoundDomainException or FileDeletedDomainException =>
+                "This link was not found or has already expired.",
+            DownloadLimitExhaustedDomainException =>
+                "The download limit for this link has been reached.",
+            _ when exception.StatusCode is HttpStatusCode.Forbidden or HttpStatusCode.Gone =>
+                "The download limit for this link has been reached.",
+            _ when exception.StatusCode == HttpStatusCode.NotFound =>
+                "This link was not found or has already expired.",
+            _ => "Failed to load the encrypted content. Please check the link and try again."
+        };
     }
 
     // ── Key input ─────────────────────────────────────────────────────────────

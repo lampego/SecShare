@@ -6,4 +6,5 @@ public sealed record UploadPackage(
     long SourceSizeBytes,
     long ArchiveSizeBytes,
     int FileCount,
-    string SourceName);
+    string SourceName
+);

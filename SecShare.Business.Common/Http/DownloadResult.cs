@@ -10,5 +10,6 @@ public sealed record DownloadResult(
     long? Size,
     int? DownloadsRemaining,
     DateTime? DeleteAt,
-    string? PayloadType);
+    string? PayloadType
+);
 
