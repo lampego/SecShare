@@ -6,23 +6,40 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
-using SecShare.Business.Common.Crypto;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
 using SecShare.Business.Exceptions;
+using SecShare.Web.Services.Crypto;
 
 namespace SecShare.Web.Pages;
 
 public partial class Receive : IAsyncDisposable
 {
+    private sealed record StageSnapshot(
+        PageState State,
+        ReadyKind ReadyKind,
+        string? KeyError,
+        string? ErrorMessage,
+        string? TextContent,
+        bool IsCopied,
+        byte[]? FileBytes,
+        string? FileName
+    );
+
     // ── Injected services ─────────────────────────────────────────────────────
 
     [Inject]
     private IJSRuntime JS { get; set; } = null!;
 
     [Inject]
+    private NavigationManager Navigation { get; set; } = null!;
+
+    [Inject]
     private ISecShareDownloadClient DownloadClient { get; set; } = null!;
+
+    [Inject]
+    private IWebCryptoService CryptoService { get; set; } = null!;
 
     [Inject]
     private ILogger<Receive> Logger { get; set; } = null!;
@@ -65,7 +82,11 @@ public partial class Receive : IAsyncDisposable
     private byte[]? _fileBytes;
     private string? _fileName;
 
+    private StageSnapshot? _previousStage;
     private readonly CancellationTokenSource _cts = new();
+
+    private bool CanShowBack
+        => _state is not PageState.Loading and not PageState.Decrypting;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
@@ -200,6 +221,7 @@ public partial class Receive : IAsyncDisposable
 
         _encryptionKey = trimmedKey;
         _isDecrypting = true;
+        StorePreviousStage();
         StateHasChanged();
 
         await DecryptAndProcessAsync();
@@ -226,13 +248,10 @@ public partial class Receive : IAsyncDisposable
         byte[] decryptedBytes;
         try
         {
-            var crypto = new CryptoService();
-            decryptedBytes = crypto.Decrypt(_downloadedData, _encryptionKey);
+            decryptedBytes = await CryptoService.DecryptAsync(_downloadedData, _encryptionKey);
         }
         catch (Exception ex) when (
-            ex is CryptographicException
-                or FormatException
-                or ArgumentException
+            IsInvalidDecryptionException(ex)
         )
         {
             Logger.LogWarning(ex, "Failed to decrypt payload for file {FileId}.", Id);
@@ -254,6 +273,15 @@ public partial class Receive : IAsyncDisposable
 
             return;
         }
+        catch (Exception ex) when (IsCryptoUnavailableException(ex))
+        {
+            Logger.LogWarning(ex, "AES-GCM decryption is not available in this browser environment for file {FileId}.", Id);
+            SetError(
+                "Local AES-GCM decryption is not available in this browser environment. " +
+                "Open this link in an up-to-date browser over HTTPS, or use the SecShare CLI."
+            );
+            return;
+        }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Unexpected error while decrypting payload for file {FileId}.", Id);
@@ -263,6 +291,21 @@ public partial class Receive : IAsyncDisposable
 
         await ProcessZipAsync(decryptedBytes);
     }
+
+    private static bool IsInvalidDecryptionException(Exception exception)
+        => exception is
+               CryptographicException
+               or FormatException
+               or ArgumentException
+           || exception.InnerException is not null
+           && IsInvalidDecryptionException(exception.InnerException);
+
+    private static bool IsCryptoUnavailableException(Exception exception)
+        => exception is
+               PlatformNotSupportedException
+               or NotSupportedException
+           || exception.InnerException is not null
+           && IsCryptoUnavailableException(exception.InnerException);
 
     // ── ZIP processing ────────────────────────────────────────────────────────
 
@@ -425,6 +468,49 @@ public partial class Receive : IAsyncDisposable
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private void OnBackClicked()
+    {
+        if (_previousStage is null || _previousStage.State == _state)
+        {
+            Navigation.NavigateTo("/receive");
+            return;
+        }
+
+        var stage = _previousStage;
+        _previousStage = null;
+
+        _state = stage.State;
+        _readyKind = stage.ReadyKind;
+        _keyError = stage.KeyError;
+        _errorMessage = stage.ErrorMessage;
+        _textContent = stage.TextContent;
+        _isCopied = stage.IsCopied;
+        _fileBytes = stage.FileBytes;
+        _fileName = stage.FileName;
+        _isDecrypting = false;
+
+        StateHasChanged();
+    }
+
+    private void StorePreviousStage()
+    {
+        if (_state is PageState.Loading or PageState.Decrypting)
+        {
+            return;
+        }
+
+        _previousStage = new StageSnapshot(
+            _state,
+            _readyKind,
+            _keyError,
+            _errorMessage,
+            _textContent,
+            _isCopied,
+            _fileBytes,
+            _fileName
+        );
+    }
 
     private void SetError(string message)
     {

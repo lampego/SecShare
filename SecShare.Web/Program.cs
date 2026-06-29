@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Logging;
 using SecShare.Business.Common.Http;
 using SecShare.Web;
+using SecShare.Web.Services.Crypto;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -37,6 +38,7 @@ builder.Services.AddScoped<WebSecShareHttpClient>(sp =>
     new WebSecShareHttpClient(sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped<ISecShareDownloadClient>(sp =>
     sp.GetRequiredService<WebSecShareHttpClient>());
+builder.Services.AddScoped<IWebCryptoService, WebCryptoService>();
 
 #if DEBUG
 builder.Logging.AddBrowserConsole()
