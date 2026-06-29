@@ -39,10 +39,12 @@ public class DbConnectionFactory : IDbConnectionFactory
         return Fluently.Configure()
             .Database(PostgreSQLConfiguration.PostgreSQL83
                 .Dialect<CustomPostgresSqlDialect>()
-                .ConnectionString(_connectionString))
+                .ConnectionString(_connectionString)
+            )
             .Mappings(m => m.FluentMappings
                 .AddFromAssemblyOf<BusinessOrmAssemblyMarker>()
-                .Conventions.Add<SnakeCaseConvention>())
+                .Conventions.Add<SnakeCaseConvention>()
+            )
             .BuildSessionFactory();
     }
 }

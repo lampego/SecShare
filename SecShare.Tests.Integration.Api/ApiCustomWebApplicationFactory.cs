@@ -31,13 +31,15 @@ public class ApiCustomWebApplicationFactory : WebApplicationFactory<TestStartup>
                 {
                     source.ReloadOnChange = false;
                 }
-            })
+            }
+            )
             .ConfigureWebHostDefaults(builder =>
             {
                 builder
                     .UseStartup<TestStartup>()
                     .ConfigureTestServices(services => services.AddHttpContextAccessor())
                     .UseTestServer();
-            });
+            }
+            );
     }
 }

@@ -15,7 +15,8 @@ public static class SecShareHttpErrorParser
 
     public static async Task EnsureSuccessResponseAsync(
         HttpResponseMessage response,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         if (response.IsSuccessStatusCode)
         {
@@ -35,7 +36,8 @@ public static class SecShareHttpErrorParser
         throw new HttpRequestException(
             $"Request failed with status {(int)response.StatusCode}.",
             inner: null,
-            statusCode: response.StatusCode);
+            statusCode: response.StatusCode
+        );
     }
 
     public static bool TryParseCommonError(

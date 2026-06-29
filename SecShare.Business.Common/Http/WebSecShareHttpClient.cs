@@ -15,7 +15,8 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
     public async Task<DownloadResult> DownloadAsync(
         string fileId,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(fileId);
 
@@ -26,7 +27,8 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
         using var response = await httpClient.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
+            cancellationToken
+        );
 
         await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
 

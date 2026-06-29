@@ -13,10 +13,12 @@ public sealed class UploadShareLinkBuilderTests
 
         Assert.Equal(
             $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token#base64UrlKey",
-            links.FullSecureLink);
+            links.FullSecureLink
+        );
         Assert.Equal(
             $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token",
-            links.Link);
+            links.Link
+        );
         Assert.Equal("base64UrlKey", links.DecryptionKey);
     }
 

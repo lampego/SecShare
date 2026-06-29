@@ -59,7 +59,8 @@ public partial class ReceiveLanding
 
             if (segments.Length == 2
                 && string.Equals(segments[0], "f", StringComparison.OrdinalIgnoreCase)
-                && !string.IsNullOrWhiteSpace(segments[1]))
+                && !string.IsNullOrWhiteSpace(segments[1])
+            )
             {
                 // Rebuild as relative URL so we stay on the current origin.
                 targetUrl = $"/f/{Uri.EscapeDataString(Uri.UnescapeDataString(segments[1]))}{absolute.Fragment}";
@@ -80,7 +81,8 @@ public partial class ReceiveLanding
 
                 if (segments.Length == 2
                     && string.Equals(segments[0], "f", StringComparison.OrdinalIgnoreCase)
-                    && !string.IsNullOrWhiteSpace(segments[1]))
+                    && !string.IsNullOrWhiteSpace(segments[1])
+                )
                 {
                     targetUrl = $"/f/{Uri.EscapeDataString(Uri.UnescapeDataString(segments[1]))}{combined.Fragment}";
                     return true;

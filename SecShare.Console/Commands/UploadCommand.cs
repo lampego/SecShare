@@ -98,7 +98,8 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                     var uploadTask = ctx.AddTask(
                         $"Uploading to {SecShareConstants.ServiceBaseUri.Host}...",
                         autoStart: true,
-                        maxValue: Math.Max(createdPackage.EncryptedPayload.LongLength, 1));
+                        maxValue: Math.Max(createdPackage.EncryptedPayload.LongLength, 1)
+                    );
                     var result = await secShareHttpClient.UploadAsync(
                         createdPackage.EncryptedPayload,
                         new UploadFileOptions
@@ -110,8 +111,10 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                         progress => TransferProgressUi.Update(
                             uploadTask,
                             $"Uploading to {SecShareConstants.ServiceBaseUri.Host}...",
-                            progress),
-                        cancellationToken);
+                            progress
+                        ),
+                        cancellationToken
+                    );
                     Complete(uploadTask);
 
                     return (createdPackage, result);

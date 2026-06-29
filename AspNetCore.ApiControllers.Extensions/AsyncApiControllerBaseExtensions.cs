@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Api.Requests.Abstractions;
 using AspNetCore.ApiControllers.Abstractions;
@@ -10,7 +10,8 @@ namespace AspNetCore.ApiControllers.Extensions
     {
         public static Task<IActionResult> RequestAsync<TRequest, TResponse>(
             this ApiControllerBase apiController,
-            TRequest request)
+            TRequest request
+        )
             where TRequest : IRequest<TResponse>
             where TResponse : IResponse
             => apiController
@@ -19,7 +20,8 @@ namespace AspNetCore.ApiControllers.Extensions
         public static Task<IActionResult> RequestAsync<TRequest, TResponse>(
             this ApiControllerBase apiController,
             TRequest request,
-            Func<TResponse, IActionResult> success)
+            Func<TResponse, IActionResult> success
+        )
             where TRequest : IRequest<TResponse>
             where TResponse : IResponse
             => apiController.RequestAsync<ApiControllerBase, TRequest, TResponse>(request, success);

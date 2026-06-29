@@ -19,11 +19,13 @@ public sealed class ZipArchiveServiceTests
 
             var archive = await this.zipArchiveService.CreateFromPathAsync(
                 sourcePath,
-                CancellationToken.None);
+                CancellationToken.None
+            );
             var result = await this.zipArchiveService.ExtractAsync(
                 archive.ArchiveBytes,
                 destinationPath,
-                CancellationToken.None);
+                CancellationToken.None
+            );
 
             var extractedPath = Path.Combine(destinationPath, "document.txt");
             Assert.Equal("file content", await File.ReadAllTextAsync(extractedPath));
@@ -51,11 +53,13 @@ public sealed class ZipArchiveServiceTests
 
             var archive = await this.zipArchiveService.CreateFromPathAsync(
                 sourcePath,
-                CancellationToken.None);
+                CancellationToken.None
+            );
             var result = await this.zipArchiveService.ExtractAsync(
                 archive.ArchiveBytes,
                 destinationPath,
-                CancellationToken.None);
+                CancellationToken.None
+            );
 
             var extractedRoot = Path.Combine(destinationPath, "source");
             Assert.Equal("root", await File.ReadAllTextAsync(Path.Combine(extractedRoot, "root.txt")));
@@ -75,11 +79,13 @@ public sealed class ZipArchiveServiceTests
     {
         var archive = await this.zipArchiveService.CreateFromTextAsync(
             "secret message",
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
         var text = await this.zipArchiveService.ReadTextAsync(
             archive.ArchiveBytes,
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
         Assert.Equal("secret message", text);
         Assert.Equal(1, archive.FileCount);
@@ -99,7 +105,8 @@ public sealed class ZipArchiveServiceTests
             }
 
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => this.zipArchiveService.CreateFromPathAsync(directory, CancellationToken.None));
+                () => this.zipArchiveService.CreateFromPathAsync(directory, CancellationToken.None)
+            );
         }
         finally
         {
@@ -130,7 +137,9 @@ public sealed class ZipArchiveServiceTests
                 () => this.zipArchiveService.ExtractAsync(
                     archiveBytes,
                     destination,
-                    CancellationToken.None));
+                    CancellationToken.None
+                )
+            );
 
             Assert.False(File.Exists(Path.Combine(destination, "outside.txt")));
         }

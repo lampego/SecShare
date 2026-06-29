@@ -10,7 +10,8 @@ public sealed class ZipArchiveService : IZipArchiveService
 
     public async Task<ZipArchiveBuildResult> CreateFromPathAsync(
         string path,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
 
@@ -39,13 +40,15 @@ public sealed class ZipArchiveService : IZipArchiveService
                 .Select(file => new ArchiveFileItem(
                     file.FullName,
                     $"{rootEntryName}/{NormalizeEntryName(Path.GetRelativePath(directory.FullName, file.FullName))}",
-                    file.Length))
+                    file.Length
+                ))
                 .OrderBy(item => item.EntryName, StringComparer.Ordinal)
                 .ToArray();
             var directoryEntryNames = directory
                 .EnumerateDirectories("*", SearchOption.AllDirectories)
                 .Select(item =>
-                    $"{rootEntryName}/{NormalizeEntryName(Path.GetRelativePath(directory.FullName, item.FullName))}")
+                    $"{rootEntryName}/{NormalizeEntryName(Path.GetRelativePath(directory.FullName, item.FullName))}"
+                )
                 .Order(StringComparer.Ordinal)
                 .ToArray();
 
@@ -55,12 +58,14 @@ public sealed class ZipArchiveService : IZipArchiveService
                 items,
                 cancellationToken,
                 rootEntryName,
-                directoryEntryNames);
+                directoryEntryNames
+            );
             return new ZipArchiveBuildResult(
                 archiveBytes,
                 items.Sum(item => item.SizeBytes),
                 items.Length,
-                directory.Name);
+                directory.Name
+            );
         }
 
         throw new FileNotFoundException($"Path '{path}' does not exist.", path);
@@ -68,7 +73,8 @@ public sealed class ZipArchiveService : IZipArchiveService
 
     public async Task<ZipArchiveBuildResult> CreateFromTextAsync(
         string text,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentNullException.ThrowIfNull(text);
 
@@ -92,7 +98,8 @@ public sealed class ZipArchiveService : IZipArchiveService
     public async Task<ZipArchiveExtractResult> ExtractAsync(
         byte[] archiveBytes,
         string destinationPath,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentNullException.ThrowIfNull(archiveBytes);
         ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
@@ -128,7 +135,8 @@ public sealed class ZipArchiveService : IZipArchiveService
                     FileAccess.Write,
                     FileShare.None,
                     bufferSize: 81920,
-                    useAsync: true);
+                    useAsync: true
+                );
                 await source.CopyToAsync(target, cancellationToken);
             }
 
@@ -136,7 +144,8 @@ public sealed class ZipArchiveService : IZipArchiveService
             return new ZipArchiveExtractResult(
                 extractedPaths,
                 entries.Where(entry => !IsDirectory(entry)).Sum(entry => entry.Length),
-                entries.Count(entry => !IsDirectory(entry)));
+                entries.Count(entry => !IsDirectory(entry))
+            );
         }
         finally
         {
@@ -177,7 +186,8 @@ public sealed class ZipArchiveService : IZipArchiveService
         IReadOnlyCollection<ArchiveFileItem> items,
         CancellationToken cancellationToken,
         string? rootEntryName = null,
-        IReadOnlyCollection<string>? directoryEntryNames = null)
+        IReadOnlyCollection<string>? directoryEntryNames = null
+    )
     {
         await using var stream = new MemoryStream();
         await using (var archive = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true))

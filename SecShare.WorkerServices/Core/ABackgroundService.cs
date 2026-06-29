@@ -78,7 +78,8 @@ public abstract class ABackgroundService : BackgroundService
         stoppingToken.Register(() =>
         {
             Log($"Processing Hosted Service is stopping because cancelled.");
-        });
+        }
+        );
 
         await Task.Run(async () =>
         {
@@ -113,7 +114,9 @@ public abstract class ABackgroundService : BackgroundService
 
                 Thread.Sleep(1000);
             }
-        }, _cancellationToken);
+        },
+        _cancellationToken
+        );
     }
 
     public override async Task StopAsync(CancellationToken stoppingToken)

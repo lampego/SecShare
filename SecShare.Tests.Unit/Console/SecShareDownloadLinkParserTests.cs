@@ -11,11 +11,13 @@ public sealed class SecShareDownloadLinkParserTests
     public void Parse_WithValidShareUrlAndKey_ReturnsPayloadUrlFileIdAndEncryptionKey()
     {
         var result = this.parser.Parse(
-            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token#base64UrlKey");
+            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token#base64UrlKey"
+        );
 
         Assert.Equal(
             new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/file-token"),
-            result.PayloadUri);
+            result.PayloadUri
+        );
         Assert.Equal("file-token", result.FileId);
         Assert.Equal("base64UrlKey", result.EncryptionKey);
     }
@@ -24,11 +26,13 @@ public sealed class SecShareDownloadLinkParserTests
     public void Parse_WithValidShareUrlWithoutKey_ReturnsPayloadUrlFileIdAndNoEncryptionKey()
     {
         var result = this.parser.Parse(
-            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token");
+            $"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ShareFilesPath}/file-token"
+        );
 
         Assert.Equal(
             new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/file-token"),
-            result.PayloadUri);
+            result.PayloadUri
+        );
         Assert.Equal("file-token", result.FileId);
         Assert.Null(result.EncryptionKey);
     }

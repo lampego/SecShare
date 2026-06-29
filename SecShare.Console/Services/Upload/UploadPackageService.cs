@@ -16,6 +16,7 @@ public sealed class UploadPackageService(CryptoService cryptoService) : IUploadP
             archive.SourceSizeBytes,
             archive.ArchiveBytes.LongLength,
             archive.FileCount,
-            archive.SourceName);
+            archive.SourceName
+        );
     }
 }

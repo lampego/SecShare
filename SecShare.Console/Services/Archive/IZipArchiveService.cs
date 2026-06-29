@@ -11,7 +11,8 @@ public interface IZipArchiveService
     Task<ZipArchiveExtractResult> ExtractAsync(
         byte[] archiveBytes,
         string destinationPath,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<string> ReadTextAsync(byte[] archiveBytes, CancellationToken cancellationToken);
 }

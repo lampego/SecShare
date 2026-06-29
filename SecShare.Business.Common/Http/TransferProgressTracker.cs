@@ -4,7 +4,8 @@ namespace SecShare.Business.Common.Http;
 
 public sealed class TransferProgressTracker(
     long? totalBytes,
-    Action<TransferProgress>? progress)
+    Action<TransferProgress>? progress
+)
 {
     private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
     private long _bytesTransferred;
@@ -35,6 +36,7 @@ public sealed class TransferProgressTracker(
         => progress?.Invoke(new TransferProgress(
             _bytesTransferred,
             totalBytes ?? _bytesTransferred,
-            _bytesPerSecond));
+            _bytesPerSecond
+        ));
 }
 

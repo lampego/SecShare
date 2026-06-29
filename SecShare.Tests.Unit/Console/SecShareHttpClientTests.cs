@@ -24,7 +24,8 @@ public sealed class SecShareHttpClientTests
             Assert.Equal(HttpMethod.Post, request.Method);
             Assert.Equal(
                 new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}"),
-                request.RequestUri);
+                request.RequestUri
+            );
             var multipartContent = Assert.IsType<MultipartFormDataContent>(request.Content);
 
             var formValues = await ReadMultipartFormValuesAsync(multipartContent, cancellationToken);
@@ -45,7 +46,8 @@ public sealed class SecShareHttpClientTests
                 Content = new StringContent(
                     """{"token":"file-token"}""",
                     Encoding.UTF8,
-                    "application/json"),
+                    "application/json"
+                ),
             };
         });
         using var httpClient = CreateHttpClient(handler);
@@ -59,7 +61,8 @@ public sealed class SecShareHttpClientTests
                 Downloads = 1
             },
             progress.Add,
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
         Assert.Equal("file-token", result.Token);
         Assert.NotEmpty(progress);
@@ -79,12 +82,14 @@ public sealed class SecShareHttpClientTests
             Assert.Equal(HttpMethod.Get, request.Method);
             Assert.Equal(
                 new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/token"),
-                request.RequestUri);
+                request.RequestUri
+            );
 
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent(expectedPayload),
-            });
+            }
+            );
         });
         using var httpClient = CreateHttpClient(handler);
         var client = new SecShareHttpClient(httpClient);
@@ -92,7 +97,8 @@ public sealed class SecShareHttpClientTests
         var result = await client.DownloadAsync(
             "token",
             progress.Add,
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
         Assert.Equal(expectedPayload, result.EncryptedPayload);
         Assert.Equal(StorageContentType.File, result.ContentType);
@@ -128,7 +134,8 @@ public sealed class SecShareHttpClientTests
         var result = await client.DownloadAsync(
             "token",
             progress: null,
-            CancellationToken.None);
+            CancellationToken.None
+        );
 
         Assert.Equal(StorageContentType.Text, result.ContentType);
         Assert.Equal("file-id", result.FileId);
@@ -143,7 +150,8 @@ public sealed class SecShareHttpClientTests
     public async Task DownloadAsync_WhenResponseIsNotSuccessful_ThrowsHttpRequestException()
     {
         var handler = new StubHttpMessageHandler((_, _) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound))
+        );
         using var httpClient = CreateHttpClient(handler);
         var client = new SecShareHttpClient(httpClient);
 
@@ -151,7 +159,9 @@ public sealed class SecShareHttpClientTests
             () => client.DownloadAsync(
                 "missing",
                 progress: null,
-                CancellationToken.None));
+                CancellationToken.None
+            )
+        );
     }
 
     [Fact]
@@ -166,7 +176,8 @@ public sealed class SecShareHttpClientTests
                 Content = new StringContent(
                     """{"token":""}""",
                     Encoding.UTF8,
-                    "application/json"),
+                    "application/json"
+                ),
             };
         });
         using var httpClient = CreateHttpClient(handler);
@@ -181,14 +192,17 @@ public sealed class SecShareHttpClientTests
                     Downloads = 1
                 },
                 progress: null,
-                CancellationToken.None));
+                CancellationToken.None
+            )
+        );
     }
 
     [Fact]
     public async Task UploadAsync_WithInvalidOptions_ThrowsArgumentExceptionWithFieldNames()
     {
         var handler = new StubHttpMessageHandler((_, _) =>
-            throw new InvalidOperationException("Request should not be sent when options are invalid."));
+            throw new InvalidOperationException("Request should not be sent when options are invalid.")
+        );
         using var httpClient = CreateHttpClient(handler);
         var client = new SecShareHttpClient(httpClient);
 
@@ -201,7 +215,9 @@ public sealed class SecShareHttpClientTests
                     Downloads = 0
                 },
                 progress: null,
-                CancellationToken.None));
+                CancellationToken.None
+            )
+        );
 
         Assert.Contains("Expires: Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d.", exception.Message);
         Assert.Contains("Downloads: Downloads must be greater than zero.", exception.Message);
@@ -220,7 +236,8 @@ public sealed class SecShareHttpClientTests
                 Content = new StringContent(
                     """{"Options.Expires":["Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d."]}""",
                     Encoding.UTF8,
-                    "application/json"),
+                    "application/json"
+                ),
             };
         });
         using var httpClient = CreateHttpClient(handler);
@@ -235,7 +252,9 @@ public sealed class SecShareHttpClientTests
                     Downloads = 1
                 },
                 progress: null,
-                CancellationToken.None));
+                CancellationToken.None
+            )
+        );
 
         Assert.Contains("Options.Expires: Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d.", exception.Message);
     }
@@ -251,7 +270,8 @@ public sealed class SecShareHttpClientTests
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent("payload"u8.ToArray()),
-            });
+            }
+            );
         });
         using var httpClient = CreateHttpClient(handler);
         var client = new SecShareHttpClient(httpClient);
@@ -293,12 +313,14 @@ public sealed class SecShareHttpClientTests
     }
 
     private sealed class StubHttpMessageHandler(
-        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler
+    )
         : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
             => handler(request, cancellationToken);
     }
 }

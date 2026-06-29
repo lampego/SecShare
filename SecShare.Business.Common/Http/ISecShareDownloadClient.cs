@@ -9,6 +9,7 @@ public interface ISecShareDownloadClient
     Task<DownloadResult> DownloadAsync(
         string fileId,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }
 

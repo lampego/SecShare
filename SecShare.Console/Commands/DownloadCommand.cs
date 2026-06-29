@@ -68,8 +68,10 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                         progress => TransferProgressUi.Update(
                             downloadTask,
                             "Downloading encrypted payload...",
-                            progress),
-                        cancellationToken);
+                            progress
+                        ),
+                        cancellationToken
+                    );
                     Complete(downloadTask);
 
                     var decryptTask = ctx.AddTask("Decrypting data...", autoStart: true);
@@ -89,11 +91,13 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                     var extractResult = await archiveService.ExtractAsync(
                         archiveBytes,
                         settings.Path,
-                        cancellationToken);
+                        cancellationToken
+                    );
                     Complete(extractTask);
 
                     return new DownloadCommandResult(downloadResult.ContentType, extractResult, null);
-                });
+                }
+                );
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -149,7 +153,8 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             ?? throw new InvalidOperationException("Download did not produce extracted files.");
         var extractedPaths = string.Join(
             Environment.NewLine,
-            extractResult.ExtractedPaths.Select(path => $"[cyan]{Markup.Escape(path)}[/]"));
+            extractResult.ExtractedPaths.Select(path => $"[cyan]{Markup.Escape(path)}[/]")
+        );
         var summary = new Markup(
             $"""
             [green]Downloaded content was decrypted and extracted.[/]
@@ -158,12 +163,14 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             Size: [yellow]{TransferProgressUi.FormatBytes(extractResult.ExtractedSizeBytes)}[/]
             Saved:
             {extractedPaths}
-            """);
+            """
+        );
 
         AnsiConsole.Write(new Panel(summary)
             .Header("[bold green]Download completed[/]")
             .Border(BoxBorder.Rounded)
-            .BorderColor(Color.Green));
+            .BorderColor(Color.Green)
+        );
 
         return 0;
     }

@@ -9,7 +9,8 @@ public sealed class SecShareDownloadLinkParser : ISecShareDownloadLinkParser
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
 
         if (!Uri.TryCreate(url, UriKind.Absolute, out var shareUri)
-            || (shareUri.Scheme != Uri.UriSchemeHttps && shareUri.Scheme != Uri.UriSchemeHttp))
+            || (shareUri.Scheme != Uri.UriSchemeHttps && shareUri.Scheme != Uri.UriSchemeHttp)
+        )
         {
             throw new ArgumentException("Download URL must be an absolute HTTP or HTTPS URL.", nameof(url));
         }
@@ -18,7 +19,8 @@ public sealed class SecShareDownloadLinkParser : ISecShareDownloadLinkParser
             .Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (pathSegments.Length != 2
             || !string.Equals(pathSegments[0], "f", StringComparison.OrdinalIgnoreCase)
-            || string.IsNullOrWhiteSpace(pathSegments[1]))
+            || string.IsNullOrWhiteSpace(pathSegments[1])
+        )
         {
             throw new ArgumentException("Download URL must have the format '/f/{fileId}' with an optional '#key' fragment.", nameof(url));
         }
@@ -30,7 +32,8 @@ public sealed class SecShareDownloadLinkParser : ISecShareDownloadLinkParser
         var baseUri = new Uri(shareUri.GetLeftPart(UriPartial.Authority));
         var payloadUri = new Uri(
             baseUri,
-            $"{SecShareConstants.ApiFilesPath}/{Uri.EscapeDataString(fileId)}");
+            $"{SecShareConstants.ApiFilesPath}/{Uri.EscapeDataString(fileId)}"
+        );
 
         return new SecShareDownloadLink(shareUri, payloadUri, fileId, encryptionKey);
     }

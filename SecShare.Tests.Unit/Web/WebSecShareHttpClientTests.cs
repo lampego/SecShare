@@ -24,7 +24,8 @@ public sealed class WebSecShareHttpClientTests
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent("payload"u8.ToArray()),
-            });
+            }
+            );
         });
 
         var client = CreateClient(handler);
@@ -38,12 +39,14 @@ public sealed class WebSecShareHttpClientTests
         {
             Assert.Equal(
                 new Uri($"{BaseUrl}{ApiFilesPath}/my-file-id"),
-                request.RequestUri);
+                request.RequestUri
+            );
 
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent("payload"u8.ToArray()),
-            });
+            }
+            );
         });
 
         var client = CreateClient(handler);
@@ -96,7 +99,8 @@ public sealed class WebSecShareHttpClientTests
             Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new ByteArrayContent(payload),
-            }));
+            })
+        );
 
         var client = CreateClient(handler);
         _ = await client.DownloadAsync("token", progress.Add, CancellationToken.None);
@@ -110,12 +114,14 @@ public sealed class WebSecShareHttpClientTests
     public async Task DownloadAsync_WhenNotFound_ThrowsHttpRequestExceptionWithStatusCode()
     {
         var handler = new StubHttpMessageHandler((_, _) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound))
+        );
 
         var client = CreateClient(handler);
 
         var ex = await Assert.ThrowsAsync<HttpRequestException>(
-            () => client.DownloadAsync("missing", progress: null, CancellationToken.None));
+            () => client.DownloadAsync("missing", progress: null, CancellationToken.None)
+        );
 
         Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
     }
@@ -124,12 +130,14 @@ public sealed class WebSecShareHttpClientTests
     public async Task DownloadAsync_WhenForbidden_ThrowsHttpRequestExceptionWithStatusCode()
     {
         var handler = new StubHttpMessageHandler((_, _) =>
-            Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden)));
+            Task.FromResult(new HttpResponseMessage(HttpStatusCode.Forbidden))
+        );
 
         var client = CreateClient(handler);
 
         var ex = await Assert.ThrowsAsync<HttpRequestException>(
-            () => client.DownloadAsync("token", progress: null, CancellationToken.None));
+            () => client.DownloadAsync("token", progress: null, CancellationToken.None)
+        );
 
         Assert.Equal(HttpStatusCode.Forbidden, ex.StatusCode);
     }
@@ -143,13 +151,16 @@ public sealed class WebSecShareHttpClientTests
                 Content = new StringContent(
                     """{"status":"fail","message":"Decrypted data is unavailable","errorCode":"FileNotFoundDomainException"}""",
                     Encoding.UTF8,
-                    "application/json"),
-            }));
+                    "application/json"
+                ),
+            })
+        );
 
         var client = CreateClient(handler);
 
         var ex = await Assert.ThrowsAsync<FileNotFoundDomainException>(
-            () => client.DownloadAsync("missing", progress: null, CancellationToken.None));
+            () => client.DownloadAsync("missing", progress: null, CancellationToken.None)
+        );
 
         Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
     }
@@ -163,13 +174,16 @@ public sealed class WebSecShareHttpClientTests
                 Content = new StringContent(
                     """{"status":"fail","message":"Decrypted data is unavailable","errorCode":"DownloadLimitExhaustedDomainException"}""",
                     Encoding.UTF8,
-                    "application/json"),
-            }));
+                    "application/json"
+                ),
+            })
+        );
 
         var client = CreateClient(handler);
 
         var ex = await Assert.ThrowsAsync<DownloadLimitExhaustedDomainException>(
-            () => client.DownloadAsync("token", progress: null, CancellationToken.None));
+            () => client.DownloadAsync("token", progress: null, CancellationToken.None)
+        );
 
         Assert.Equal(HttpStatusCode.NotFound, ex.StatusCode);
     }
@@ -183,13 +197,16 @@ public sealed class WebSecShareHttpClientTests
                 Content = new StringContent(
                     """{"Id":["Invalid file identifier format."]}""",
                     Encoding.UTF8,
-                    "application/json"),
-            }));
+                    "application/json"
+                ),
+            })
+        );
 
         var client = CreateClient(handler);
 
         var ex = await Assert.ThrowsAsync<ApiException>(
-            () => client.DownloadAsync("bad-token", progress: null, CancellationToken.None));
+            () => client.DownloadAsync("bad-token", progress: null, CancellationToken.None)
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, ex.StatusCode);
         Assert.Contains("Id: Invalid file identifier format.", ex.Message);
@@ -199,12 +216,14 @@ public sealed class WebSecShareHttpClientTests
         => new(new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) });
 
     private sealed class StubHttpMessageHandler(
-        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler)
+        Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler
+    )
         : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
             => handler(request, cancellationToken);
     }
 }

@@ -11,13 +11,15 @@ public sealed partial class SecShareHttpClient
     Task<DownloadResult> ISecShareDownloadClient.DownloadAsync(
         string fileId,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         => DownloadAsync(fileId, progress, cancellationToken);
 
     public async Task<DownloadResult> DownloadAsync(
         string fileId,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(fileId);
 
@@ -29,7 +31,8 @@ public sealed partial class SecShareHttpClient
         using var response = await _httpClient.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken);
+            cancellationToken
+        );
         await EnsureSuccessResponseAsync(response, cancellationToken);
 
         var totalBytes = response.Content.Headers.ContentLength;

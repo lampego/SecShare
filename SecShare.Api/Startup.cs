@@ -36,7 +36,8 @@ public class Startup
                     SecShareFileHeaders.DownloadsRemaining,
                     SecShareFileHeaders.DeleteAt,
                     SecShareFileHeaders.PayloadType
-                ));
+                )
+            );
         });
 
         services.AddAutoMapper(cfg => { }, assembly);

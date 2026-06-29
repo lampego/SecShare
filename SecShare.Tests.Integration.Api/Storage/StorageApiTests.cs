@@ -57,7 +57,8 @@ public class StorageApiTests : BaseTest
         var response = await PostMultipartFormDataRequestAsync(
             UploadRoute,
             CreateUploadOptionsData(),
-            formFile);
+            formFile
+        );
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
 
@@ -78,7 +79,8 @@ public class StorageApiTests : BaseTest
         var response = await PostMultipartFormDataRequestAsync(
             UploadRoute,
             CreateUploadOptionsData(),
-            formFile);
+            formFile
+        );
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         
@@ -115,7 +117,8 @@ public class StorageApiTests : BaseTest
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             UploadRoute,
             CreateUploadOptionsData(),
-            formFile);
+            formFile
+        );
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
@@ -143,7 +146,8 @@ public class StorageApiTests : BaseTest
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             UploadRoute,
             CreateUploadOptionsData(contentType: StorageContentType.Text),
-            formFile);
+            formFile
+        );
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
@@ -174,7 +178,8 @@ public class StorageApiTests : BaseTest
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             AlternativeUploadRoute,
             CreateUploadOptionsData(),
-            formFile);
+            formFile
+        );
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
@@ -242,7 +247,8 @@ public class StorageApiTests : BaseTest
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             UploadRoute,
             CreateUploadOptionsData(downloads: 1),
-            formFile);
+            formFile
+        );
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
@@ -286,7 +292,8 @@ public class StorageApiTests : BaseTest
         var uploadResponse = await PostMultipartFormDataRequestAsync(
             UploadRoute,
             CreateUploadOptionsData(),
-            formFile);
+            formFile
+        );
         Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
 
         var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();

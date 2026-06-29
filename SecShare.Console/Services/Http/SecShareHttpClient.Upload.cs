@@ -13,7 +13,8 @@ public sealed partial class SecShareHttpClient
         byte[] encryptedPayload,
         UploadFileOptions options,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
         ArgumentNullException.ThrowIfNull(encryptedPayload);
         ArgumentNullException.ThrowIfNull(options);

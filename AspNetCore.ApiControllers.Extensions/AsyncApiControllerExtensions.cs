@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Api.Requests.Abstractions;
 using AspNetCore.ApiControllers.Abstractions;
@@ -50,7 +50,8 @@ namespace AspNetCore.ApiControllers.Extensions
         
         public static Task<IActionResult> RequestAsync<TApiController, TRequest, TResponse>(
             this TApiController apiController,
-            TRequest request)
+            TRequest request
+        )
             where TApiController : 
                 ControllerBase, 
                 IAsyncApiController, 

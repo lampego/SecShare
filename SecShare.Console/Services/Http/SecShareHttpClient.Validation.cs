@@ -8,7 +8,8 @@ public sealed partial class SecShareHttpClient
 {
     private async Task EnsureSuccessResponseAsync(
         HttpResponseMessage response,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
         => await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
 
     private static void ValidateUploadOptions(UploadFileOptions options)
@@ -19,7 +20,8 @@ public sealed partial class SecShareHttpClient
                 new ValidationContext(options),
                 results,
                 validateAllProperties: true
-            ))
+            )
+        )
         {
             return;
         }

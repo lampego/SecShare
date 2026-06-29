@@ -7,7 +7,8 @@ public sealed partial class SecShareHttpClient
 {
     private sealed class ProgressByteArrayContent(
         byte[] content,
-        Action<TransferProgress>? progress)
+        Action<TransferProgress>? progress
+    )
         : HttpContent
     {
         private const int BufferSize = 81920;
@@ -18,7 +19,8 @@ public sealed partial class SecShareHttpClient
         protected override async Task SerializeToStreamAsync(
             Stream stream,
             TransportContext? context,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken
+        )
         {
             var tracker = new TransferProgressTracker(content.LongLength, progress);
 

@@ -10,10 +10,12 @@ public interface ISecShareHttpClient
         byte[] encryptedPayload,
         UploadFileOptions options,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 
     Task<DownloadResult> DownloadAsync(
         string fileId,
         Action<TransferProgress>? progress,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken
+    );
 }

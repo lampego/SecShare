@@ -12,7 +12,8 @@ public static class TransferProgressUi
     public static void Update(
         ProgressTask task,
         string operation,
-        TransferProgress progress)
+        TransferProgress progress
+    )
     {
         var totalBytes = progress.TotalBytes;
         var maxValue = Math.Max(totalBytes ?? progress.BytesTransferred, 1);
