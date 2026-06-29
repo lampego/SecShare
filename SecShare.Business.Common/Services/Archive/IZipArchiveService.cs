@@ -1,6 +1,7 @@
-using SecShare.Console.Models.Archive;
+using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Models.Archive;
 
-namespace SecShare.Console.Services.Archive;
+namespace SecShare.Business.Common.Services.Archive;
 
 public interface IZipArchiveService
 {
@@ -15,4 +16,10 @@ public interface IZipArchiveService
     );
 
     Task<string> ReadTextAsync(byte[] archiveBytes, CancellationToken cancellationToken);
+
+    Task<ZipArchiveContentResult> ReadContentAsync(
+        byte[] archiveBytes,
+        StorageContentType contentType,
+        CancellationToken cancellationToken
+    );
 }

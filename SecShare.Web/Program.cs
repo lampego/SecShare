@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Logging;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Services.Archive;
 using SecShare.Web;
 using SecShare.Web.Services.Crypto;
 
@@ -39,6 +40,7 @@ builder.Services.AddScoped<WebSecShareHttpClient>(sp =>
 builder.Services.AddScoped<ISecShareDownloadClient>(sp =>
     sp.GetRequiredService<WebSecShareHttpClient>());
 builder.Services.AddScoped<IWebCryptoService, WebCryptoService>();
+builder.Services.AddScoped<IZipArchiveService, ZipArchiveService>();
 
 #if DEBUG
 builder.Logging.AddBrowserConsole()

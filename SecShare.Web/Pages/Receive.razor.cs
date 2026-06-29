@@ -1,14 +1,12 @@
-using System.IO.Compression;
 using System.Net;
 using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using SecShare.Business.Common.Enums;
-using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Services.Archive;
 using SecShare.Business.Exceptions;
 using SecShare.Web.Services.Crypto;
 
@@ -40,6 +38,9 @@ public partial class Receive : IAsyncDisposable
 
     [Inject]
     private IWebCryptoService CryptoService { get; set; } = null!;
+
+    [Inject]
+    private IZipArchiveService ZipArchiveService { get; set; } = null!;
 
     [Inject]
     private ILogger<Receive> Logger { get; set; } = null!;
@@ -313,45 +314,24 @@ public partial class Receive : IAsyncDisposable
     {
         try
         {
-            await using var stream = new MemoryStream(zipBytes, writable: false);
-            using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-
-            if (_contentType == StorageContentType.Text)
+            var content = await ZipArchiveService.ReadContentAsync(
+                zipBytes,
+                _contentType,
+                _cts.Token
+            );
+            if (content.IsText)
             {
-                await ProcessTextArchiveAsync(archive);
+                _textContent = content.TextContent;
+                _readyKind = ReadyKind.Text;
+                _state = PageState.Ready;
+                StateHasChanged();
                 return;
             }
 
-            var fileEntries = archive.Entries
-                .Where(e => !IsDirectoryEntry(e))
-                .ToArray();
-
-            if (_contentType == StorageContentType.File && fileEntries.Length == 1)
-            {
-                // Single file — extract the inner file instead of serving the ZIP wrapper.
-                var entry = fileEntries[0];
-                var entryName = Path.GetFileName(entry.FullName);
-                if (string.IsNullOrEmpty(entryName))
-                {
-                    entryName = "secshare-file";
-                }
-
-                await using var ms = new MemoryStream();
-                await using (var entryStream = entry.Open())
-                {
-                    await entryStream.CopyToAsync(ms, _cts.Token);
-                }
-
-                _fileBytes = ms.ToArray();
-                _fileName = entryName;
-            }
-            else
-            {
-                // Multiple files or a directory tree — keep the ZIP.
-                _fileBytes = zipBytes;
-                _fileName = ResolveArchiveFileName(archive);
-            }
-
+            _fileBytes = content.FileBytes
+                ?? throw new InvalidDataException("ZIP archive did not produce downloadable file content.");
+            _fileName = content.FileName
+                ?? throw new InvalidDataException("ZIP archive did not produce a downloadable file name.");
             _readyKind = ReadyKind.File;
             _state = PageState.Ready;
             StateHasChanged();
@@ -376,49 +356,6 @@ public partial class Receive : IAsyncDisposable
             Logger.LogError(ex, "Unexpected error while processing decrypted ZIP content for file {FileId}.", Id);
             SetError("An error occurred while processing the decrypted content.");
         }
-    }
-
-    private async Task ProcessTextArchiveAsync(ZipArchive archive)
-    {
-        var textEntry = archive.Entries.FirstOrDefault(e => !IsDirectoryEntry(e));
-        if (textEntry is null)
-        {
-            SetError("The decrypted content could not be read as text.");
-            return;
-        }
-
-        using var reader = new StreamReader(
-            textEntry.Open(),
-            Encoding.UTF8,
-            detectEncodingFromByteOrderMarks: true
-        );
-        _textContent = await reader.ReadToEndAsync(_cts.Token);
-        _readyKind = ReadyKind.Text;
-        _state = PageState.Ready;
-        StateHasChanged();
-    }
-
-    /// <summary>
-    /// Derives a ZIP archive filename from the root directory entry embedded in the ZIP,
-    /// falling back to a safe default name.
-    /// </summary>
-    private string ResolveArchiveFileName(ZipArchive archive)
-    {
-        if (_contentType == StorageContentType.Folder)
-        {
-            // The ZIP was created with the directory name as the top-level entry.
-            var rootDir = archive.Entries
-                .Where(e => IsDirectoryEntry(e))
-                .Select(e => e.FullName.TrimEnd('/'))
-                .FirstOrDefault(name => !name.Contains('/'));
-
-            if (!string.IsNullOrWhiteSpace(rootDir))
-            {
-                return $"{rootDir}.zip";
-            }
-        }
-
-        return "secshare-files.zip";
     }
 
     // ── Actions ───────────────────────────────────────────────────────────────
@@ -518,9 +455,6 @@ public partial class Receive : IAsyncDisposable
         _state = PageState.Error;
         StateHasChanged();
     }
-
-    private static bool IsDirectoryEntry(ZipArchiveEntry entry)
-        => entry.FullName.EndsWith('/') || entry.FullName.EndsWith('\\');
 
     private static string FormatBytes(long bytes)
     {

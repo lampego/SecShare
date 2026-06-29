@@ -1,5 +1,6 @@
 using System.IO.Compression;
-using SecShare.Console.Services.Archive;
+using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Services.Archive;
 
 namespace SecShare.Tests.Unit.Console;
 
@@ -93,6 +94,65 @@ public sealed class ZipArchiveServiceTests
     }
 
     [Fact]
+    public async Task ReadContentAsync_WithSingleFile_ReturnsInnerFile()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var sourcePath = Path.Combine(root, "document.txt");
+            await File.WriteAllTextAsync(sourcePath, "file content");
+
+            var archive = await this.zipArchiveService.CreateFromPathAsync(
+                sourcePath,
+                CancellationToken.None
+            );
+            var content = await this.zipArchiveService.ReadContentAsync(
+                archive.ArchiveBytes,
+                StorageContentType.File,
+                CancellationToken.None
+            );
+
+            Assert.False(content.IsText);
+            Assert.Equal("document.txt", content.FileName);
+            Assert.Equal("file content", await ReadTextAsync(content.FileBytes));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ReadContentAsync_WithDirectory_ReturnsArchiveWithRootDirectoryName()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var sourcePath = Path.Combine(root, "source");
+            Directory.CreateDirectory(sourcePath);
+            await File.WriteAllTextAsync(Path.Combine(sourcePath, "root.txt"), "root");
+
+            var archive = await this.zipArchiveService.CreateFromPathAsync(
+                sourcePath,
+                CancellationToken.None
+            );
+            var content = await this.zipArchiveService.ReadContentAsync(
+                archive.ArchiveBytes,
+                StorageContentType.Folder,
+                CancellationToken.None
+            );
+
+            Assert.False(content.IsText);
+            Assert.Equal("source.zip", content.FileName);
+            Assert.Equal(archive.ArchiveBytes, content.FileBytes);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task CreateFromPathAsync_WhenTotalSizeExceedsLimit_ThrowsInvalidOperationException()
     {
         var directory = CreateTempDirectory();
@@ -155,5 +215,12 @@ public sealed class ZipArchiveServiceTests
         Directory.CreateDirectory(path);
 
         return path;
+    }
+
+    private static async Task<string> ReadTextAsync(byte[]? bytes)
+    {
+        Assert.NotNull(bytes);
+
+        return await new StreamReader(new MemoryStream(bytes)).ReadToEndAsync();
     }
 }

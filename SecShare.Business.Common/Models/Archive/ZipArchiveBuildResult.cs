@@ -1,4 +1,4 @@
-namespace SecShare.Console.Models.Archive;
+namespace SecShare.Business.Common.Models.Archive;
 
 public sealed record ZipArchiveBuildResult(
     byte[] ArchiveBytes,

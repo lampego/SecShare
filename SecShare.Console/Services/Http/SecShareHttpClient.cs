@@ -1,5 +1,5 @@
 using SecShare.Business.Common.Http;
-using SecShare.Console.Services.Archive;
+using SecShare.Business.Common.Services.Archive;
 
 namespace SecShare.Console.Services.Http;
 

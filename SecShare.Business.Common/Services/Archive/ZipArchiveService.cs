@@ -1,8 +1,9 @@
 using System.IO.Compression;
 using System.Text;
-using SecShare.Console.Models.Archive;
+using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Models.Archive;
 
-namespace SecShare.Console.Services.Archive;
+namespace SecShare.Business.Common.Services.Archive;
 
 public sealed class ZipArchiveService : IZipArchiveService
 {
@@ -49,7 +50,7 @@ public sealed class ZipArchiveService : IZipArchiveService
                 .Select(item =>
                     $"{rootEntryName}/{NormalizeEntryName(Path.GetRelativePath(directory.FullName, item.FullName))}"
                 )
-                .Order(StringComparer.Ordinal)
+                .OrderBy(name => name, StringComparer.Ordinal)
                 .ToArray();
 
             ValidateTotalSize(items);
@@ -162,24 +163,51 @@ public sealed class ZipArchiveService : IZipArchiveService
 
         await using var stream = new MemoryStream(archiveBytes, writable: false);
         using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
-        var fileEntries = archive.Entries
+        var entries = ValidateEntries(archive);
+
+        return await ReadTextAsync(entries, cancellationToken);
+    }
+
+    public async Task<ZipArchiveContentResult> ReadContentAsync(
+        byte[] archiveBytes,
+        StorageContentType contentType,
+        CancellationToken cancellationToken
+    )
+    {
+        ArgumentNullException.ThrowIfNull(archiveBytes);
+
+        await using var stream = new MemoryStream(archiveBytes, writable: false);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+        var entries = ValidateEntries(archive);
+
+        if (contentType == StorageContentType.Text)
+        {
+            var text = await ReadTextAsync(entries, cancellationToken);
+            return new ZipArchiveContentResult(text, null, null);
+        }
+
+        var fileEntries = entries
             .Where(entry => !IsDirectory(entry))
             .ToArray();
 
-        if (fileEntries.Length != 1)
+        if (contentType == StorageContentType.File && fileEntries.Length == 1)
         {
-            throw new InvalidDataException("Text archive must contain exactly one file.");
+            var entry = fileEntries[0];
+            var entryName = ResolveFileEntryName(entry);
+            await using var target = new MemoryStream();
+            await using (var source = await entry.OpenAsync(cancellationToken))
+            {
+                await source.CopyToAsync(target, cancellationToken);
+            }
+
+            return new ZipArchiveContentResult(null, target.ToArray(), entryName);
         }
 
-        var entry = fileEntries[0];
-        if (entry.Length > MaxSourceSizeBytes)
-        {
-            throw new InvalidOperationException("Text content size must not exceed 200 MB.");
-        }
-
-        await using var entryStream = await entry.OpenAsync(cancellationToken);
-        using var reader = new StreamReader(entryStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
-        return await reader.ReadToEndAsync(cancellationToken);
+        return new ZipArchiveContentResult(
+            null,
+            archiveBytes,
+            ResolveArchiveFileName(entries, contentType)
+        );
     }
 
     private static async Task<byte[]> CreateArchiveAsync(
@@ -216,7 +244,7 @@ public sealed class ZipArchiveService : IZipArchiveService
         return stream.ToArray();
     }
 
-    private static ZipArchiveEntry[] ValidateEntries(ZipArchive archive, string stagingPath)
+    private static ZipArchiveEntry[] ValidateEntries(ZipArchive archive, string? stagingPath = null)
     {
         var entries = archive.Entries.ToArray();
         var extractedSizeBytes = entries
@@ -228,12 +256,25 @@ public sealed class ZipArchiveService : IZipArchiveService
             throw new InvalidOperationException("Extracted archive size must not exceed 200 MB.");
         }
 
-        var targetPaths = new HashSet<string>(GetPathComparer());
+        var entryNames = new HashSet<string>(StringComparer.Ordinal);
+        var targetPaths = stagingPath is null
+            ? null
+            : new HashSet<string>(GetPathComparer());
         foreach (var entry in entries)
         {
             if (string.IsNullOrWhiteSpace(entry.FullName))
             {
                 throw new InvalidDataException("ZIP archive contains an entry with an empty name.");
+            }
+
+            if (!entryNames.Add(NormalizeEntryName(entry.FullName).TrimEnd('/')))
+            {
+                throw new InvalidDataException($"ZIP archive contains duplicate entry '{entry.FullName}'.");
+            }
+
+            if (stagingPath is null || targetPaths is null)
+            {
+                continue;
             }
 
             var targetPath = GetSafeTargetPath(stagingPath, entry.FullName);
@@ -244,6 +285,31 @@ public sealed class ZipArchiveService : IZipArchiveService
         }
 
         return entries;
+    }
+
+    private static async Task<string> ReadTextAsync(
+        IReadOnlyCollection<ZipArchiveEntry> entries,
+        CancellationToken cancellationToken
+    )
+    {
+        var fileEntries = entries
+            .Where(entry => !IsDirectory(entry))
+            .ToArray();
+
+        if (fileEntries.Length != 1)
+        {
+            throw new InvalidDataException("Text archive must contain exactly one file.");
+        }
+
+        var entry = fileEntries[0];
+        if (entry.Length > MaxSourceSizeBytes)
+        {
+            throw new InvalidOperationException("Text content size must not exceed 200 MB.");
+        }
+
+        await using var entryStream = await entry.OpenAsync(cancellationToken);
+        using var reader = new StreamReader(entryStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+        return await reader.ReadToEndAsync(cancellationToken);
     }
 
     private static IReadOnlyCollection<string> MoveStagedItems(string stagingPath, string destinationRoot)
@@ -295,6 +361,58 @@ public sealed class ZipArchiveService : IZipArchiveService
         return targetPath;
     }
 
+    private static string ResolveArchiveFileName(
+        IReadOnlyCollection<ZipArchiveEntry> entries,
+        StorageContentType contentType
+    )
+    {
+        if (contentType == StorageContentType.Folder)
+        {
+            var rootDirectoryName = ResolveRootDirectoryName(entries);
+            if (!string.IsNullOrWhiteSpace(rootDirectoryName))
+            {
+                return $"{rootDirectoryName}.zip";
+            }
+        }
+
+        return "secshare-files.zip";
+    }
+
+    private static string? ResolveRootDirectoryName(IReadOnlyCollection<ZipArchiveEntry> entries)
+    {
+        var explicitRootDirectory = entries
+            .Where(IsDirectory)
+            .Select(entry => NormalizeEntryName(entry.FullName).TrimEnd('/'))
+            .FirstOrDefault(name => !name.Contains('/'));
+
+        if (!string.IsNullOrWhiteSpace(explicitRootDirectory))
+        {
+            return explicitRootDirectory;
+        }
+
+        var rootNames = entries
+            .Select(entry => NormalizeEntryName(entry.FullName).Trim('/'))
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Select(name => name.Split('/')[0])
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return rootNames.Length == 1
+            ? rootNames[0]
+            : null;
+    }
+
+    private static string ResolveFileEntryName(ZipArchiveEntry entry)
+    {
+        var entryName = NormalizeEntryName(entry.FullName)
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault();
+
+        return string.IsNullOrEmpty(entryName)
+            ? "secshare-file"
+            : entryName;
+    }
+
     private static bool IsDirectory(ZipArchiveEntry entry)
         => entry.FullName.EndsWith('/') || entry.FullName.EndsWith('\\');
 
@@ -309,7 +427,8 @@ public sealed class ZipArchiveService : IZipArchiveService
 
     private static string NormalizeEntryName(string entryName)
         => entryName.Replace(Path.DirectorySeparatorChar, '/')
-            .Replace(Path.AltDirectorySeparatorChar, '/');
+            .Replace(Path.AltDirectorySeparatorChar, '/')
+            .Replace('\\', '/');
 
     private static StringComparison GetPathComparison()
         => OperatingSystem.IsWindows()
@@ -320,5 +439,4 @@ public sealed class ZipArchiveService : IZipArchiveService
         => OperatingSystem.IsWindows()
             ? StringComparer.OrdinalIgnoreCase
             : StringComparer.Ordinal;
-
 }

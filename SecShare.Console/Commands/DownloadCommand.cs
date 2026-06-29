@@ -1,10 +1,10 @@
 using System.ComponentModel;
 using System.Security.Cryptography;
 using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Models.Archive;
+using SecShare.Business.Common.Services.Archive;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
-using SecShare.Console.Models.Archive;
-using SecShare.Console.Services.Archive;
 using SecShare.Console.Services.Download;
 using SecShare.Console.Services.Http;
 using SecShare.Console.Ui;
