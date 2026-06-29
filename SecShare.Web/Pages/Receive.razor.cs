@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using SecShare.Business.Common.Crypto;
 using SecShare.Business.Common.Enums;
@@ -22,6 +23,9 @@ public partial class Receive : IAsyncDisposable
 
     [Inject]
     private ISecShareDownloadClient DownloadClient { get; set; } = null!;
+
+    [Inject]
+    private ILogger<Receive> Logger { get; set; } = null!;
 
     // ── Route parameter ───────────────────────────────────────────────────────
 
@@ -84,8 +88,9 @@ public partial class Receive : IAsyncDisposable
                 await JS.InvokeVoidAsync("secshareInterop.clearLocationHash");
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Failed to read or clear decryption key from URL fragment.");
             // JS interop may fail in certain environments; continue without the fragment key.
         }
 
@@ -118,6 +123,7 @@ public partial class Receive : IAsyncDisposable
         }
         catch (HttpRequestException ex)
         {
+            Logger.LogWarning(ex, "Failed to download encrypted payload for file {FileId}.", Id);
             SetError(ex.StatusCode switch
             {
                 HttpStatusCode.NotFound => "This link was not found or has already expired.",
@@ -129,6 +135,7 @@ public partial class Receive : IAsyncDisposable
         }
         catch (ApiException ex)
         {
+            Logger.LogWarning(ex, "API rejected encrypted payload download for file {FileId}.", Id);
             SetError(ResolveDownloadErrorMessage(ex));
             return;
         }
@@ -136,8 +143,9 @@ public partial class Receive : IAsyncDisposable
         {
             return;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Unexpected error while downloading encrypted payload for file {FileId}.", Id);
             SetError("Failed to load the encrypted content. Please check your connection and try again.");
             return;
         }
@@ -227,6 +235,7 @@ public partial class Receive : IAsyncDisposable
                 or ArgumentException
         )
         {
+            Logger.LogWarning(ex, "Failed to decrypt payload for file {FileId}.", Id);
             if (_hasKeyFromLink)
             {
                 // Key came from the URL but was invalid; user cannot re-enter it easily.
@@ -245,8 +254,9 @@ public partial class Receive : IAsyncDisposable
 
             return;
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Unexpected error while decrypting payload for file {FileId}.", Id);
             SetError("An unexpected error occurred during decryption.");
             return;
         }
@@ -306,8 +316,9 @@ public partial class Receive : IAsyncDisposable
             // Trigger the browser's save dialog automatically.
             await SaveFileAsync();
         }
-        catch (InvalidDataException)
+        catch (InvalidDataException ex)
         {
+            Logger.LogWarning(ex, "Decrypted payload is not a valid ZIP archive for file {FileId}.", Id);
             SetError(
                 "The decrypted data appears to be corrupted or in an unsupported format. " +
                 "Verify that the correct key was used."
@@ -317,8 +328,9 @@ public partial class Receive : IAsyncDisposable
         {
             // Cancelled — no state change needed.
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogError(ex, "Unexpected error while processing decrypted ZIP content for file {FileId}.", Id);
             SetError("An error occurred while processing the decrypted content.");
         }
     }
@@ -379,8 +391,9 @@ public partial class Receive : IAsyncDisposable
         {
             await JS.InvokeVoidAsync("secshareInterop.saveFile", _fileName, _fileBytes);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Failed to save decrypted file {FileName} through JS interop.", _fileName);
             // JS interop failure is non-critical; the "Download again" button remains available.
         }
     }
@@ -396,8 +409,9 @@ public partial class Receive : IAsyncDisposable
         {
             await JS.InvokeVoidAsync("secshareInterop.copyText", _textContent);
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.LogWarning(ex, "Failed to copy decrypted text to clipboard.");
             // Clipboard access may be denied; ignore silently.
         }
 

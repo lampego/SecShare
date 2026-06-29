@@ -1,5 +1,7 @@
+using Majorsoft.Blazor.WebAssembly.Logging.Console;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Logging;
 using SecShare.Business.Common.Http;
 using SecShare.Web;
 
@@ -35,5 +37,11 @@ builder.Services.AddScoped<WebSecShareHttpClient>(sp =>
     new WebSecShareHttpClient(sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped<ISecShareDownloadClient>(sp =>
     sp.GetRequiredService<WebSecShareHttpClient>());
+
+#if DEBUG
+builder.Logging.AddBrowserConsole()
+    .SetMinimumLevel(LogLevel.Debug)
+    .AddFilter("Microsoft", LogLevel.Information);
+#endif
 
 await builder.Build().RunAsync();
