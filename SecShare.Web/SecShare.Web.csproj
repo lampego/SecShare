@@ -7,9 +7,35 @@
         <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Production' ">
+        <DefineConstants>TRACE;IS_RELEASE_BUILD</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <DefineConstants>TRACE;IS_RELEASE_BUILD</DefineConstants>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <DefineConstants>TRACE;IS_DEBUG_BUILD</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <Content Update="wwwroot\appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\appsettings.Production.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+        <Content Update="wwwroot\appsettings.Debug.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.8"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.8" PrivateAssets="all"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\SecShare.Business.Common\SecShare.Business.Common.csproj" />
     </ItemGroup>
 
     <ItemGroup>
@@ -17,8 +43,8 @@
     </ItemGroup>
 
     <PropertyGroup>
-        <TailwindInputCss>$(ProjectDir)styles\app.css</TailwindInputCss>
-        <TailwindOutputCss>$(ProjectDir)wwwroot\css\app.min.css</TailwindOutputCss>
+        <TailwindInputCss>$(ProjectDir)styles/app.css</TailwindInputCss>
+        <TailwindOutputCss>$(ProjectDir)wwwroot/css/app.min.css</TailwindOutputCss>
     </PropertyGroup>
 
     <ItemGroup>

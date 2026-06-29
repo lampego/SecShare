@@ -1,8 +1,8 @@
 using SecShare.Business.Common.Enums;
 
-namespace SecShare.Console.Models.Http;
+namespace SecShare.Business.Common.Http;
 
-public sealed record DownloadHttpResult(
+public sealed record DownloadResult(
     byte[] EncryptedPayload,
     StorageContentType ContentType,
     string? FileId,
@@ -10,5 +10,5 @@ public sealed record DownloadHttpResult(
     long? Size,
     int? DownloadsRemaining,
     DateTime? DeleteAt,
-    string? PayloadType
-);
+    string? PayloadType);
+

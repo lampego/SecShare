@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using SecShare.Business.Common.Dto.Storage;
+using SecShare.Business.Common.Headers;
 using SecShare.Console.Models.Http;
 
 namespace SecShare.Console.Services.Http;
@@ -30,7 +31,7 @@ public sealed partial class SecShareHttpClient
         {
             Content = content
         };
-        request.Headers.Add("X-Client-Type", "Console");
+        request.Headers.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeConsole);
         request.Headers.UserAgent.ParseAdd("SecShareConsole/1.0");
 
         using var response = await _httpClient.SendAsync(request, cancellationToken);

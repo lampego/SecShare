@@ -5,6 +5,7 @@ using Autofac;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using SecShare.Business.Common.Headers;
 using SecShare.Business.Dto;
 using SecShare.Business.Exceptions;
 
@@ -26,9 +27,9 @@ public class MainApiControllerBase : ApiControllerBase
         {
             if (this.GetType().Name.Contains("StorageController", StringComparison.OrdinalIgnoreCase))
             {
-                if (!IsValidConsoleRequest(httpContext))
+                if (!IsValidClientRequest(httpContext))
                 {
-                    throw new ApiException("Forbidden: Requests are only allowed from the SecShare Console application.", HttpStatusCode.Forbidden);
+                    throw new ApiException("Forbidden: Requests are only allowed from the SecShare application.", HttpStatusCode.Forbidden);
                 }
             }
         }
@@ -72,21 +73,21 @@ public class MainApiControllerBase : ApiControllerBase
         return response;
     }
 
-    protected bool IsValidConsoleRequest(HttpContext? httpContext = null)
+    protected bool IsValidClientRequest(HttpContext? httpContext = null)
     {
         var context = httpContext ?? HttpContextAccessor.HttpContext;
         if (context == null) return false;
 
         var request = context.Request;
 
-        // Check custom header
-        if (request.Headers.TryGetValue("X-Client-Type", out var clientType) &&
-            string.Equals(clientType, "Console", StringComparison.OrdinalIgnoreCase))
+        // Accept Console or Web via the explicit client-type header.
+        if (request.Headers.TryGetValue(SecShareClientHeaders.ClientType, out var clientType))
         {
-            return true;
+            return string.Equals(clientType, SecShareClientHeaders.ClientTypeConsole, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(clientType, SecShareClientHeaders.ClientTypeWeb, StringComparison.OrdinalIgnoreCase);
         }
 
-        // Check user-agent
+        // Legacy: also accept the Console user-agent for backward compatibility with older CLI builds.
         if (request.Headers.TryGetValue("User-Agent", out var userAgent))
         {
             var uaString = userAgent.ToString();

@@ -1,18 +1,16 @@
+using System.Net.Http;
 using SecShare.Business.Common.Headers;
-using SecShare.Business.Common.Http;
 
-namespace SecShare.Console.Services.Http;
+namespace SecShare.Business.Common.Http;
 
-public sealed partial class SecShareHttpClient
+/// <summary>
+/// Blazor WASM implementation of <see cref="ISecShareDownloadClient"/>.
+/// Sends <c>X-Client-Type: Web</c> and streams the encrypted payload with optional progress reporting.
+/// </summary>
+public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDownloadClient
 {
+    private const long MaxEncryptedPayloadSizeBytes = 220L * 1024 * 1024;
     private const string ApiFilesPath = "/api/files";
-
-    // Explicit ISecShareDownloadClient implementation — no progress reporting wrapper needed.
-    Task<DownloadResult> ISecShareDownloadClient.DownloadAsync(
-        string fileId,
-        Action<TransferProgress>? progress,
-        CancellationToken cancellationToken)
-        => DownloadAsync(fileId, progress, cancellationToken);
 
     public async Task<DownloadResult> DownloadAsync(
         string fileId,
@@ -23,19 +21,25 @@ public sealed partial class SecShareHttpClient
 
         var uri = new Uri($"{ApiFilesPath}/{Uri.EscapeDataString(fileId)}", UriKind.Relative);
         using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-        request.Headers.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeConsole);
-        request.Headers.UserAgent.ParseAdd("SecShareConsole/1.0");
+        request.Headers.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeWeb);
 
-        using var response = await _httpClient.SendAsync(
+        using var response = await httpClient.SendAsync(
             request,
             HttpCompletionOption.ResponseHeadersRead,
             cancellationToken);
-        await EnsureSuccessResponseAsync(response, cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(
+                $"Download failed with status {(int)response.StatusCode}.",
+                inner: null,
+                statusCode: response.StatusCode);
+        }
 
         var totalBytes = response.Content.Headers.ContentLength;
         if (totalBytes > MaxEncryptedPayloadSizeBytes)
         {
-            throw new InvalidOperationException("Encrypted payload size must not exceed 210 MB.");
+            throw new InvalidOperationException("Encrypted payload size must not exceed 220 MB.");
         }
 
         await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -53,7 +57,7 @@ public sealed partial class SecShareHttpClient
 
             if (target.Length + bytesRead > MaxEncryptedPayloadSizeBytes)
             {
-                throw new InvalidOperationException("Encrypted payload size must not exceed 210 MB.");
+                throw new InvalidOperationException("Encrypted payload size must not exceed 220 MB.");
             }
 
             await target.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
@@ -64,3 +68,4 @@ public sealed partial class SecShareHttpClient
         return SecShareResponseParser.ParseDownloadResult(response, target.ToArray());
     }
 }
+

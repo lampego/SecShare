@@ -3,6 +3,7 @@ using System.Text;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
+using SecShare.Business.Common.Http;
 using SecShare.Business.Exceptions;
 using SecShare.Console;
 using SecShare.Console.Models.Http;
@@ -89,7 +90,7 @@ public sealed class SecShareHttpClientTests
         var client = new SecShareHttpClient(httpClient);
 
         var result = await client.DownloadAsync(
-            new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/token"),
+            "token",
             progress.Add,
             CancellationToken.None);
 
@@ -125,7 +126,7 @@ public sealed class SecShareHttpClientTests
         var client = new SecShareHttpClient(httpClient);
 
         var result = await client.DownloadAsync(
-            new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/token"),
+            "token",
             progress: null,
             CancellationToken.None);
 
@@ -148,7 +149,7 @@ public sealed class SecShareHttpClientTests
 
         await Assert.ThrowsAsync<HttpRequestException>(
             () => client.DownloadAsync(
-                new Uri($"{SecShareConstants.ServiceBaseUrl}{SecShareConstants.ApiFilesPath}/missing"),
+                "missing",
                 progress: null,
                 CancellationToken.None));
     }
@@ -237,6 +238,25 @@ public sealed class SecShareHttpClientTests
                 CancellationToken.None));
 
         Assert.Contains("Options.Expires: Expires must use a positive duration from 1 second to 365 days with suffix s, m, h, or d.", exception.Message);
+    }
+
+    [Fact]
+    public async Task DownloadAsync_SetsConsoleClientTypeHeader()
+    {
+        var handler = new StubHttpMessageHandler((request, _) =>
+        {
+            Assert.True(request.Headers.TryGetValues(SecShareClientHeaders.ClientType, out var values));
+            Assert.Equal(SecShareClientHeaders.ClientTypeConsole, values.Single());
+
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent("payload"u8.ToArray()),
+            });
+        });
+        using var httpClient = CreateHttpClient(handler);
+        var client = new SecShareHttpClient(httpClient);
+
+        _ = await client.DownloadAsync("token", progress: null, CancellationToken.None);
     }
 
     private static HttpClient CreateHttpClient(HttpMessageHandler handler)

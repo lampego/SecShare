@@ -2,6 +2,7 @@ using Autofac;
 using Microsoft.AspNetCore.HttpOverrides;
 using SecShare.Api.Di.Autofac.Modules;
 using SecShare.Business;
+using SecShare.Business.Common.Headers;
 using SecShare.Business.Helpers;
 using SecShare.Business.Mvc.Middleware;
 using Serilog;
@@ -26,7 +27,16 @@ public class Startup
             options.AddPolicy("Cors", policy => policy
                 .AllowAnyOrigin()
                 .AllowAnyHeader()
-                .AllowAnyMethod());
+                .AllowAnyMethod()
+                .WithExposedHeaders(
+                    SecShareFileHeaders.ContentType,
+                    SecShareFileHeaders.FileId,
+                    SecShareFileHeaders.FileExtension,
+                    SecShareFileHeaders.FileSize,
+                    SecShareFileHeaders.DownloadsRemaining,
+                    SecShareFileHeaders.DeleteAt,
+                    SecShareFileHeaders.PayloadType
+                ));
         });
 
         services.AddAutoMapper(cfg => { }, assembly);

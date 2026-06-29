@@ -1,4 +1,5 @@
 using SecShare.Business.Common.Dto.Storage;
+using SecShare.Business.Common.Http;
 using SecShare.Console.Models.Http;
 
 namespace SecShare.Console.Services.Http;
@@ -11,8 +12,8 @@ public interface ISecShareHttpClient
         Action<TransferProgress>? progress,
         CancellationToken cancellationToken);
 
-    Task<DownloadHttpResult> DownloadAsync(
-        Uri payloadUri,
+    Task<DownloadResult> DownloadAsync(
+        string fileId,
         Action<TransferProgress>? progress,
         CancellationToken cancellationToken);
 }

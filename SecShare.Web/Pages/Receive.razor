@@ -1,0 +1,178 @@
+@page "/f/{Id}"
+
+<PageTitle>SecShare — Receive</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<div class="min-h-screen bg-[#f7f8f5] flex flex-col items-center justify-center px-4 py-12">
+    <div class="w-full max-w-lg space-y-6">
+
+        <!-- Logo -->
+        <a href="/" aria-label="SecShare home" class="focus-ring inline-block rounded-md">
+            <img src="images/logos/logo-horizontal.svg" alt="SecShare" class="h-8 w-auto" />
+        </a>
+
+        @switch (_state)
+        {
+            case PageState.Loading:
+                <div class="rounded-xl border border-[#dce5da] bg-white/80 p-10 shadow-sm text-center">
+                    <div class="mx-auto mb-4 h-7 w-7 animate-spin rounded-full border-[2.5px] border-[#dce5da] border-t-[#13201d]"></div>
+                    <p class="font-mono text-sm text-[#52625d]">Loading encrypted content…</p>
+                    @if (_downloadProgress is { TotalBytes: > 0 } p)
+                    {
+                        var pct = (int)Math.Min(100, p.BytesTransferred * 100 / p.TotalBytes.Value);
+                        <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[#dce5da]">
+                            <div class="h-full rounded-full bg-[#13201d] transition-all duration-150"
+                                 style="width: @(pct)%"></div>
+                        </div>
+                        <p class="mt-2 text-xs text-[#a0afa9]">
+                            @FormatBytes(p.BytesTransferred) / @FormatBytes(p.TotalBytes.Value)
+                            · @FormatSpeed(p.BytesPerSecond)
+                        </p>
+                    }
+                </div>
+                break;
+
+            case PageState.NeedKey:
+                <div class="rounded-xl border border-[#dce5da] bg-white/80 p-8 shadow-sm">
+                    <div class="mb-6">
+                        <div class="mb-4 flex h-10 w-10 items-center justify-center rounded-lg border border-[#dce5da] bg-[#f7f8f5]">
+                            <!-- Lock icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <h1 class="text-base font-semibold text-[#13201d]">Decryption key required</h1>
+                        <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                            This link does not include the decryption key. Ask the sender for the key and paste it below.
+                        </p>
+                    </div>
+                    <div class="space-y-3">
+                        <input @bind="_keyInput"
+                               @onkeydown="OnKeyInputKeyDown"
+                               type="text"
+                               placeholder="Paste decryption key…"
+                               autocomplete="off"
+                               spellcheck="false"
+                               class="w-full rounded-lg border border-[#dce5da] bg-white px-4 py-2.5 font-mono text-sm text-[#13201d] placeholder:text-[#a0afa9] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]" />
+                        @if (!string.IsNullOrEmpty(_keyError))
+                        {
+                            <p class="text-xs text-red-600">@_keyError</p>
+                        }
+                        <button @onclick="OnDecryptClicked"
+                                disabled="@_isDecrypting"
+                                class="w-full rounded-lg bg-[#13201d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530] disabled:cursor-not-allowed disabled:opacity-60 focus-ring">
+                            @(_isDecrypting ? "Decrypting…" : "Decrypt")
+                        </button>
+                    </div>
+                </div>
+                break;
+
+            case PageState.Decrypting:
+                <div class="rounded-xl border border-[#dce5da] bg-white/80 p-10 shadow-sm text-center">
+                    <div class="mx-auto mb-4 h-7 w-7 animate-spin rounded-full border-[2.5px] border-[#dce5da] border-t-[#13201d]"></div>
+                    <p class="font-mono text-sm text-[#52625d]">Decrypting locally in your browser…</p>
+                    <p class="mt-1.5 text-xs text-[#a0afa9]">The decryption key is never sent to SecShare servers.</p>
+                </div>
+                break;
+
+            case PageState.Ready when _readyKind == ReadyKind.Text:
+                <div class="overflow-hidden rounded-xl border border-[#dce5da] bg-white/80 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-[#dce5da] px-5 py-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-medium text-[#13201d]">Decrypted text</span>
+                            @if (_hasKeyFromLink)
+                            {
+                                <span class="inline-flex items-center gap-1 rounded-full bg-[#eaf6ef] px-2 py-0.5 text-xs font-medium text-[#1a6641]">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                    Key found in link
+                                </span>
+                            }
+                        </div>
+                        <button @onclick="CopyTextAsync"
+                                class="focus-ring inline-flex items-center gap-1.5 rounded-md border border-[#dce5da] bg-white px-3 py-1.5 text-xs font-medium text-[#52625d] shadow-sm transition hover:border-[#9bb5aa] hover:text-[#13201d]">
+                            @if (_isCopied)
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#1a6641]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                                <span>Copied!</span>
+                            }
+                            else
+                            {
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                </svg>
+                                <span>Copy text</span>
+                            }
+                        </button>
+                    </div>
+                    <pre class="max-h-96 overflow-y-auto p-5 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words text-[#13201d]">@_textContent</pre>
+                </div>
+                break;
+
+            case PageState.Ready when _readyKind == ReadyKind.File:
+                <div class="rounded-xl border border-[#dce5da] bg-white/80 p-8 shadow-sm">
+                    <div class="mb-6 flex items-start gap-4">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eaf6ef]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#1a6641]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="min-w-0">
+                            <h1 class="text-base font-semibold text-[#13201d]">
+                                @(_contentType == StorageContentType.Folder ? "Archive ready" : "File ready")
+                            </h1>
+                            <p class="mt-0.5 truncate font-mono text-sm text-[#52625d]">@_fileName</p>
+                            @if (_hasKeyFromLink)
+                            {
+                                <p class="mt-1 text-xs text-[#a0afa9]">Encryption key was found in the link.</p>
+                            }
+                        </div>
+                    </div>
+                    <button @onclick="SaveFileAsync"
+                            class="focus-ring inline-flex items-center gap-2 rounded-lg border border-[#dce5da] bg-white px-4 py-2 text-sm font-medium text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download again
+                    </button>
+                </div>
+                break;
+
+            case PageState.Error:
+                <div class="rounded-xl border border-red-200 bg-white/80 p-8 shadow-sm">
+                    <div class="mb-5 flex items-start gap-4">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-red-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-base font-semibold text-[#13201d]">Could not receive the content</h1>
+                            <p class="mt-1 text-sm leading-6 text-[#52625d]">@_errorMessage</p>
+                        </div>
+                    </div>
+                    <a href="/" class="focus-ring text-sm text-[#52625d] underline-offset-2 transition hover:text-[#13201d] hover:underline">
+                        ← Back to home
+                    </a>
+                </div>
+                break;
+        }
+
+        <p class="text-center text-xs text-[#a0afa9]">
+            Decryption happens locally in your browser — the key is never sent to SecShare servers.
+        </p>
+
+    </div>
+</div>
+

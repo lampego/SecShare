@@ -28,22 +28,29 @@ public class StorageApiTests : BaseTest
 
     private void AddConsoleHeaders()
     {
-        HttpClient.DefaultRequestHeaders.Remove("X-Client-Type");
-        HttpClient.DefaultRequestHeaders.Add("X-Client-Type", "Console");
+        HttpClient.DefaultRequestHeaders.Remove(SecShareClientHeaders.ClientType);
+        HttpClient.DefaultRequestHeaders.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeConsole);
         HttpClient.DefaultRequestHeaders.UserAgent.Clear();
         HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("SecShareConsole/1.0");
     }
 
-    private void RemoveConsoleHeaders()
+    private void AddWebHeaders()
     {
-        HttpClient.DefaultRequestHeaders.Remove("X-Client-Type");
+        HttpClient.DefaultRequestHeaders.Remove(SecShareClientHeaders.ClientType);
+        HttpClient.DefaultRequestHeaders.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeWeb);
+        HttpClient.DefaultRequestHeaders.UserAgent.Clear();
+    }
+
+    private void RemoveClientHeaders()
+    {
+        HttpClient.DefaultRequestHeaders.Remove(SecShareClientHeaders.ClientType);
         HttpClient.DefaultRequestHeaders.UserAgent.Clear();
     }
 
     [Fact]
-    public async Task Upload_WithoutConsoleHeaders_ReturnsForbidden()
+    public async Task Upload_WithoutClientTypeHeader_ReturnsForbidden()
     {
-        RemoveConsoleHeaders();
+        RemoveClientHeaders();
 
         var fileBytes = Encoding.UTF8.GetBytes("Test file contents");
         var formFile = CreateFormFile("archive.secshare", fileBytes);
@@ -58,7 +65,7 @@ public class StorageApiTests : BaseTest
         Assert.NotNull(errorResponse);
         Assert.Equal("fail", errorResponse.Status);
         Assert.Equal("ApiException", errorResponse.ErrorCode);
-        Assert.Equal("Forbidden: Requests are only allowed from the SecShare Console application.", errorResponse.Message);
+        Assert.Equal("Forbidden: Requests are only allowed from the SecShare application.", errorResponse.Message);
     }
 
     [Fact]
@@ -81,9 +88,9 @@ public class StorageApiTests : BaseTest
     }
 
     [Fact]
-    public async Task Download_WithoutConsoleHeaders_ReturnsForbidden()
+    public async Task Download_WithoutClientTypeHeader_ReturnsForbidden()
     {
-        RemoveConsoleHeaders();
+        RemoveClientHeaders();
 
         var response = await HttpClient.GetAsync($"{GetRoutePrefix}{Guid.NewGuid()}");
 
@@ -93,7 +100,7 @@ public class StorageApiTests : BaseTest
         Assert.NotNull(errorResponse);
         Assert.Equal("fail", errorResponse.Status);
         Assert.Equal("ApiException", errorResponse.ErrorCode);
-        Assert.Equal("Forbidden: Requests are only allowed from the SecShare Console application.", errorResponse.Message);
+        Assert.Equal("Forbidden: Requests are only allowed from the SecShare application.", errorResponse.Message);
     }
 
     [Fact]
@@ -265,6 +272,33 @@ public class StorageApiTests : BaseTest
         Assert.Equal("fail", afterDeletionError.Status);
         Assert.Equal("Decrypted data is unavailable", afterDeletionError.Message);
         Assert.Equal("FileDeletedDomainException", afterDeletionError.ErrorCode);
+    }
+
+    [Fact]
+    public async Task Download_WithWebClientHeader_ReturnsFileStream()
+    {
+        // Upload using Console headers so we get a token.
+        AddConsoleHeaders();
+
+        var originalContent = "Secure content for web download test";
+        var fileBytes = Encoding.UTF8.GetBytes(originalContent);
+        var formFile = CreateFormFile("archive.secshare", fileBytes);
+        var uploadResponse = await PostMultipartFormDataRequestAsync(
+            UploadRoute,
+            CreateUploadOptionsData(),
+            formFile);
+        Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+        var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
+        Assert.NotNull(uploadResponseDto);
+
+        // Switch to Web headers for download.
+        AddWebHeaders();
+        var downloadResponse = await HttpClient.GetAsync($"{GetRoutePrefix}{uploadResponseDto.Token}");
+
+        Assert.Equal(HttpStatusCode.OK, downloadResponse.StatusCode);
+        var downloadedBytes = await downloadResponse.Content.ReadAsByteArrayAsync();
+        Assert.Equal(fileBytes, downloadedBytes);
     }
 
     private static Dictionary<string, object> CreateUploadOptionsData(

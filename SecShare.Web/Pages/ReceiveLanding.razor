@@ -1,0 +1,63 @@
+@page "/receive"
+
+<PageTitle>SecShare — Open a link</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<div class="min-h-screen bg-[#f7f8f5] flex flex-col items-center justify-center px-4 py-12">
+    <div class="w-full max-w-lg space-y-6">
+
+        <!-- Logo -->
+        <a href="/" aria-label="SecShare home" class="focus-ring inline-block rounded-md">
+            <img src="images/logos/logo-horizontal.svg" alt="SecShare" class="h-8 w-auto" />
+        </a>
+
+        <div class="rounded-xl border border-[#dce5da] bg-white/80 p-8 shadow-sm">
+            <!-- Icon -->
+            <div class="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-[#dce5da] bg-[#f7f8f5]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+            </div>
+
+            <h1 class="text-xl font-semibold text-[#13201d]">Open a SecShare link</h1>
+            <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                Paste the full SecShare link you received. If the link includes a decryption key
+                (the part after <code class="rounded bg-[#f7f8f5] px-1 font-mono text-xs">#</code>),
+                it will be read locally and never sent to the server.
+            </p>
+
+            <div class="mt-6 space-y-3">
+                <label for="link-input" class="block text-xs font-medium uppercase tracking-wide text-[#6b7c75]">
+                    SecShare link
+                </label>
+                <input id="link-input"
+                       @bind="_linkInput"
+                       @onkeydown="OnInputKeyDown"
+                       type="text"
+                       placeholder="https://secshare.me/f/…#key"
+                       autocomplete="off"
+                       spellcheck="false"
+                       class="w-full rounded-lg border border-[#dce5da] bg-white px-4 py-2.5 font-mono text-sm text-[#13201d] placeholder:text-[#a0afa9] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]" />
+
+                @if (!string.IsNullOrEmpty(_error))
+                {
+                    <p class="text-xs text-red-600">@_error</p>
+                }
+
+                <button @onclick="OpenLink"
+                        class="w-full rounded-lg bg-[#13201d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530] focus-ring">
+                    Open
+                </button>
+            </div>
+        </div>
+
+        <p class="text-center text-xs text-[#a0afa9]">
+            Decryption happens locally in your browser — the key is never sent to SecShare servers.
+        </p>
+
+    </div>
+</div>
+

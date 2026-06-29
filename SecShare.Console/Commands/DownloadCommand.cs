@@ -64,7 +64,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                 {
                     var downloadTask = ctx.AddTask("Downloading encrypted payload...", autoStart: true);
                     var downloadResult = await secShareHttpClient.DownloadAsync(
-                        link.PayloadUri,
+                        link.FileId,
                         progress => TransferProgressUi.Update(
                             downloadTask,
                             "Downloading encrypted payload...",

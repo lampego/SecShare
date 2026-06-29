@@ -1,5 +1,5 @@
 using System.Net;
-using SecShare.Console.Models.Http;
+using SecShare.Business.Common.Http;
 
 namespace SecShare.Console.Services.Http;
 

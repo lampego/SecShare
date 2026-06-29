@@ -1,10 +1,12 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using SecShare.Business.Common.Http;
 using SecShare.Console.Services.Archive;
 
 namespace SecShare.Console.Services.Http;
 
-public sealed partial class SecShareHttpClient(HttpClient httpClient) : ISecShareHttpClient
+public sealed partial class SecShareHttpClient(HttpClient httpClient)
+    : ISecShareHttpClient, ISecShareDownloadClient
 {
     public const long MaxEncryptedPayloadSizeBytes =
         ZipArchiveService.MaxSourceSizeBytes + (10L * 1024 * 1024);
