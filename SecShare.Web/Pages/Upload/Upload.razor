@@ -1,0 +1,245 @@
+@page "/upload"
+
+<PageTitle>SecShare — Create encrypted link</PageTitle>
+<HeadContent>
+    <meta name="robots" content="noindex, nofollow" />
+</HeadContent>
+
+<div class="min-h-screen bg-[#f7f8f5] text-[#13201d]">
+    <SiteHeader />
+    <main class="section-shell py-12 md:py-16">
+        <div class="mx-auto max-w-4xl">
+            <div class="mb-8">
+                <p class="font-mono text-sm font-semibold uppercase tracking-normal text-[#0f766e]">Browser upload</p>
+                <h1 class="mt-3 text-3xl font-semibold tracking-normal text-[#13201d] md:text-4xl">
+                    Create encrypted link
+                </h1>
+                <p class="mt-4 max-w-2xl text-lg leading-8 text-[#52625d]">
+                    Encrypt files or text in your browser before uploading.
+                </p>
+            </div>
+
+            @if (_result is null)
+            {
+                <div class="grid gap-6 lg:grid-cols-[1fr_0.72fr] lg:items-start">
+                    <section class="rounded-xl border border-[#dce5da] bg-white/80 p-5 shadow-sm md:p-6">
+                        <div class="grid grid-cols-2 rounded-lg border border-[#dce5da] bg-[#f7f8f5] p-1">
+                            <button type="button"
+                                    @onclick="() => SetMode(UploadMode.Files)"
+                                    class="@GetModeButtonClass(UploadMode.Files)">
+                                Files
+                            </button>
+                            <button type="button"
+                                    @onclick="() => SetMode(UploadMode.TextSecret)"
+                                    class="@GetModeButtonClass(UploadMode.TextSecret)">
+                                Text secret
+                            </button>
+                        </div>
+
+                        @if (_mode == UploadMode.Files)
+                        {
+                            <div class="mt-6 space-y-5">
+                                <div class="relative rounded-xl border border-dashed border-[#b9cabe] bg-[#fbfcf8] p-8 text-center transition hover:border-[#8ca99d]">
+                                    <InputFile @key="_fileInputKey"
+                                               OnChange="OnFilesSelected"
+                                               multiple
+                                               class="absolute inset-0 h-full w-full cursor-pointer opacity-0" />
+                                    <div class="pointer-events-none mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-lg border border-[#dce5da] bg-white">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                    </div>
+                                    <p class="pointer-events-none text-sm font-semibold text-[#13201d]">
+                                        Drag and drop files here
+                                    </p>
+                                    <p class="pointer-events-none mt-2 text-sm text-[#52625d]">
+                                        or
+                                    </p>
+                                    <span class="pointer-events-none mt-3 inline-flex rounded-md bg-[#13201d] px-4 py-2 text-sm font-semibold text-white shadow-sm">
+                                        Select files
+                                    </span>
+                                </div>
+
+                                <p class="text-sm leading-6 text-[#52625d]">
+                                    Multiple files will be shared as one encrypted upload.
+                                </p>
+
+                                @if (_selectedFiles.Count > 0)
+                                {
+                                    <div class="rounded-lg border border-[#dce5da] bg-white">
+                                        <div class="flex items-center justify-between border-b border-[#dce5da] px-4 py-3">
+                                            <p class="text-sm font-semibold text-[#13201d]">Selected files</p>
+                                            <button type="button"
+                                                    @onclick="ClearFiles"
+                                                    class="focus-ring rounded-md text-sm font-medium text-[#52625d] underline-offset-2 transition hover:text-[#13201d] hover:underline">
+                                                Clear all
+                                            </button>
+                                        </div>
+                                        <ul class="divide-y divide-[#dce5da]">
+                                            @foreach (var item in _selectedFiles)
+                                            {
+                                                <li class="flex items-center justify-between gap-4 px-4 py-3">
+                                                    <div class="min-w-0">
+                                                        <p class="truncate text-sm font-medium text-[#13201d]">@item.File.Name</p>
+                                                        <p class="mt-0.5 font-mono text-xs text-[#6b7c75]">@FormatBytes(item.File.Size)</p>
+                                                    </div>
+                                                    <button type="button"
+                                                            @onclick="() => RemoveFile(item.Id)"
+                                                            class="focus-ring shrink-0 rounded-md border border-[#dce5da] bg-white px-3 py-1.5 text-xs font-medium text-[#52625d] shadow-sm transition hover:border-[#9bb5aa] hover:text-[#13201d]">
+                                                        Remove
+                                                    </button>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mt-6 space-y-5">
+                                <div>
+                                    <label for="secret-text" class="block text-xs font-medium uppercase tracking-wide text-[#6b7c75]">
+                                        Secret text
+                                    </label>
+                                    <textarea id="secret-text"
+                                              @bind="_textSecret"
+                                              rows="10"
+                                              placeholder="Paste a secret, config value, token, log fragment, or any text you want to share."
+                                              class="mt-2 w-full resize-y rounded-lg border border-[#dce5da] bg-white px-4 py-3 font-mono text-sm leading-6 text-[#13201d] placeholder:text-[#a0afa9] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]"></textarea>
+                                </div>
+
+                                <p class="text-sm leading-6 text-[#52625d]">
+                                    Text is encrypted in your browser and uploaded as an encrypted secret.
+                                </p>
+                            </div>
+                        }
+                    </section>
+
+                    <aside class="rounded-xl border border-[#dce5da] bg-white/80 p-5 shadow-sm md:p-6">
+                        <h2 class="text-base font-semibold text-[#13201d]">Upload options</h2>
+                        <div class="mt-5 space-y-5">
+                            <div>
+                                <label for="expires" class="block text-xs font-medium uppercase tracking-wide text-[#6b7c75]">
+                                    Expires after
+                                </label>
+                                <select id="expires"
+                                        @bind="_expires"
+                                        class="mt-2 w-full rounded-lg border border-[#dce5da] bg-white px-4 py-2.5 text-sm text-[#13201d] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]">
+                                    <option value="10m">10 minutes</option>
+                                    <option value="1h">1 hour</option>
+                                    <option value="10h">10 hours</option>
+                                    <option value="24h">1 day</option>
+                                    <option value="60d">60 days</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="downloads" class="block text-xs font-medium uppercase tracking-wide text-[#6b7c75]">
+                                    Downloads before removal
+                                </label>
+                                <input id="downloads"
+                                       @bind="_downloads"
+                                       type="number"
+                                       min="1"
+                                       class="mt-2 w-full rounded-lg border border-[#dce5da] bg-white px-4 py-2.5 text-sm text-[#13201d] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]" />
+                                <p class="mt-2 text-xs leading-5 text-[#6b7c75]">
+                                    The encrypted share is removed after this many successful downloads.
+                                </p>
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(_errorMessage))
+                            {
+                                <div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700">
+                                    @_errorMessage
+                                </div>
+                            }
+
+                            <button type="button"
+                                    @onclick="EncryptAndUploadAsync"
+                                    disabled="@IsSubmitDisabled"
+                                    class="focus-ring inline-flex w-full justify-center rounded-lg bg-[#13201d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530] disabled:cursor-not-allowed disabled:opacity-60">
+                                @SubmitButtonText
+                            </button>
+                        </div>
+                    </aside>
+                </div>
+            }
+            else
+            {
+                <section class="rounded-xl border border-[#dce5da] bg-white/80 p-5 shadow-sm md:p-6">
+                    <div class="mb-6 flex items-start gap-4">
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eaf6ef]">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#1a6641]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-semibold text-[#13201d]">Encrypted link is ready</h2>
+                            <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                                Anyone with the full link can decrypt the file. Treat it like a temporary secret.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid gap-4 lg:grid-cols-2">
+                        <article class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-4">
+                            <h3 class="font-semibold text-[#13201d]">Full link</h3>
+                            <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                                Send this if the receiver should open and decrypt the file directly.
+                            </p>
+                            <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
+                                @_result.FullLink
+                            </div>
+                            <button type="button"
+                                    @onclick="CopyFullLinkAsync"
+                                    class="focus-ring mt-3 inline-flex rounded-md bg-[#13201d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530]">
+                                @(_copied == CopiedTarget.FullLink ? "Copied" : "Copy full link")
+                            </button>
+                        </article>
+
+                        <article class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-4">
+                            <h3 class="font-semibold text-[#13201d]">Separate link and key</h3>
+                            <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                                Use this if you want to send the link and decryption key through different channels.
+                            </p>
+                            <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
+                                @_result.LinkWithoutKey
+                            </div>
+                            <button type="button"
+                                    @onclick="CopyLinkAsync"
+                                    class="focus-ring mt-3 inline-flex rounded-md border border-[#cbd8cf] bg-white px-4 py-2 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+                                @(_copied == CopiedTarget.Link ? "Copied" : "Copy link")
+                            </button>
+
+                            <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
+                                @_result.DecryptionKey
+                            </div>
+                            <button type="button"
+                                    @onclick="CopyKeyAsync"
+                                    class="focus-ring mt-3 inline-flex rounded-md border border-[#cbd8cf] bg-white px-4 py-2 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+                                @(_copied == CopiedTarget.Key ? "Copied" : "Copy key")
+                            </button>
+                        </article>
+                    </div>
+
+                    <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+                        <button type="button"
+                                @onclick="CreateAnotherLink"
+                                class="focus-ring inline-flex justify-center rounded-md border border-[#cbd8cf] bg-white px-5 py-3 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+                            Create another link
+                        </button>
+                        <button type="button"
+                                @onclick="CopyFullLinkAsync"
+                                class="focus-ring inline-flex justify-center rounded-md bg-[#13201d] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530]">
+                            @(_copied == CopiedTarget.FullLink ? "Copied" : "Copy full link")
+                        </button>
+                    </div>
+                </section>
+            }
+        </div>
+    </main>
+    <SiteFooter />
+</div>
