@@ -49,7 +49,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <TailwindSourceFiles Include="**\*.razor;wwwroot\index.html" Exclude="bin\**;obj\**;node_modules\**" />
+        <TailwindSourceFiles
+            Include="**\*.razor;**\*.cs;**\*.html"
+            Exclude="bin\**;obj\**;node_modules\**"
+        />
     </ItemGroup>
 
     <Target Name="Npm" BeforeTargets="TailwindCssBuild" Condition="!Exists('$(ProjectDir)node_modules')">
@@ -66,6 +69,12 @@
         <Message Text="Building Tailwind CSS..." Importance="high" />
         <Exec Command="npx @tailwindcss/cli -i $(TailwindInputCss) -o $(TailwindOutputCss) --minify" WorkingDirectory="$(ProjectDir)" />
         <Touch Files="$(TailwindOutputCss)" AlwaysCreate="true" />
+    </Target>
+
+    <Target Name="FingerprintPublishedIndexAssets"
+            AfterTargets="Publish"
+            Condition="Exists('$(PublishDir)wwwroot/index.html') And Exists('$(IntermediateOutputPath)staticwebassets.publish.endpoints.json')">
+        <Exec Command="node &quot;$(ProjectDir)Scripts/fingerprint-published-index.js&quot; &quot;$(IntermediateOutputPath)staticwebassets.publish.endpoints.json&quot; &quot;$(PublishDir)wwwroot/index.html&quot; &quot;$(IntermediateOutputPath)staticwebassets/htmlassetplaceholders/publish&quot;" />
     </Target>
 
 </Project>

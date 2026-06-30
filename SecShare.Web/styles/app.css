@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@source "../**/*.{razor,html,cshtml}";
+@source "../**/*.{razor,cs,html,cshtml}";
 
 @theme {
     --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
