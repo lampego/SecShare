@@ -5,59 +5,80 @@
     <meta name="robots" content="noindex, nofollow" />
 </HeadContent>
 
-<div class="min-h-screen bg-[#f7f8f5] flex flex-col items-center justify-center px-4 py-12">
-    <div class="w-full max-w-lg space-y-6">
-
-        <!-- Logo -->
-        <a href="/" aria-label="SecShare home" class="focus-ring inline-block rounded-md">
-            <img src="images/logos/logo-horizontal.svg" alt="SecShare" class="h-8 w-auto" />
-        </a>
-
-        <div class="rounded-xl border border-[#dce5da] bg-white/80 p-8 shadow-sm">
-            <!-- Icon -->
-            <div class="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-[#dce5da] bg-[#f7f8f5]">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                </svg>
+<div class="min-h-screen bg-[#f7f8f5] text-[#13201d]">
+    <SiteHeader />
+    <main class="section-shell py-12 md:py-16">
+        <div class="mx-auto max-w-4xl">
+            <div class="mb-8">
+                <p class="font-mono text-sm font-semibold uppercase tracking-normal text-[#0f766e]">Browser receive</p>
+                <h1 class="mt-3 text-3xl font-semibold tracking-normal text-[#13201d] md:text-4xl">
+                    Open a SecShare link
+                </h1>
+                <p class="mt-4 max-w-2xl text-lg leading-8 text-[#52625d]">
+                    Paste a received link, decrypt it locally, and download the file.
+                </p>
             </div>
 
-            <h1 class="text-xl font-semibold text-[#13201d]">Open a SecShare link</h1>
-            <p class="mt-2 text-sm leading-6 text-[#52625d]">
-                Paste the full SecShare link you received. If the link includes a decryption key
-                (the part after <code class="rounded bg-[#f7f8f5] px-1 font-mono text-xs">#</code>),
-                it will be read locally and never sent to the server.
-            </p>
+            <div class="grid gap-6 lg:grid-cols-[1fr_0.72fr] lg:items-start">
+                <section class="rounded-xl border border-[#dce5da] bg-white/80 p-5 shadow-sm md:p-6">
+                    <div class="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-[#dce5da] bg-[#f7f8f5]">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
+                    </div>
 
-            <div class="mt-6 space-y-3">
-                <label for="link-input" class="block text-xs font-medium uppercase tracking-wide text-[#6b7c75]">
-                    SecShare link
-                </label>
-                <input id="link-input"
-                       @bind="_linkInput"
-                       @onkeydown="OnInputKeyDown"
-                       type="text"
-                       placeholder="https://secshare.me/f/…#key"
-                       autocomplete="off"
-                       spellcheck="false"
-                       class="w-full rounded-lg border border-[#dce5da] bg-white px-4 py-2.5 font-mono text-sm text-[#13201d] placeholder:text-[#a0afa9] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]" />
+                    <h2 class="text-xl font-semibold text-[#13201d]">Receive encrypted content</h2>
+                    <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                        Paste the full SecShare link you received. If the link includes a decryption key
+                        (the part after <code class="rounded bg-[#f7f8f5] px-1 font-mono text-xs">#</code>),
+                        it will be read locally and never sent to the server.
+                    </p>
 
-                @if (!string.IsNullOrEmpty(_error))
-                {
-                    <p class="text-xs text-red-600">@_error</p>
-                }
+                    <div class="mt-6 space-y-3">
+                        <label for="link-input" class="block text-xs font-medium uppercase tracking-wide text-[#6b7c75]">
+                            SecShare link
+                        </label>
+                        <input id="link-input"
+                               @bind="_linkInput"
+                               @onkeydown="OnInputKeyDown"
+                               type="text"
+                               placeholder="https://secshare.me/f/...#key"
+                               autocomplete="off"
+                               spellcheck="false"
+                               class="w-full rounded-lg border border-[#dce5da] bg-white px-4 py-2.5 font-mono text-sm text-[#13201d] placeholder:text-[#a0afa9] focus:border-[#0f766e] focus:outline-none focus:ring-1 focus:ring-[#0f766e]" />
 
-                <button @onclick="OpenLink"
-                        class="w-full rounded-lg bg-[#13201d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530] focus-ring">
-                    Open
-                </button>
+                        @if (!string.IsNullOrEmpty(_error))
+                        {
+                            <p class="text-xs text-red-600">@_error</p>
+                        }
+
+                        <button type="button"
+                                @onclick="OpenLink"
+                                class="focus-ring inline-flex w-full justify-center rounded-lg bg-[#13201d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530]">
+                            Open link
+                        </button>
+                    </div>
+                </section>
+
+                <aside class="rounded-xl border border-[#dce5da] bg-white/80 p-5 shadow-sm md:p-6">
+                    <h2 class="text-base font-semibold text-[#13201d]">Local decryption</h2>
+                    <p class="mt-3 text-sm leading-6 text-[#52625d]">
+                        Decryption happens in your browser. The key stays in the URL fragment and is not sent to SecShare servers.
+                    </p>
+                    <div class="mt-5 rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-4">
+                        <p class="text-sm font-semibold text-[#13201d]">Have content to send?</p>
+                        <p class="mt-2 text-sm leading-6 text-[#52625d]">
+                            Create an encrypted upload from files or text.
+                        </p>
+                        <a href="/upload"
+                           class="focus-ring mt-4 inline-flex rounded-md border border-[#cbd8cf] bg-white px-4 py-2 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+                            Upload in browser
+                        </a>
+                    </div>
+                </aside>
             </div>
         </div>
-
-        <p class="text-center text-xs text-[#a0afa9]">
-            Decryption happens locally in your browser — the key is never sent to SecShare servers.
-        </p>
-
-    </div>
+    </main>
+    <SiteFooter />
 </div>
-
