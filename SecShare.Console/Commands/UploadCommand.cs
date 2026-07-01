@@ -2,10 +2,10 @@ using System.ComponentModel;
 using System.Text.Json;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Http;
 using SecShare.Business.Common.Services.Archive;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Services.Crypto;
-using SecShare.Console.Models.Http;
 using SecShare.Console.Models.Upload;
 using SecShare.Console.Services.Http;
 using SecShare.Console.Services.Upload;
@@ -36,6 +36,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         [CommandOption("--text")]
         [Description("Treat input as plain text instead of a file path.")]
         public bool IsText { get; init; }
+        
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
@@ -65,7 +66,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         var isText = settings.IsText || isFromStdin;
         var contentType = ResolveContentType(inputToProcess, isText);
         UploadPackage package;
-        UploadHttpResult uploadResult;
+        UploadResult uploadResult;
         try
         {
             var archiveService = new ZipArchiveService();

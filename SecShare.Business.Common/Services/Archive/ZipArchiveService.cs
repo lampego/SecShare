@@ -19,7 +19,7 @@ public sealed class ZipArchiveService : IZipArchiveService
         if (File.Exists(path))
         {
             var file = new FileInfo(path);
-            var item = new ArchiveFileItem(file.FullName, file.Name, file.Length);
+            var item = CreatePathItem(file.FullName, file.Name, file.Length);
 
             ValidateTotalSize([item]);
 
@@ -38,7 +38,7 @@ public sealed class ZipArchiveService : IZipArchiveService
             var rootEntryName = NormalizeEntryName(directory.Name);
             var items = directory
                 .EnumerateFiles("*", SearchOption.AllDirectories)
-                .Select(file => new ArchiveFileItem(
+                .Select(file => CreatePathItem(
                     file.FullName,
                     $"{rootEntryName}/{NormalizeEntryName(Path.GetRelativePath(directory.FullName, file.FullName))}",
                     file.Length
@@ -70,6 +70,32 @@ public sealed class ZipArchiveService : IZipArchiveService
         }
 
         throw new FileNotFoundException($"Path '{path}' does not exist.", path);
+    }
+
+    public async Task<ZipArchiveBuildResult> CreateFromStreamsAsync(
+        IReadOnlyCollection<ZipArchiveSourceItem> items,
+        string sourceName,
+        CancellationToken cancellationToken
+    )
+    {
+        ArgumentNullException.ThrowIfNull(items);
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceName);
+
+        if (items.Count == 0)
+        {
+            throw new InvalidOperationException("At least one file must be selected.");
+        }
+
+        var archiveItems = CreateUniqueStreamItems(items);
+        ValidateTotalSize(archiveItems);
+
+        var archiveBytes = await CreateArchiveAsync(archiveItems, cancellationToken);
+        return new ZipArchiveBuildResult(
+            archiveBytes,
+            archiveItems.Sum(item => item.SizeBytes),
+            archiveItems.Length,
+            sourceName
+        );
     }
 
     public async Task<ZipArchiveBuildResult> CreateFromTextAsync(
@@ -235,7 +261,7 @@ public sealed class ZipArchiveService : IZipArchiveService
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var entry = archive.CreateEntry(item.EntryName, CompressionLevel.Optimal);
-                await using var sourceStream = File.OpenRead(item.FullPath);
+                await using var sourceStream = await item.OpenReadStreamAsync(cancellationToken);
                 await using var entryStream = await entry.OpenAsync(cancellationToken);
                 await sourceStream.CopyToAsync(entryStream, cancellationToken);
             }
@@ -423,6 +449,73 @@ public sealed class ZipArchiveService : IZipArchiveService
         {
             throw new InvalidOperationException("Total upload size must not exceed 200 MB.");
         }
+    }
+
+    private static ArchiveFileItem CreatePathItem(string fullPath, string entryName, long sizeBytes)
+    {
+        return new ArchiveFileItem(
+            entryName,
+            sizeBytes,
+            _ => ValueTask.FromResult<Stream>(File.OpenRead(fullPath))
+        );
+    }
+
+    private static ArchiveFileItem[] CreateUniqueStreamItems(IReadOnlyCollection<ZipArchiveSourceItem> sourceItems)
+    {
+        var usedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        return sourceItems
+            .Select(item =>
+            {
+                ArgumentNullException.ThrowIfNull(item);
+                if (item.SizeBytes < 0)
+                {
+                    throw new InvalidOperationException("File size must not be negative.");
+                }
+
+                return new ArchiveFileItem(
+                    CreateUniqueEntryName(item.EntryName, usedNames),
+                    item.SizeBytes,
+                    item.OpenReadStreamAsync
+                );
+            })
+            .ToArray();
+    }
+
+    private static string CreateUniqueEntryName(string fileName, ISet<string> usedNames)
+    {
+        var entryName = NormalizeSingleFileEntryName(fileName);
+        if (string.IsNullOrWhiteSpace(entryName))
+        {
+            entryName = "file";
+        }
+
+        if (usedNames.Add(entryName))
+        {
+            return entryName;
+        }
+
+        var nameWithoutExtension = Path.GetFileNameWithoutExtension(entryName);
+        var extension = Path.GetExtension(entryName);
+        for (var index = 2; ; index++)
+        {
+            var candidate = $"{nameWithoutExtension}-{index}{extension}";
+            if (usedNames.Add(candidate))
+            {
+                return candidate;
+            }
+        }
+    }
+
+    private static string NormalizeSingleFileEntryName(string entryName)
+    {
+        var normalizedName = NormalizeEntryName(entryName)
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .LastOrDefault();
+
+        return string.IsNullOrWhiteSpace(normalizedName)
+            ? string.Empty
+            : normalizedName;
     }
 
     private static string NormalizeEntryName(string entryName)

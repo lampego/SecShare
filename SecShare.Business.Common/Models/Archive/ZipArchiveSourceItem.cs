@@ -1,6 +1,6 @@
 namespace SecShare.Business.Common.Models.Archive;
 
-internal sealed record ArchiveFileItem(
+public sealed record ZipArchiveSourceItem(
     string EntryName,
     long SizeBytes,
     Func<CancellationToken, ValueTask<Stream>> OpenReadStreamAsync

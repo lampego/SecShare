@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Headers;
-using SecShare.Console.Models.Http;
+using SecShare.Business.Common.Http;
 
 namespace SecShare.Console.Services.Http;
 
@@ -9,7 +9,7 @@ public sealed partial class SecShareHttpClient
 {
     private const string EncryptedUploadFileName = "secret_file";
 
-    public async Task<UploadHttpResult> UploadAsync(
+    public async Task<UploadResult> UploadAsync(
         byte[] encryptedPayload,
         UploadFileOptions options,
         Action<TransferProgress>? progress,
@@ -38,7 +38,7 @@ public sealed partial class SecShareHttpClient
         using var response = await _httpClient.SendAsync(request, cancellationToken);
         await EnsureSuccessResponseAsync(response, cancellationToken);
 
-        var result = await response.Content.ReadFromJsonAsync<UploadHttpResult>(cancellationToken);
+        var result = await response.Content.ReadFromJsonAsync<UploadResult>(cancellationToken);
         if (result is null || string.IsNullOrWhiteSpace(result.Token))
         {
             throw new InvalidOperationException("Upload response does not contain a file token.");

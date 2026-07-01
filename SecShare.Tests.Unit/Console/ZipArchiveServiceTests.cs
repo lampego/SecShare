@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Models.Archive;
 using SecShare.Business.Common.Services.Archive;
 
 namespace SecShare.Tests.Unit.Console;
@@ -153,6 +154,28 @@ public sealed class ZipArchiveServiceTests
     }
 
     [Fact]
+    public async Task CreateFromStreamsAsync_WithDuplicateFileNames_CreatesUniqueEntries()
+    {
+        var archive = await this.zipArchiveService.CreateFromStreamsAsync(
+            [
+                CreateSourceItem("report.txt", "first"),
+                CreateSourceItem("nested/report.txt", "second"),
+            ],
+            "selected files",
+            CancellationToken.None
+        );
+
+        using var stream = new MemoryStream(archive.ArchiveBytes);
+        using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
+
+        Assert.Equal(2, archive.FileCount);
+        Assert.Equal("selected files", archive.SourceName);
+        Assert.Equal(["report.txt", "report-2.txt"], zip.Entries.Select(entry => entry.FullName));
+        Assert.Equal("first", await ReadEntryTextAsync(zip.GetEntry("report.txt")));
+        Assert.Equal("second", await ReadEntryTextAsync(zip.GetEntry("report-2.txt")));
+    }
+
+    [Fact]
     public async Task CreateFromPathAsync_WhenTotalSizeExceedsLimit_ThrowsInvalidOperationException()
     {
         var directory = CreateTempDirectory();
@@ -222,5 +245,23 @@ public sealed class ZipArchiveServiceTests
         Assert.NotNull(bytes);
 
         return await new StreamReader(new MemoryStream(bytes)).ReadToEndAsync();
+    }
+
+    private static ZipArchiveSourceItem CreateSourceItem(string name, string content)
+    {
+        var bytes = System.Text.Encoding.UTF8.GetBytes(content);
+        return new ZipArchiveSourceItem(
+            name,
+            bytes.LongLength,
+            _ => ValueTask.FromResult<Stream>(new MemoryStream(bytes))
+        );
+    }
+
+    private static async Task<string> ReadEntryTextAsync(ZipArchiveEntry? entry)
+    {
+        Assert.NotNull(entry);
+
+        await using var stream = entry.Open();
+        return await new StreamReader(stream).ReadToEndAsync();
     }
 }

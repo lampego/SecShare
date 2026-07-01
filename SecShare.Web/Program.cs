@@ -39,6 +39,8 @@ builder.Services.AddScoped<WebSecShareHttpClient>(sp =>
     new WebSecShareHttpClient(sp.GetRequiredService<HttpClient>()));
 builder.Services.AddScoped<ISecShareDownloadClient>(sp =>
     sp.GetRequiredService<WebSecShareHttpClient>());
+builder.Services.AddScoped<ISecShareUploadClient>(sp =>
+    sp.GetRequiredService<WebSecShareHttpClient>());
 builder.Services.AddScoped<IWebCryptoService, WebCryptoService>();
 builder.Services.AddScoped<IZipArchiveService, ZipArchiveService>();
 

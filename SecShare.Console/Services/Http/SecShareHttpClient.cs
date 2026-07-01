@@ -4,7 +4,7 @@ using SecShare.Business.Common.Services.Archive;
 namespace SecShare.Console.Services.Http;
 
 public sealed partial class SecShareHttpClient(HttpClient httpClient)
-    : ISecShareHttpClient, ISecShareDownloadClient
+    : ISecShareHttpClient, ISecShareDownloadClient, ISecShareUploadClient
 {
     public const long MaxEncryptedPayloadSizeBytes =
         ZipArchiveService.MaxSourceSizeBytes + (10L * 1024 * 1024);

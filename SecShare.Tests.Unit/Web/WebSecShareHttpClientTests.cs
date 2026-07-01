@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
@@ -12,6 +13,50 @@ public sealed class WebSecShareHttpClientTests
 {
     private const string BaseUrl = "https://secshare.me";
     private const string ApiFilesPath = "/api/files";
+
+    [Fact]
+    public async Task UploadAsync_SetsWebClientTypeHeaderAndSendsMultipartRequest()
+    {
+        var encryptedPayload = "encrypted payload"u8.ToArray();
+        var handler = new StubHttpMessageHandler(async (request, cancellationToken) =>
+        {
+            Assert.Equal(HttpMethod.Post, request.Method);
+            Assert.Equal(new Uri($"{BaseUrl}{ApiFilesPath}"), request.RequestUri);
+            Assert.True(request.Headers.TryGetValues(SecShareClientHeaders.ClientType, out var values));
+            Assert.Equal(SecShareClientHeaders.ClientTypeWeb, values.Single());
+
+            var multipartContent = Assert.IsType<MultipartFormDataContent>(request.Content);
+            var formValues = await ReadMultipartFormValuesAsync(multipartContent, cancellationToken);
+            Assert.Contains("file", formValues.Keys);
+            Assert.Equal("24h", formValues["Options.Expires"]);
+            Assert.Equal("1", formValues["Options.Downloads"]);
+            Assert.Equal("Text", formValues["Options.ContentType"]);
+
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    """{"token":"file-token"}""",
+                    Encoding.UTF8,
+                    "application/json"
+                ),
+            };
+        });
+
+        var client = CreateClient(handler);
+        var result = await client.UploadAsync(
+            encryptedPayload,
+            new UploadFileOptions
+            {
+                Expires = "24h",
+                Downloads = 1,
+                ContentType = StorageContentType.Text
+            },
+            progress: null,
+            CancellationToken.None
+        );
+
+        Assert.Equal("file-token", result.Token);
+    }
 
     [Fact]
     public async Task DownloadAsync_SetsWebClientTypeHeader()
@@ -214,6 +259,33 @@ public sealed class WebSecShareHttpClientTests
 
     private static WebSecShareHttpClient CreateClient(HttpMessageHandler handler)
         => new(new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) });
+
+    private static async Task<Dictionary<string, string>> ReadMultipartFormValuesAsync(
+        MultipartFormDataContent multipartContent,
+        CancellationToken cancellationToken
+    )
+    {
+        var values = new Dictionary<string, string>();
+        foreach (var content in multipartContent)
+        {
+            var name = content.Headers.ContentDisposition?.Name?.Trim('"');
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                continue;
+            }
+
+            if (content.Headers.ContentDisposition?.FileName == null)
+            {
+                values[name] = await content.ReadAsStringAsync(cancellationToken);
+                continue;
+            }
+
+            _ = await content.ReadAsByteArrayAsync(cancellationToken);
+            values[name] = string.Empty;
+        }
+
+        return values;
+    }
 
     private sealed class StubHttpMessageHandler(
         Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> handler

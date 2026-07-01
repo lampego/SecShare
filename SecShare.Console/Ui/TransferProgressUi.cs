@@ -1,4 +1,4 @@
-using SecShare.Console.Models.Http;
+using SecShare.Business.Common.Formatting;
 using Spectre.Console;
 using Spectre.Console.Rendering;
 
@@ -26,19 +26,7 @@ public static class TransferProgressUi
     }
 
     public static string FormatBytes(double bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB"];
-        var value = bytes;
-        var unitIndex = 0;
-
-        while (value >= 1024 && unitIndex < units.Length - 1)
-        {
-            value /= 1024;
-            unitIndex++;
-        }
-
-        return $"{value:0.##} {units[unitIndex]}";
-    }
+        => ByteSizeFormatter.Format(bytes);
 
     private static string FormatTotalBytes(long? totalBytes)
         => totalBytes.HasValue

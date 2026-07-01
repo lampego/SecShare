@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Formatting;
 using SecShare.Business.Common.Http;
 using SecShare.Business.Common.Services.Archive;
 using SecShare.Business.Exceptions;
@@ -456,21 +457,9 @@ public partial class Receive : IAsyncDisposable
         StateHasChanged();
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        return bytes switch
-        {
-            < 1024 => $"{bytes} B",
-            < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
-            _ => $"{bytes / (1024.0 * 1024):F1} MB"
-        };
-    }
-
     private static string FormatSpeed(double bytesPerSecond)
     {
-        if (bytesPerSecond < 1024) return $"{bytesPerSecond:F0} B/s";
-        if (bytesPerSecond < 1024 * 1024) return $"{bytesPerSecond / 1024:F1} KB/s";
-        return $"{bytesPerSecond / (1024 * 1024):F1} MB/s";
+        return $"{ByteSizeFormatter.Format(bytesPerSecond)}/s";
     }
 
     public ValueTask DisposeAsync()

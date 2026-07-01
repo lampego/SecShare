@@ -37,7 +37,7 @@
                                  style="width: @(pct)%"></div>
                         </div>
                         <p class="mt-2 text-xs text-[#a0afa9]">
-                            @FormatBytes(p.BytesTransferred) / @FormatBytes(p.TotalBytes.Value)
+                            @ByteSizeFormatter.Format(p.BytesTransferred) / @ByteSizeFormatter.Format(p.TotalBytes.Value)
                             · @FormatSpeed(p.BytesPerSecond)
                         </p>
                     }

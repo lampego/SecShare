@@ -1,16 +1,55 @@
 using System.Net.Http;
+using System.Net.Http.Json;
+using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Headers;
 
 namespace SecShare.Business.Common.Http;
 
 /// <summary>
-/// Blazor WASM implementation of <see cref="ISecShareDownloadClient"/>.
-/// Sends <c>X-Client-Type: Web</c> and streams the encrypted payload with optional progress reporting.
+/// Blazor WASM implementation of the SecShare API client.
+/// Sends <c>X-Client-Type: Web</c> and streams encrypted payloads with optional progress reporting.
 /// </summary>
-public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDownloadClient
+public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDownloadClient, ISecShareUploadClient
 {
     private const long MaxEncryptedPayloadSizeBytes = 220L * 1024 * 1024;
     private const string ApiFilesPath = "/api/files";
+    private const string EncryptedUploadFileName = "secret_file";
+
+    public async Task<UploadResult> UploadAsync(
+        byte[] encryptedPayload,
+        UploadFileOptions options,
+        Action<TransferProgress>? progress,
+        CancellationToken cancellationToken
+    )
+    {
+        ArgumentNullException.ThrowIfNull(encryptedPayload);
+        SecShareUploadOptionsValidator.Validate(options);
+
+        using var fileContent = new ProgressByteArrayContent(encryptedPayload, progress);
+        using var content = new MultipartFormDataContent
+        {
+            { fileContent, "file", EncryptedUploadFileName },
+            { new StringContent(options.Expires), "Options.Expires" },
+            { new StringContent(options.Downloads.ToString()), "Options.Downloads" },
+            { new StringContent(options.ContentType.ToString()), "Options.ContentType" }
+        };
+        using var request = new HttpRequestMessage(HttpMethod.Post, ApiFilesPath)
+        {
+            Content = content
+        };
+        request.Headers.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeWeb);
+
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+        await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
+
+        var result = await response.Content.ReadFromJsonAsync<UploadResult>(cancellationToken);
+        if (result is null || string.IsNullOrWhiteSpace(result.Token))
+        {
+            throw new InvalidOperationException("Upload response does not contain a file token.");
+        }
+
+        return result;
+    }
 
     public async Task<DownloadResult> DownloadAsync(
         string fileId,
