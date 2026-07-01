@@ -25,7 +25,7 @@ public partial class Upload : IAsyncDisposable
     );
     private enum UploadMode { Files, TextSecret }
     private enum SubmitStage { Idle, Encrypting, Uploading, CreatingLink }
-    private enum CopiedTarget { None, FullLink, Link, Key }
+    private enum CopiedTarget { None, FullLink, Link, Key, CliCommand }
 
     [Inject]
     private ISecShareUploadClient UploadClient { get; set; } = null!;
@@ -254,6 +254,19 @@ public partial class Upload : IAsyncDisposable
         }
 
         await CopyAsync(_result.FullLink, CopiedTarget.FullLink);
+    }
+
+    private async Task CopyCliCommandAsync()
+    {
+        if (_result is null)
+        {
+            return;
+        }
+
+        await CopyAsync(
+            $"secshare get \"{_result.FullLink}\"",
+            CopiedTarget.CliCommand
+        );
     }
 
     private async Task CopyLinkAsync()

@@ -225,6 +225,32 @@
                         </article>
                     </div>
 
+                    <article class="mt-4 rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-4">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#0f766e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="4 17 10 11 4 5"></polyline>
+                                <line x1="12" y1="19" x2="20" y2="19"></line>
+                            </svg>
+                            <h3 class="font-semibold text-[#13201d]">Download via command-line client</h3>
+                        </div>
+                        <p class="mt-1 text-sm leading-6 text-[#52625d]">
+                            Alternatively, use the official SecShare CLI tool to securely download and decrypt the cargo directly in your terminal.
+                        </p>
+                        <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
+                            secshare get "@_result.FullLink"
+                        </div>
+                        <div class="mt-3 flex flex-wrap items-center gap-3">
+                            <button type="button"
+                                    @onclick="CopyCliCommandAsync"
+                                    class="focus-ring inline-flex rounded-md bg-[#13201d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530]">
+                                @(_copied == CopiedTarget.CliCommand ? "Copied" : "Copy CLI command")
+                            </button>
+                            <span class="text-xs text-[#6b7c75]">
+                                Or: <code class="rounded bg-[#f7f8f5] px-1.5 py-0.5 font-mono text-xs text-[#13201d]">secshare get "@_result.LinkWithoutKey"</code> (interactive key entry)
+                            </span>
+                        </div>
+                    </article>
+
                     <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                         <button type="button"
                                 @onclick="CreateAnotherLink"
