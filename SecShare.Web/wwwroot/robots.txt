@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /f/
+Disallow: /not-found
+Disallow: /receive
+Disallow: /receive/
+Disallow: /upload
+Disallow: /upload/
+
+Sitemap: https://secshare.me/sitemap.xml
