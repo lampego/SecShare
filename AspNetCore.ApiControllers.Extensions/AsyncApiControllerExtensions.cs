@@ -38,12 +38,9 @@ namespace AspNetCore.ApiControllers.Extensions
             if (apiController == null)
                 throw new ArgumentNullException(nameof(apiController));
 
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
+            if (request == null || !apiController.ModelState.IsValid)
+                return HandleInvalidRequest(apiController, request);
 
-            if (!apiController.ModelState.IsValid)
-                return apiController.InvalidModelState(apiController.ModelState);
-                
             await apiController.AsyncRequestBuilder.ExecuteAsync(request);
             return success();
         }
@@ -80,11 +77,8 @@ namespace AspNetCore.ApiControllers.Extensions
             if (apiController == null)
                 throw new ArgumentNullException(nameof(apiController));
 
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-
-            if (!apiController.ModelState.IsValid)
-                return apiController.InvalidModelState(apiController.ModelState);
+            if (request == null || !apiController.ModelState.IsValid)
+                return HandleInvalidRequest(apiController, request);
 
             var response = await apiController.AsyncRequestBuilder.ExecuteAsync<TRequest, TResponse>(request);
             if (response is IActionResult actionResult)
@@ -93,6 +87,23 @@ namespace AspNetCore.ApiControllers.Extensions
             }
 
             return success(response);
+        }
+
+        private static IActionResult HandleInvalidRequest<TApiController, TRequest>(
+            TApiController apiController,
+            TRequest? request
+        )
+            where TApiController :
+                ControllerBase,
+                IHasInvalidModelStateActionResult
+        {
+            if (apiController is IHasInvalidRequestException hasInvalidRequestException)
+                throw hasInvalidRequestException.InvalidRequestException(apiController.ModelState);
+
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            return apiController.InvalidModelState(apiController.ModelState);
         }
     }
 }

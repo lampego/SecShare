@@ -22,6 +22,7 @@ public static class ConsoleErrorParser
         return exception switch
         {
             UploadOptionsValidationDomainException => $"Invalid upload options: {exception.Message}",
+            DataValidationException => exception.Message,
             _ when exception.Message == "Server Exception" => "Failed to upload file due to a server error.",
             _ => exception.Message
         };

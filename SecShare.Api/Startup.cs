@@ -1,16 +1,20 @@
 using Autofac;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
 using SecShare.Api.Di.Autofac.Modules;
 using SecShare.Business;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Helpers;
 using SecShare.Business.Mvc.Middleware;
+using SecShare.Business.Services.Storage;
 using Serilog;
 
 namespace SecShare.Api;
 
 public class Startup
 {
+    private const long MultipartFormDataOverheadBytes = 1024 * 1024;
+
     public IConfiguration Configuration { get; }
 
     public Startup(IConfiguration configuration)
@@ -42,6 +46,10 @@ public class Startup
 
         services.AddAutoMapper(cfg => { }, assembly);
         services.AddHttpContextAccessor();
+        services.Configure<FormOptions>(options =>
+        {
+            options.MultipartBodyLengthLimit = FileStorage.MaxFileSize + MultipartFormDataOverheadBytes;
+        });
         services.AddOptions<UploadRateLimitMiddleware.UploadRateLimitOptions>()
             .Bind(Configuration.GetSection(UploadRateLimitMiddleware.UploadRateLimitOptions.SectionName))
             .Validate(

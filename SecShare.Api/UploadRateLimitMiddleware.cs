@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 
 namespace SecShare.Api;
@@ -31,6 +32,8 @@ public class UploadRateLimitMiddleware
     {
         if (ShouldThrottleUpload(context.Request))
         {
+            DisableKestrelRequestBodyLimit(context);
+
             var originalBody = context.Request.Body;
             var limitedBody = new RateLimitedReadStream(
                 originalBody,
@@ -52,6 +55,15 @@ public class UploadRateLimitMiddleware
         }
 
         await _next(context);
+    }
+
+    private static void DisableKestrelRequestBodyLimit(HttpContext context)
+    {
+        var maxRequestBodySizeFeature = context.Features.Get<IHttpMaxRequestBodySizeFeature>();
+        if (maxRequestBodySizeFeature is { IsReadOnly: false })
+        {
+            maxRequestBodySizeFeature.MaxRequestBodySize = null;
+        }
     }
 
     private static bool ShouldThrottleUpload(HttpRequest request)

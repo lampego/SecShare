@@ -1,13 +1,17 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using SecShare.Business.Common.Headers;
 using SecShare.Api.Dto.RequestResponse.Storage;
 using SecShare.Business.Dto;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Orm.Dao.Queue;
 using SecShare.Business.Orm.Enums;
-using Microsoft.Extensions.DependencyInjection;
+using SecShare.Business.Services.Storage;
 using SecShare.Tests.Integration.Api.Core;
 using StorageContentType = SecShare.Business.Common.Enums.StorageContentType;
 
@@ -21,6 +25,7 @@ public class StorageApiTests : BaseTest
     private const string AlternativeGetRoutePrefix = "/api/files/";
     private const string DefaultExpires = "24h";
     private const int DefaultDownloads = 1;
+    private const int LargeUploadSizeBytes = 100 * 1024 * 1024;
 
     public StorageApiTests(ApiCustomWebApplicationFactory factory) : base(factory)
     {
@@ -28,10 +33,15 @@ public class StorageApiTests : BaseTest
 
     private void AddConsoleHeaders()
     {
-        HttpClient.DefaultRequestHeaders.Remove(SecShareClientHeaders.ClientType);
-        HttpClient.DefaultRequestHeaders.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeConsole);
-        HttpClient.DefaultRequestHeaders.UserAgent.Clear();
-        HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd("SecShareConsole/1.0");
+        AddConsoleHeaders(HttpClient);
+    }
+
+    private static void AddConsoleHeaders(HttpClient httpClient)
+    {
+        httpClient.DefaultRequestHeaders.Remove(SecShareClientHeaders.ClientType);
+        httpClient.DefaultRequestHeaders.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeConsole);
+        httpClient.DefaultRequestHeaders.UserAgent.Clear();
+        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("SecShareConsole/1.0");
     }
 
     private void AddWebHeaders()
@@ -237,6 +247,85 @@ public class StorageApiTests : BaseTest
     }
 
     [Fact]
+    public async Task Upload_WithLargeFile_AndManualDeletion_DeletesFile()
+    {
+        AddConsoleHeaders();
+
+        var tempFilePath = CreateLargeTempFile(LargeUploadSizeBytes);
+        try
+        {
+            await using var fileStream = File.OpenRead(tempFilePath);
+            var formFile = new FormFile(fileStream, 0, fileStream.Length, "File", "large.secshare");
+            var uploadResponse = await PostMultipartFormDataRequestAsync(
+                UploadRoute,
+                CreateUploadOptionsData(downloads: 2),
+                formFile
+            );
+            Assert.Equal(HttpStatusCode.OK, uploadResponse.StatusCode);
+
+            var uploadResponseDto = await uploadResponse.Content.ReadFromJsonAsync<UploadFileResponse>();
+            Assert.NotNull(uploadResponseDto);
+            Assert.True(Guid.TryParse(uploadResponseDto.Token, out var fileId));
+
+            var fileStorage = ServiceProvider.GetRequiredService<IFileStorage>();
+            await fileStorage.DeleteFileAsync(fileId);
+            await FlushDbChanges(isClearSession: true);
+
+            var downloadResponseAfterDeletion = await HttpClient.GetAsync($"{GetRoutePrefix}{uploadResponseDto.Token}");
+            Assert.Equal(HttpStatusCode.NotFound, downloadResponseAfterDeletion.StatusCode);
+
+            var afterDeletionError = await downloadResponseAfterDeletion.Content.ReadFromJsonAsync<JsonCommonResponse>();
+            Assert.NotNull(afterDeletionError);
+            Assert.Equal("fail", afterDeletionError.Status);
+            Assert.Equal("Decrypted data is unavailable", afterDeletionError.Message);
+            Assert.Equal("FileDeletedDomainException", afterDeletionError.ErrorCode);
+        }
+        finally
+        {
+            File.Delete(tempFilePath);
+        }
+    }
+
+    [Fact]
+    public async Task Upload_WhenMultipartBodyLimitIsExceeded_ReturnsDataValidationException()
+    {
+        await using var customFactory = Factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.Configure<FormOptions>(options =>
+                {
+                    options.MultipartBodyLengthLimit = 1024;
+                });
+            });
+        });
+        using var httpClient = customFactory.CreateClient();
+        AddConsoleHeaders(httpClient);
+
+        using var multipartFormContent = new MultipartFormDataContent();
+        foreach (var dataKeyPair in CreateUploadOptionsData())
+        {
+            multipartFormContent.Add(new StringContent($"{dataKeyPair.Value}"), name: dataKeyPair.Key);
+        }
+
+        multipartFormContent.Add(
+            new ByteArrayContent(new byte[2048]),
+            name: "File",
+            fileName: "too-large.secshare"
+        );
+
+        var response = await httpClient.PostAsync(UploadRoute, multipartFormContent);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var errorResponse = await response.Content.ReadFromJsonAsync<JsonCommonResponse>();
+        Assert.NotNull(errorResponse);
+        Assert.Equal("fail", errorResponse.Status);
+        Assert.Equal("DataValidationException", errorResponse.ErrorCode);
+        Assert.Contains("Multipart body length limit", errorResponse.Message);
+    }
+
+    [Fact]
     public async Task Download_WhenDownloadLimitIsReached_SchedulesDeletionAndRejectsNextDownload()
     {
         AddConsoleHeaders();
@@ -329,5 +418,13 @@ public class StorageApiTests : BaseTest
         return response.Headers.TryGetValues(name, out var values)
             ? values.SingleOrDefault()
             : null;
+    }
+
+    private static string CreateLargeTempFile(long length)
+    {
+        var tempFilePath = Path.Combine(Path.GetTempPath(), $"{Guid.CreateVersion7()}.secshare");
+        using var fileStream = new FileStream(tempFilePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+        fileStream.SetLength(length);
+        return tempFilePath;
     }
 }
