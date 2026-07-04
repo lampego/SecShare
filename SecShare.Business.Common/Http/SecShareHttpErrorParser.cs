@@ -81,6 +81,7 @@ public static class SecShareHttpErrorParser
             "FileDeletedDomainException" => new FileDeletedDomainException(errorResult.Message),
             "DownloadLimitExhaustedDomainException" => new DownloadLimitExhaustedDomainException(errorResult.Message),
             "UploadOptionsValidationDomainException" => new UploadOptionsValidationDomainException(errorResult.Message),
+            "DataValidationException" => new DataValidationException(errorResult.Message),
             _ => new ApiException(
                 errorResult.Message,
                 statusCode

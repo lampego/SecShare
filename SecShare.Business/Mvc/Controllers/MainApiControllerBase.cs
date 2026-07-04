@@ -4,6 +4,7 @@ using AspNetCore.ApiControllers.Abstractions;
 using Autofac;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Dto;
@@ -11,7 +12,7 @@ using SecShare.Business.Exceptions;
 
 namespace SecShare.Business.Mvc.Controllers;
 
-public class MainApiControllerBase : ApiControllerBase
+public class MainApiControllerBase : ApiControllerBase, IHasInvalidRequestException
 {
     protected readonly ILogger<MainApiControllerBase> Logger;
     protected readonly IHttpContextAccessor HttpContextAccessor;
@@ -59,6 +60,9 @@ public class MainApiControllerBase : ApiControllerBase
         return new OkObjectResult(new JsonCommonResponse { Status = "ok" });
     };
 
+    public Func<ModelStateDictionary, Exception> InvalidRequestException
+        => modelState => new DataValidationException(GetModelStateErrorMessage(modelState));
+
     protected JsonResult JsonSuccess(object? data = null, HttpStatusCode code = HttpStatusCode.OK, string? message = null)
     {
         var response = new JsonResult(
@@ -98,5 +102,20 @@ public class MainApiControllerBase : ApiControllerBase
         }
 
         return false;
+    }
+
+    private static string GetModelStateErrorMessage(ModelStateDictionary modelState)
+    {
+        var errors = modelState.Values
+            .SelectMany(value => value.Errors)
+            .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage)
+                ? error.Exception?.Message
+                : error.ErrorMessage)
+            .Where(message => !string.IsNullOrWhiteSpace(message))
+            .ToArray();
+
+        return errors.Length == 0
+            ? "Uploaded file is too large."
+            : string.Join("; ", errors);
     }
 }

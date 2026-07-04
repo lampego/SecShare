@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using SecShare.Api;
 using SecShare.Business.Helpers;
 using SecShare.Business.Logging;
 using Serilog;
@@ -31,6 +32,14 @@ public class ApiCustomWebApplicationFactory : WebApplicationFactory<TestStartup>
                 {
                     source.ReloadOnChange = false;
                 }
+
+                config.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    {
+                        $"{UploadRateLimitMiddleware.UploadRateLimitOptions.SectionName}:UploadBytesPerSecond",
+                        $"{1024 * 1024 * 1024}"
+                    }
+                });
             }
             )
             .ConfigureWebHostDefaults(builder =>
