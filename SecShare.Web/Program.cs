@@ -2,7 +2,7 @@ using Majorsoft.Blazor.WebAssembly.Logging.Console;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Logging;
-using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Clients;
 using SecShare.Business.Common.Services.Archive;
 using SecShare.Web;
 using SecShare.Web.Services.Crypto;
@@ -35,12 +35,12 @@ builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri(apiUrl)
 });
-builder.Services.AddScoped<WebSecShareHttpClient>(sp =>
-    new WebSecShareHttpClient(sp.GetRequiredService<HttpClient>()));
-builder.Services.AddScoped<ISecShareDownloadClient>(sp =>
-    sp.GetRequiredService<WebSecShareHttpClient>());
-builder.Services.AddScoped<ISecShareUploadClient>(sp =>
-    sp.GetRequiredService<WebSecShareHttpClient>());
+builder.Services.AddScoped<WebHttpClient>(sp =>
+    new WebHttpClient(sp.GetRequiredService<HttpClient>()));
+builder.Services.AddScoped<IDownloadClient>(sp =>
+    sp.GetRequiredService<WebHttpClient>());
+builder.Services.AddScoped<IUploadClient>(sp =>
+    sp.GetRequiredService<WebHttpClient>());
 builder.Services.AddScoped<IWebCryptoService, WebCryptoService>();
 builder.Services.AddScoped<IZipArchiveService, ZipArchiveService>();
 

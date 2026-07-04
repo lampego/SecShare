@@ -1,15 +1,17 @@
 using System.Net;
 using Microsoft.AspNetCore.StaticFiles;
+using SecShare.Business.Common.Formatting;
 using SecShare.Business.Exceptions;
 using SecShare.Business.Orm.Dao.Files;
 using SecShare.Business.Orm.Entities;
+using SecShare.Business.Common.Http;
 using SecShare.Business.Services.Storage.Client;
 
 namespace SecShare.Business.Services.Storage;
 
 public class FileStorage : IFileStorage
 {
-    public const int MaxFileSize = 1024 * 1024 * 250;
+    public const int MaxFileSize = (int)TransferLimits.MaxUploadFileSizeBytes;
 
     private readonly IFilesDao _filesDao;
     private readonly IFileStorageGarageClient _storageClient;
@@ -31,7 +33,9 @@ public class FileStorage : IFileStorage
     {
         if (fileData.Length > MaxFileSize)
         {
-            throw new InvalidOperationException($"File can not be larger than {MaxFileSize / 1024 / 1024}Mb");
+            throw new InvalidOperationException(
+                $"File can not be larger than {ByteSizeFormatter.Format(MaxFileSize)}."
+            );
         }
 
         var storagePath = BuildStoragePath(fileName);

@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Validators;
 
 namespace SecShare.Console.Services.Http;
 
@@ -16,7 +17,7 @@ public sealed partial class SecShareHttpClient
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(encryptedPayload);
+        UploadPayloadValidator.Validate(encryptedPayload);
         ArgumentNullException.ThrowIfNull(options);
         ValidateUploadOptions(options);
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using SecShare.Api.Di.Autofac.Modules;
 using SecShare.Business;
 using SecShare.Business.Common.Headers;
+using SecShare.Business.Common.Http;
 using SecShare.Business.Helpers;
 using SecShare.Business.Mvc.Middleware;
 using SecShare.Business.Services.Storage;
@@ -13,8 +14,6 @@ namespace SecShare.Api;
 
 public class Startup
 {
-    private const long MultipartFormDataOverheadBytes = 1024 * 1024;
-
     public IConfiguration Configuration { get; }
 
     public Startup(IConfiguration configuration)
@@ -48,7 +47,7 @@ public class Startup
         services.AddHttpContextAccessor();
         services.Configure<FormOptions>(options =>
         {
-            options.MultipartBodyLengthLimit = FileStorage.MaxFileSize + MultipartFormDataOverheadBytes;
+            options.MultipartBodyLengthLimit = FileStorage.MaxFileSize + TransferLimits.MultipartFormDataOverheadBytes;
         });
         services.AddOptions<UploadRateLimitMiddleware.UploadRateLimitOptions>()
             .Bind(Configuration.GetSection(UploadRateLimitMiddleware.UploadRateLimitOptions.SectionName))

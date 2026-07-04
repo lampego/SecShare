@@ -3,13 +3,13 @@ using System.Net.Http;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
 
-namespace SecShare.Business.Common.Http;
+namespace SecShare.Business.Common.Http.Parsers;
 
 /// <summary>
 /// Parses SecShare API response headers into a <see cref="DownloadResult"/>.
 /// Used by both the Console and Blazor Web download clients.
 /// </summary>
-public static class SecShareResponseParser
+public static class ResponseParser
 {
     public static DownloadResult ParseDownloadResult(HttpResponseMessage response, byte[] payload)
     {
@@ -68,4 +68,3 @@ public static class SecShareResponseParser
             ? value
             : null;
 }
-

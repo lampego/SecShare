@@ -1,5 +1,7 @@
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Parsers;
+using SecShare.Business.Common.Http.Validators;
 
 namespace SecShare.Console.Services.Http;
 
@@ -9,8 +11,8 @@ public sealed partial class SecShareHttpClient
         HttpResponseMessage response,
         CancellationToken cancellationToken
     )
-        => await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
+        => await HttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
 
     private static void ValidateUploadOptions(UploadFileOptions options)
-        => SecShareUploadOptionsValidator.Validate(options);
+        => UploadOptionsValidator.Validate(options);
 }

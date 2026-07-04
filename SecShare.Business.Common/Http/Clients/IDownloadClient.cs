@@ -1,10 +1,10 @@
-namespace SecShare.Business.Common.Http;
+namespace SecShare.Business.Common.Http.Clients;
 
 /// <summary>
 /// Downloads an encrypted payload from the SecShare API.
 /// Shared contract used by both the Blazor Web app and the Console.
 /// </summary>
-public interface ISecShareDownloadClient
+public interface IDownloadClient
 {
     Task<DownloadResult> DownloadAsync(
         string fileId,
@@ -12,4 +12,3 @@ public interface ISecShareDownloadClient
         CancellationToken cancellationToken
     );
 }
-

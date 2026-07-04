@@ -1,5 +1,7 @@
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Clients;
+using SecShare.Business.Common.Http.Parsers;
 
 namespace SecShare.Console.Services.Http;
 
@@ -7,8 +9,8 @@ public sealed partial class SecShareHttpClient
 {
     private const string ApiFilesPath = "/api/files";
 
-    // Explicit ISecShareDownloadClient implementation — no progress reporting wrapper needed.
-    Task<DownloadResult> ISecShareDownloadClient.DownloadAsync(
+    // Explicit IDownloadClient implementation — no progress reporting wrapper needed.
+    Task<DownloadResult> IDownloadClient.DownloadAsync(
         string fileId,
         Action<TransferProgress>? progress,
         CancellationToken cancellationToken
@@ -64,6 +66,6 @@ public sealed partial class SecShareHttpClient
         }
 
         tracker.Complete();
-        return SecShareResponseParser.ParseDownloadResult(response, target.ToArray());
+        return ResponseParser.ParseDownloadResult(response, target.ToArray());
     }
 }
