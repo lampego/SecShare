@@ -7,7 +7,7 @@ namespace SecShare.Tests.Unit.Console;
 
 public sealed class ZipArchiveServiceTests
 {
-    private readonly ZipArchiveService zipArchiveService = new();
+    private readonly ZipArchiveService _zipArchiveService = new();
 
     [Fact]
     public async Task CreateAndExtract_WithFile_RestoresOriginalFile()
@@ -19,11 +19,11 @@ public sealed class ZipArchiveServiceTests
             var destinationPath = Path.Combine(root, "output");
             await File.WriteAllTextAsync(sourcePath, "file content");
 
-            var archive = await this.zipArchiveService.CreateFromPathAsync(
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
                 sourcePath,
                 CancellationToken.None
             );
-            var result = await this.zipArchiveService.ExtractAsync(
+            var result = await this._zipArchiveService.ExtractAsync(
                 archive.ArchiveBytes,
                 destinationPath,
                 CancellationToken.None
@@ -53,11 +53,11 @@ public sealed class ZipArchiveServiceTests
             await File.WriteAllTextAsync(Path.Combine(sourcePath, "root.txt"), "root");
             await File.WriteAllTextAsync(Path.Combine(sourcePath, "nested", "child.txt"), "child");
 
-            var archive = await this.zipArchiveService.CreateFromPathAsync(
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
                 sourcePath,
                 CancellationToken.None
             );
-            var result = await this.zipArchiveService.ExtractAsync(
+            var result = await this._zipArchiveService.ExtractAsync(
                 archive.ArchiveBytes,
                 destinationPath,
                 CancellationToken.None
@@ -79,12 +79,12 @@ public sealed class ZipArchiveServiceTests
     [Fact]
     public async Task CreateFromTextAndReadText_RestoresOriginalTextWithoutExtractingFiles()
     {
-        var archive = await this.zipArchiveService.CreateFromTextAsync(
+        var archive = await this._zipArchiveService.CreateFromTextAsync(
             "secret message",
             CancellationToken.None
         );
 
-        var text = await this.zipArchiveService.ReadTextAsync(
+        var text = await this._zipArchiveService.ReadTextAsync(
             archive.ArchiveBytes,
             CancellationToken.None
         );
@@ -103,11 +103,11 @@ public sealed class ZipArchiveServiceTests
             var sourcePath = Path.Combine(root, "document.txt");
             await File.WriteAllTextAsync(sourcePath, "file content");
 
-            var archive = await this.zipArchiveService.CreateFromPathAsync(
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
                 sourcePath,
                 CancellationToken.None
             );
-            var content = await this.zipArchiveService.ReadContentAsync(
+            var content = await this._zipArchiveService.ReadContentAsync(
                 archive.ArchiveBytes,
                 StorageContentType.File,
                 CancellationToken.None
@@ -133,11 +133,11 @@ public sealed class ZipArchiveServiceTests
             Directory.CreateDirectory(sourcePath);
             await File.WriteAllTextAsync(Path.Combine(sourcePath, "root.txt"), "root");
 
-            var archive = await this.zipArchiveService.CreateFromPathAsync(
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
                 sourcePath,
                 CancellationToken.None
             );
-            var content = await this.zipArchiveService.ReadContentAsync(
+            var content = await this._zipArchiveService.ReadContentAsync(
                 archive.ArchiveBytes,
                 StorageContentType.Folder,
                 CancellationToken.None
@@ -156,7 +156,7 @@ public sealed class ZipArchiveServiceTests
     [Fact]
     public async Task CreateFromStreamsAsync_WithDuplicateFileNames_CreatesUniqueEntries()
     {
-        var archive = await this.zipArchiveService.CreateFromStreamsAsync(
+        var archive = await this._zipArchiveService.CreateFromStreamsAsync(
             [
                 CreateSourceItem("report.txt", "first"),
                 CreateSourceItem("nested/report.txt", "second"),
@@ -188,7 +188,7 @@ public sealed class ZipArchiveServiceTests
             }
 
             await Assert.ThrowsAsync<InvalidOperationException>(
-                () => this.zipArchiveService.CreateFromPathAsync(directory, CancellationToken.None)
+                () => this._zipArchiveService.CreateFromPathAsync(directory, CancellationToken.None)
             );
         }
         finally
@@ -217,7 +217,7 @@ public sealed class ZipArchiveServiceTests
             }
 
             await Assert.ThrowsAsync<InvalidDataException>(
-                () => this.zipArchiveService.ExtractAsync(
+                () => this._zipArchiveService.ExtractAsync(
                     archiveBytes,
                     destination,
                     CancellationToken.None
@@ -229,6 +229,110 @@ public sealed class ZipArchiveServiceTests
         finally
         {
             Directory.Delete(destination, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task GetConflictingPaths_WithExistingRootItems_ReturnsDestinationPaths()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var sourcePath = Path.Combine(root, "source");
+            var destinationPath = Path.Combine(root, "output");
+            Directory.CreateDirectory(sourcePath);
+            Directory.CreateDirectory(Path.Combine(destinationPath, "source"));
+            await File.WriteAllTextAsync(Path.Combine(sourcePath, "root.txt"), "root");
+
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
+                sourcePath,
+                CancellationToken.None
+            );
+
+            var conflictingPaths = this._zipArchiveService.GetConflictingPaths(
+                archive.ArchiveBytes,
+                destinationPath
+            );
+
+            Assert.Equal([Path.Combine(destinationPath, "source")], conflictingPaths);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExtractAsync_WhenConflictExists_DoesNotModifyDestination()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var sourcePath = Path.Combine(root, "source");
+            var destinationPath = Path.Combine(root, "output");
+            Directory.CreateDirectory(sourcePath);
+            Directory.CreateDirectory(Path.Combine(destinationPath, "source"));
+            await File.WriteAllTextAsync(Path.Combine(sourcePath, "root.txt"), "new-root");
+            await File.WriteAllTextAsync(Path.Combine(destinationPath, "source", "keep.txt"), "keep");
+
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
+                sourcePath,
+                CancellationToken.None
+            );
+
+            await Assert.ThrowsAsync<IOException>(
+                () => this._zipArchiveService.ExtractAsync(
+                    archive.ArchiveBytes,
+                    destinationPath,
+                    CancellationToken.None
+                )
+            );
+
+            Assert.Equal(
+                "keep",
+                await File.ReadAllTextAsync(Path.Combine(destinationPath, "source", "keep.txt"))
+            );
+            Assert.False(File.Exists(Path.Combine(destinationPath, "source", "root.txt")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExtractAsync_WithOverwriteEnabled_ReplacesExistingRootItems()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var sourcePath = Path.Combine(root, "source");
+            var destinationPath = Path.Combine(root, "output");
+            Directory.CreateDirectory(sourcePath);
+            Directory.CreateDirectory(Path.Combine(destinationPath, "source"));
+            await File.WriteAllTextAsync(Path.Combine(sourcePath, "root.txt"), "new-root");
+            await File.WriteAllTextAsync(Path.Combine(destinationPath, "source", "keep.txt"), "keep");
+
+            var archive = await this._zipArchiveService.CreateFromPathAsync(
+                sourcePath,
+                CancellationToken.None
+            );
+
+            var result = await this._zipArchiveService.ExtractAsync(
+                archive.ArchiveBytes,
+                destinationPath,
+                CancellationToken.None,
+                new ZipArchiveExtractOptions(IsOverwriteEnabled: true)
+            );
+
+            var extractedRoot = Path.Combine(destinationPath, "source");
+            Assert.Equal([extractedRoot], result.ExtractedPaths);
+            Assert.Equal("new-root", await File.ReadAllTextAsync(Path.Combine(extractedRoot, "root.txt")));
+            Assert.False(File.Exists(Path.Combine(extractedRoot, "keep.txt")));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
         }
     }
 

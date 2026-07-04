@@ -15,10 +15,18 @@ namespace SecShare.Console.Commands;
 
 public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
 {
+    private const string OverwriteExistingChoice = "Replace existing files";
+    private const string UseAnotherDirectoryChoice = "Extract to another directory";
+    private const string CancelChoice = "Cancel download";
+
     private sealed record DownloadCommandResult(
         StorageContentType ContentType,
-        ZipArchiveExtractResult? ExtractResult,
-        string? Text
+        byte[] ArchiveBytes
+    );
+
+    private sealed record ExtractionPlan(
+        string DestinationPath,
+        bool IsOverwriteEnabled
     );
 
     public sealed class Settings : CommandSettings
@@ -35,6 +43,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
+        var archiveService = new ZipArchiveService();
         DownloadCommandResult result;
         try
         {
@@ -47,14 +56,11 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
 
             var decryptionKey = new DecryptionKeyResolver(new ConsoleDecryptionKeyReader()).Resolve(link);
 
-            using var httpClient = new HttpClient
-            {
-                BaseAddress = SecShareConstants.ServiceBaseUri,
-                Timeout = TimeSpan.FromMinutes(5),
-            };
+            using var httpClient = new HttpClient();
+            httpClient.BaseAddress = SecShareConstants.ServiceBaseUri;
+            httpClient.Timeout = TimeSpan.FromMinutes(5);
             var secShareHttpClient = new SecShareHttpClient(httpClient);
             var packageService = new DownloadPackageService(new CryptoService());
-            var archiveService = new ZipArchiveService();
 
             result = await AnsiConsole.Progress()
                 .AutoClear(false)
@@ -78,24 +84,7 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
                     var archiveBytes = packageService.Decrypt(downloadResult.EncryptedPayload, decryptionKey);
                     Complete(decryptTask);
 
-                    if (downloadResult.ContentType == StorageContentType.Text)
-                    {
-                        var textTask = ctx.AddTask("Reading text...", autoStart: true);
-                        var text = await archiveService.ReadTextAsync(archiveBytes, cancellationToken);
-                        Complete(textTask);
-
-                        return new DownloadCommandResult(StorageContentType.Text, null, text);
-                    }
-
-                    var extractTask = ctx.AddTask("Extracting files...", autoStart: true);
-                    var extractResult = await archiveService.ExtractAsync(
-                        archiveBytes,
-                        settings.Path,
-                        cancellationToken
-                    );
-                    Complete(extractTask);
-
-                    return new DownloadCommandResult(downloadResult.ContentType, extractResult, null);
+                    return new DownloadCommandResult(downloadResult.ContentType, archiveBytes);
                 }
                 );
         }
@@ -128,57 +117,208 @@ public sealed class DownloadCommand : AsyncCommand<DownloadCommand.Settings>
             return 1;
         }
 
-        if (result.ContentType == StorageContentType.Text)
+        try
         {
-            var rawText = result.Text ?? string.Empty;
-            var longestLineLength = rawText
-                .Split('\n')
-                .Select(line => line.TrimEnd('\r').Length)
-                .DefaultIfEmpty(0)
-                .Max();
+            if (result.ContentType == StorageContentType.Text)
+            {
+                var rawText = await archiveService.ReadTextAsync(result.ArchiveBytes, cancellationToken);
+                var longestLineLength = rawText
+                    .Split('\n')
+                    .Select(line => line.TrimEnd('\r').Length)
+                    .DefaultIfEmpty(0)
+                    .Max();
 
-            var panel = new Panel(Markup.Escape(rawText))
-                .Header("[bold green]Decrypted text[/]")
+                var panel = new Panel(Markup.Escape(rawText))
+                    .Header("[bold green]Decrypted text[/]")
+                    .Border(BoxBorder.Rounded)
+                    .BorderColor(Color.Green);
+
+                panel.Width = Math.Max(20, longestLineLength + 4);
+
+                AnsiConsole.Write(panel);
+
+                return 0;
+            }
+
+            var extractionPlan = ResolveExtractionPlan(settings.Path, result.ArchiveBytes, archiveService);
+            if (extractionPlan is null)
+            {
+                AnsiConsole.MarkupLine("[yellow]Download cancelled before extraction.[/]");
+                return 1;
+            }
+
+            var extractResult = await AnsiConsole.Progress()
+                .AutoClear(false)
+                .HideCompleted(false)
+                .Columns(TransferProgressUi.CreateColumns())
+                .StartAsync(async ctx =>
+                {
+                    var extractTask = ctx.AddTask("Extracting files...", autoStart: true);
+                    var extracted = await archiveService.ExtractAsync(
+                        result.ArchiveBytes,
+                        extractionPlan.DestinationPath,
+                        cancellationToken,
+                        new ZipArchiveExtractOptions(extractionPlan.IsOverwriteEnabled)
+                    );
+                    Complete(extractTask);
+                    return extracted;
+                });
+
+            var extractedPaths = string.Join(
+                Environment.NewLine,
+                extractResult.ExtractedPaths.Select(path => $"[cyan]{Markup.Escape(path)}[/]")
+            );
+            var summary = new Markup(
+                $"""
+                [green]Downloaded content was decrypted and extracted.[/]
+
+                Files: [yellow]{extractResult.FileCount}[/]
+                Size: [yellow]{TransferProgressUi.FormatBytes(extractResult.ExtractedSizeBytes)}[/]
+                Saved:
+                {extractedPaths}
+                """
+            );
+
+            AnsiConsole.Write(new Panel(summary)
+                .Header("[bold green]Download completed[/]")
                 .Border(BoxBorder.Rounded)
-                .BorderColor(Color.Green);
-
-            panel.Width = Math.Max(20, longestLineLength + 4);
-
-            AnsiConsole.Write(panel);
+                .BorderColor(Color.Green)
+            );
 
             return 0;
         }
-
-        var extractResult = result.ExtractResult
-            ?? throw new InvalidOperationException("Download did not produce extracted files.");
-        var extractedPaths = string.Join(
-            Environment.NewLine,
-            extractResult.ExtractedPaths.Select(path => $"[cyan]{Markup.Escape(path)}[/]")
-        );
-        var summary = new Markup(
-            $"""
-            [green]Downloaded content was decrypted and extracted.[/]
-
-            Files: [yellow]{extractResult.FileCount}[/]
-            Size: [yellow]{TransferProgressUi.FormatBytes(extractResult.ExtractedSizeBytes)}[/]
-            Saved:
-            {extractedPaths}
-            """
-        );
-
-        AnsiConsole.Write(new Panel(summary)
-            .Header("[bold green]Download completed[/]")
-            .Border(BoxBorder.Rounded)
-            .BorderColor(Color.Green)
-        );
-
-        return 0;
+        catch (Exception exception) when (
+            exception is
+                InvalidDataException
+                or ArgumentException
+                or IOException
+                or UnauthorizedAccessException
+                or InvalidOperationException
+        )
+        {
+            var errorMessage = ConsoleErrorParser.ResolveFriendlyDownloadErrorMessage(exception);
+            AnsiConsole.MarkupLine($"[red]Download failed:[/] {Markup.Escape(errorMessage)}");
+            return 1;
+        }
     }
 
     private static void Complete(ProgressTask task)
     {
         task.Value = task.MaxValue;
         task.StopTask();
+    }
+
+    private static ExtractionPlan? ResolveExtractionPlan(
+        string destinationPath,
+        byte[] archiveBytes,
+        IZipArchiveService archiveService
+    )
+    {
+        var currentDestinationPath = Path.GetFullPath(destinationPath);
+        while (true)
+        {
+            EnsureDestinationIsDirectoryPath(currentDestinationPath);
+
+            var conflictingPaths = archiveService.GetConflictingPaths(archiveBytes, currentDestinationPath);
+            if (conflictingPaths.Count == 0)
+            {
+                return new ExtractionPlan(currentDestinationPath, IsOverwriteEnabled: false);
+            }
+
+            ShowConflictingPaths(currentDestinationPath, conflictingPaths);
+            var choice = AnsiConsole.Prompt(
+                new SelectionPrompt<string>()
+                    .Title("[bold]How should SecShare handle the existing files?[/]")
+                    .AddChoices(
+                        OverwriteExistingChoice,
+                        UseAnotherDirectoryChoice,
+                        CancelChoice
+                    )
+            );
+
+            switch (choice)
+            {
+                case OverwriteExistingChoice:
+                    return new ExtractionPlan(currentDestinationPath, IsOverwriteEnabled: true);
+                case UseAnotherDirectoryChoice:
+                    currentDestinationPath = PromptForAlternativeDestinationPath(destinationPath);
+                    break;
+                case CancelChoice:
+                    return null;
+            }
+        }
+    }
+
+    private static void EnsureDestinationIsDirectoryPath(string destinationPath)
+    {
+        if (File.Exists(destinationPath))
+        {
+            throw new IOException($"Destination '{destinationPath}' is an existing file. Please choose a directory path.");
+        }
+    }
+
+    private static void ShowConflictingPaths(string destinationPath, IReadOnlyCollection<string> conflictingPaths)
+    {
+        AnsiConsole.MarkupLine(
+            $"[yellow]The destination already contains files or directories from this archive:[/] [cyan]{Markup.Escape(destinationPath)}[/]"
+        );
+
+        foreach (var conflictingPath in conflictingPaths)
+        {
+            AnsiConsole.MarkupLine($"  • [yellow]{Markup.Escape(conflictingPath)}[/]");
+        }
+
+        AnsiConsole.WriteLine();
+    }
+
+    private static string PromptForAlternativeDestinationPath(string baseDestinationPath)
+    {
+        while (true)
+        {
+            var directoryName = AnsiConsole.Ask<string>(
+                "[bold]Enter a subdirectory name inside the selected destination:[/]"
+            ).Trim();
+
+            if (!TryValidateDirectoryName(directoryName, out var validationErrorMessage))
+            {
+                AnsiConsole.MarkupLine($"[red]{Markup.Escape(validationErrorMessage)}[/]");
+                continue;
+            }
+
+            return Path.Combine(Path.GetFullPath(baseDestinationPath), directoryName);
+        }
+    }
+
+    private static bool TryValidateDirectoryName(string directoryName, out string validationErrorMessage)
+    {
+        if (string.IsNullOrWhiteSpace(directoryName))
+        {
+            validationErrorMessage = "Directory name must not be empty.";
+            return false;
+        }
+
+        if (directoryName is "." or "..")
+        {
+            validationErrorMessage = "Directory name must not be '.' or '..'.";
+            return false;
+        }
+
+        if (directoryName != Path.GetFileName(directoryName)
+            || directoryName.Contains(Path.DirectorySeparatorChar)
+            || directoryName.Contains(Path.AltDirectorySeparatorChar))
+        {
+            validationErrorMessage = "Directory name must not contain path separators.";
+            return false;
+        }
+
+        if (directoryName.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+        {
+            validationErrorMessage = "Directory name contains invalid characters.";
+            return false;
+        }
+
+        validationErrorMessage = string.Empty;
+        return true;
     }
 
 }

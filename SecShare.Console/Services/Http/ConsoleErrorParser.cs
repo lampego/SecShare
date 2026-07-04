@@ -12,6 +12,11 @@ public static class ConsoleErrorParser
             FileDeletedDomainException => "This file has been deleted and is no longer available.",
             DownloadLimitExhaustedDomainException => "The download limit for this file has been exhausted.",
             UploadOptionsValidationDomainException => $"Invalid upload options: {exception.Message}",
+            InvalidDataException => "The downloaded archive is corrupted or uses an unsupported format.",
+            IOException ex when ex.Message.Contains("already contains", StringComparison.OrdinalIgnoreCase) =>
+                "The destination already contains files or directories from this archive.",
+            IOException ex when ex.Message.Contains("existing file", StringComparison.OrdinalIgnoreCase) =>
+                "The destination path points to an existing file. Choose a directory path instead.",
             _ when exception.Message == "Server Exception" => "Decrypted data is unavailable.",
             _ => exception.Message
         };

@@ -122,10 +122,29 @@ public sealed class ZipArchiveService : IZipArchiveService
         return new ZipArchiveBuildResult(stream.ToArray(), bytes.LongLength, 1, "message.txt");
     }
 
+    public IReadOnlyCollection<string> GetConflictingPaths(byte[] archiveBytes, string destinationPath)
+    {
+        ArgumentNullException.ThrowIfNull(archiveBytes);
+        ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
+
+        var destinationRoot = Path.GetFullPath(destinationPath);
+        if (!Directory.Exists(destinationRoot))
+        {
+            return [];
+        }
+
+        using var stream = new MemoryStream(archiveBytes, writable: false);
+        using var archive = new ZipArchive(stream, ZipArchiveMode.Read);
+        var entries = ValidateEntries(archive);
+
+        return GetConflictingPaths(entries, destinationRoot);
+    }
+
     public async Task<ZipArchiveExtractResult> ExtractAsync(
         byte[] archiveBytes,
         string destinationPath,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        ZipArchiveExtractOptions? options = null
     )
     {
         ArgumentNullException.ThrowIfNull(archiveBytes);
@@ -167,7 +186,11 @@ public sealed class ZipArchiveService : IZipArchiveService
                 await source.CopyToAsync(target, cancellationToken);
             }
 
-            var extractedPaths = MoveStagedItems(stagingPath, destinationRoot);
+            var extractedPaths = MoveStagedItems(
+                stagingPath,
+                destinationRoot,
+                options ?? new ZipArchiveExtractOptions()
+            );
             return new ZipArchiveExtractResult(
                 extractedPaths,
                 entries.Where(entry => !IsDirectory(entry)).Sum(entry => entry.Length),
@@ -338,20 +361,47 @@ public sealed class ZipArchiveService : IZipArchiveService
         return await reader.ReadToEndAsync(cancellationToken);
     }
 
-    private static IReadOnlyCollection<string> MoveStagedItems(string stagingPath, string destinationRoot)
+    private static IReadOnlyCollection<string> GetConflictingPaths(
+        IReadOnlyCollection<ZipArchiveEntry> entries,
+        string destinationRoot
+    )
+    {
+        return GetArchiveRootItemNames(entries)
+            .Select(itemName => Path.Combine(destinationRoot, itemName))
+            .Where(path => File.Exists(path) || Directory.Exists(path))
+            .ToArray();
+    }
+
+    private static IReadOnlyCollection<string> MoveStagedItems(
+        string stagingPath,
+        string destinationRoot,
+        ZipArchiveExtractOptions options
+    )
     {
         var items = new DirectoryInfo(stagingPath)
             .EnumerateFileSystemInfos()
             .OrderBy(item => item.Name, StringComparer.Ordinal)
             .ToArray();
 
-        foreach (var item in items)
+        var conflictingPaths = items
+            .Select(item => Path.Combine(destinationRoot, item.Name))
+            .Where(path => File.Exists(path) || Directory.Exists(path))
+            .ToArray();
+
+        if (conflictingPaths.Length > 0 && !options.IsOverwriteEnabled)
         {
-            var destination = Path.Combine(destinationRoot, item.Name);
-            if (File.Exists(destination) || Directory.Exists(destination))
+            throw new IOException($"Destination already contains: {string.Join(", ", conflictingPaths)}.");
+        }
+
+        foreach (var conflictingPath in conflictingPaths)
+        {
+            if (Directory.Exists(conflictingPath))
             {
-                throw new IOException($"Destination '{destination}' already exists.");
+                Directory.Delete(conflictingPath, recursive: true);
+                continue;
             }
+
+            File.Delete(conflictingPath);
         }
 
         foreach (var item in items)
@@ -437,6 +487,25 @@ public sealed class ZipArchiveService : IZipArchiveService
         return string.IsNullOrEmpty(entryName)
             ? "secshare-file"
             : entryName;
+    }
+
+    private static IReadOnlyCollection<string> GetArchiveRootItemNames(IReadOnlyCollection<ZipArchiveEntry> entries)
+    {
+        var rootItemNames = new HashSet<string>(GetPathComparer());
+        foreach (var entry in entries)
+        {
+            var rootItemName = NormalizeEntryName(entry.FullName)
+                .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                .FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(rootItemName))
+            {
+                rootItemNames.Add(rootItemName);
+            }
+        }
+
+        return rootItemNames
+            .OrderBy(name => name, StringComparer.Ordinal)
+            .ToArray();
     }
 
     private static bool IsDirectory(ZipArchiveEntry entry)
