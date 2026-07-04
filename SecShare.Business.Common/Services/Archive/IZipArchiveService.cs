@@ -15,10 +15,13 @@ public interface IZipArchiveService
 
     Task<ZipArchiveBuildResult> CreateFromTextAsync(string text, CancellationToken cancellationToken);
 
+    IReadOnlyCollection<string> GetConflictingPaths(byte[] archiveBytes, string destinationPath);
+
     Task<ZipArchiveExtractResult> ExtractAsync(
         byte[] archiveBytes,
         string destinationPath,
-        CancellationToken cancellationToken
+        CancellationToken cancellationToken,
+        ZipArchiveExtractOptions? options = null
     );
 
     Task<string> ReadTextAsync(byte[] archiveBytes, CancellationToken cancellationToken);
