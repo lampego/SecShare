@@ -163,6 +163,26 @@
                                     class="focus-ring inline-flex w-full justify-center rounded-lg bg-[#13201d] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530] disabled:cursor-not-allowed disabled:opacity-60">
                                 @SubmitButtonText
                             </button>
+
+                            @if (_stage == SubmitStage.Uploading)
+                            {
+                                <div class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-4">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <p class="text-sm font-semibold text-[#13201d]">Uploading encrypted payload</p>
+                                        <p class="font-mono text-xs text-[#52625d]">@UploadProgressPercent.ToString("0.0")%</p>
+                                    </div>
+
+                                    <div class="mt-3 h-2 overflow-hidden rounded-full bg-[#e7eee9]">
+                                        <div class="h-full rounded-full bg-[#0f766e] transition-all duration-200"
+                                             style="width: @($"{UploadProgressPercent:0.0}%")"></div>
+                                    </div>
+
+                                    <div class="mt-3 flex items-center justify-between gap-3 font-mono text-xs text-[#52625d]">
+                                        <span>@UploadedBytesText</span>
+                                        <span>@UploadSpeedText</span>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </aside>
                 </div>

@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
+using SecShare.Business.Common.Formatting;
+using SecShare.Business.Common.Http;
 using SecShare.Business.Common.Http.Clients;
 using SecShare.Business.Common.Models.Archive;
 using SecShare.Business.Common.Services.Archive;
@@ -57,6 +59,9 @@ public partial class Upload : IAsyncDisposable
     private string _expires = "24h";
     private int _downloads = 1;
     private string? _errorMessage;
+    private long _uploadBytesTransferred;
+    private long? _uploadTotalBytes;
+    private double _uploadBytesPerSecond;
 
     private bool IsBusy => _stage != SubmitStage.Idle;
 
@@ -73,6 +78,19 @@ public partial class Upload : IAsyncDisposable
         SubmitStage.CreatingLink => "Creating link",
         _ => "Encrypt and upload"
     };
+
+    private string UploadedBytesText
+        => _uploadTotalBytes.HasValue
+            ? $"{ByteSizeFormatter.Format(_uploadBytesTransferred)} / {ByteSizeFormatter.Format(_uploadTotalBytes.Value)}"
+            : ByteSizeFormatter.Format(_uploadBytesTransferred);
+
+    private string UploadSpeedText
+        => $"{ByteSizeFormatter.Format(_uploadBytesPerSecond)}/s";
+
+    private double UploadProgressPercent
+        => _uploadTotalBytes is > 0
+            ? Math.Clamp((_uploadBytesTransferred * 100d) / _uploadTotalBytes.Value, 0d, 100d)
+            : 0d;
 
     private void SetMode(UploadMode mode)
     {
@@ -138,6 +156,7 @@ public partial class Upload : IAsyncDisposable
 
         _errorMessage = null;
         _copied = CopiedTarget.None;
+        ResetUploadProgress();
 
         try
         {
@@ -225,11 +244,19 @@ public partial class Upload : IAsyncDisposable
                 Downloads = Math.Max(_downloads, 1),
                 ContentType = contentType
             },
-            progress: null,
+            progress: OnUploadProgress,
             cancellationToken
         );
 
         return result.Token;
+    }
+
+    private void OnUploadProgress(TransferProgress progress)
+    {
+        _uploadBytesTransferred = progress.BytesTransferred;
+        _uploadTotalBytes = progress.TotalBytes;
+        _uploadBytesPerSecond = progress.BytesPerSecond;
+        _ = InvokeAsync(StateHasChanged);
     }
 
     private StorageContentType ResolveContentType()
@@ -322,8 +349,16 @@ public partial class Upload : IAsyncDisposable
         _result = null;
         _errorMessage = null;
         _copied = CopiedTarget.None;
+        ResetUploadProgress();
         ClearFiles();
         _textSecret = string.Empty;
+    }
+
+    private void ResetUploadProgress()
+    {
+        _uploadBytesTransferred = 0;
+        _uploadTotalBytes = null;
+        _uploadBytesPerSecond = 0;
     }
 
     private void ResetFileInput()
