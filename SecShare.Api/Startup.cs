@@ -42,6 +42,13 @@ public class Startup
 
         services.AddAutoMapper(cfg => { }, assembly);
         services.AddHttpContextAccessor();
+        services.AddOptions<UploadRateLimitMiddleware.UploadRateLimitOptions>()
+            .Bind(Configuration.GetSection(UploadRateLimitMiddleware.UploadRateLimitOptions.SectionName))
+            .Validate(
+                options => options.UploadBytesPerSecond > 0,
+                "UploadRateLimit:UploadBytesPerSecond must be greater than zero."
+            )
+            .ValidateOnStart();
         services.Configure<ForwardedHeadersOptions>(options =>
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
@@ -70,6 +77,7 @@ public class Startup
         ApplicationHelper.HostingEnvironment = env.EnvironmentName;
 
         app.UseForwardedHeaders();
+        app.UseMiddleware<UploadRateLimitMiddleware>();
         app.UseRouting();
         app.UseCors("Cors");
         app.UseMiddleware<ApiExceptionMiddleware>();
