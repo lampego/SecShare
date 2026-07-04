@@ -18,8 +18,9 @@ public partial class Upload : IAsyncDisposable
     private const int MaxSelectedFiles = 100;
     private const long MaxSourceSizeBytes = ZipArchiveService.MaxSourceSizeBytes;
     private const string FilesSourceName = "selected files";
+    private const string NoValidFilesSelectedError = "No valid files selected.";
 
-    private sealed record SelectedUploadFile(Guid Id, IBrowserFile File);
+    private sealed record SelectedUploadFile(Guid Id, string Name, long Size, byte[] Content);
     private sealed record UploadResultViewModel(
         string LinkWithoutKey,
         string DecryptionKey,
@@ -111,7 +112,7 @@ public partial class Upload : IAsyncDisposable
             : $"{baseClass} text-[#52625d] hover:text-[#13201d]";
     }
 
-    private void OnFilesSelected(InputFileChangeEventArgs args)
+    private async Task OnFilesSelected(InputFileChangeEventArgs args)
     {
         if (IsBusy)
         {
@@ -119,9 +120,30 @@ public partial class Upload : IAsyncDisposable
         }
 
         _errorMessage = null;
+        var hasUnsupportedEntries = false;
+
         foreach (var file in args.GetMultipleFiles(MaxSelectedFiles))
         {
-            _selectedFiles.Add(new SelectedUploadFile(Guid.NewGuid(), file));
+            try
+            {
+                var fileBytes = await ReadFileBytesAsync(file, _cts.Token);
+                _selectedFiles.Add(new SelectedUploadFile(Guid.NewGuid(), file.Name, file.Size, fileBytes));
+            }
+            catch (Exception ex) when (
+                ex is JSException
+                    or IOException
+                    or InvalidOperationException
+                    or NotSupportedException
+            )
+            {
+                Logger.LogWarning(ex, "Skipped unsupported file entry during selection.");
+                hasUnsupportedEntries = true;
+            }
+        }
+
+        if (hasUnsupportedEntries)
+        {
+            _errorMessage = "One or more selected items were skipped. Folders are not supported.";
         }
     }
 
@@ -195,6 +217,7 @@ public partial class Upload : IAsyncDisposable
                 or HttpRequestException
                 or ArgumentException
                 or NotSupportedException
+                or JSException
         )
         {
             Logger.LogWarning(ex, "Browser upload failed.");
@@ -209,12 +232,17 @@ public partial class Upload : IAsyncDisposable
 
     private async Task<byte[]> CreateFilesArchiveAsync(CancellationToken cancellationToken)
     {
+        if (_selectedFiles.Count == 0)
+        {
+            throw new InvalidOperationException(NoValidFilesSelectedError);
+        }
+
         var archive = await ArchiveService.CreateFromStreamsAsync(
             _selectedFiles
                 .Select(item => new ZipArchiveSourceItem(
-                    item.File.Name,
-                    item.File.Size,
-                    token => ValueTask.FromResult<Stream>(item.File.OpenReadStream(MaxSourceSizeBytes, token))
+                    item.Name,
+                    item.Size,
+                    _ => ValueTask.FromResult<Stream>(new MemoryStream(item.Content, writable: false))
                 ))
                 .ToArray(),
             FilesSourceName,
@@ -222,6 +250,14 @@ public partial class Upload : IAsyncDisposable
         );
 
         return archive.ArchiveBytes;
+    }
+
+    private static async Task<byte[]> ReadFileBytesAsync(IBrowserFile file, CancellationToken cancellationToken)
+    {
+        await using var source = file.OpenReadStream(MaxSourceSizeBytes, cancellationToken);
+        using var target = new MemoryStream();
+        await source.CopyToAsync(target, cancellationToken);
+        return target.ToArray();
     }
 
     private async Task<byte[]> CreateTextArchiveAsync(CancellationToken cancellationToken)
@@ -369,6 +405,13 @@ public partial class Upload : IAsyncDisposable
         {
             InvalidOperationException ex when ex.Message.Contains("200 MB", StringComparison.OrdinalIgnoreCase) =>
                 "Total upload size must not exceed 200 MB.",
+            InvalidOperationException ex when ex.Message.Contains(NoValidFilesSelectedError, StringComparison.Ordinal) =>
+                "Directory upload is not supported. Please select files only.",
+            JSException ex when (
+                ex.Message.Contains("requested file or directory could not be found", StringComparison.OrdinalIgnoreCase)
+                || ex.Message.Contains("There is no file with ID", StringComparison.OrdinalIgnoreCase)
+            ) =>
+                "One or more selected items are unavailable. Folders are not supported, please reselect files only.",
             HttpRequestException =>
                 "Upload failed. Please check your connection and try again.",
             _ => "Upload failed. Please check the selected content and try again."
