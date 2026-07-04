@@ -5,11 +5,12 @@ using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Headers;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Clients;
 using SecShare.Business.Exceptions;
 
 namespace SecShare.Tests.Unit.Web;
 
-public sealed class WebSecShareHttpClientTests
+public sealed class WebHttpClientTests
 {
     private const string BaseUrl = "https://secshare.me";
     private const string ApiFilesPath = "/api/files";
@@ -257,7 +258,7 @@ public sealed class WebSecShareHttpClientTests
         Assert.Contains("Id: Invalid file identifier format.", ex.Message);
     }
 
-    private static WebSecShareHttpClient CreateClient(HttpMessageHandler handler)
+    private static WebHttpClient CreateClient(HttpMessageHandler handler)
         => new(new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) });
 
     private static async Task<Dictionary<string, string>> ReadMultipartFormValuesAsync(

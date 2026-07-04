@@ -1,9 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using SecShare.Business.Common.Dto.Storage;
+using SecShare.Business.Common.Http.Parsers;
 
-namespace SecShare.Business.Common.Http;
+namespace SecShare.Business.Common.Http.Validators;
 
-public static class SecShareUploadOptionsValidator
+public static class UploadOptionsValidator
 {
     public static void Validate(UploadFileOptions options)
     {
@@ -21,6 +22,6 @@ public static class SecShareUploadOptionsValidator
             return;
         }
 
-        throw new ArgumentException(SecShareHttpErrorParser.FormatValidationErrors(results));
+        throw new ArgumentException(HttpErrorParser.FormatValidationErrors(results));
     }
 }

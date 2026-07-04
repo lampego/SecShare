@@ -2,14 +2,16 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Headers;
+using SecShare.Business.Common.Http.Parsers;
+using SecShare.Business.Common.Http.Validators;
 
-namespace SecShare.Business.Common.Http;
+namespace SecShare.Business.Common.Http.Clients;
 
 /// <summary>
 /// Blazor WASM implementation of the SecShare API client.
 /// Sends <c>X-Client-Type: Web</c> and streams encrypted payloads with optional progress reporting.
 /// </summary>
-public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDownloadClient, ISecShareUploadClient
+public sealed class WebHttpClient(HttpClient httpClient) : IDownloadClient, IUploadClient
 {
     private const long MaxEncryptedPayloadSizeBytes = 220L * 1024 * 1024;
     private const string ApiFilesPath = "/api/files";
@@ -22,8 +24,8 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
         CancellationToken cancellationToken
     )
     {
-        ArgumentNullException.ThrowIfNull(encryptedPayload);
-        SecShareUploadOptionsValidator.Validate(options);
+        UploadPayloadValidator.Validate(encryptedPayload);
+        UploadOptionsValidator.Validate(options);
 
         using var fileContent = new ProgressByteArrayContent(encryptedPayload, progress);
         using var content = new MultipartFormDataContent
@@ -40,7 +42,7 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
         request.Headers.Add(SecShareClientHeaders.ClientType, SecShareClientHeaders.ClientTypeWeb);
 
         using var response = await httpClient.SendAsync(request, cancellationToken);
-        await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
+        await HttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
 
         var result = await response.Content.ReadFromJsonAsync<UploadResult>(cancellationToken);
         if (result is null || string.IsNullOrWhiteSpace(result.Token))
@@ -69,7 +71,7 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
             cancellationToken
         );
 
-        await SecShareHttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
+        await HttpErrorParser.EnsureSuccessResponseAsync(response, cancellationToken);
 
         var totalBytes = response.Content.Headers.ContentLength;
         if (totalBytes > MaxEncryptedPayloadSizeBytes)
@@ -100,6 +102,6 @@ public sealed class WebSecShareHttpClient(HttpClient httpClient) : ISecShareDown
         }
 
         tracker.Complete();
-        return SecShareResponseParser.ParseDownloadResult(response, target.ToArray());
+        return ResponseParser.ParseDownloadResult(response, target.ToArray());
     }
 }

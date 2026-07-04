@@ -4,9 +4,9 @@ using System.Text.Json;
 using SecShare.Business.Dto;
 using SecShare.Business.Exceptions;
 
-namespace SecShare.Business.Common.Http;
+namespace SecShare.Business.Common.Http.Parsers;
 
-public static class SecShareHttpErrorParser
+public static class HttpErrorParser
 {
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

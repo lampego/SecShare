@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
-using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Clients;
 using SecShare.Business.Common.Models.Archive;
 using SecShare.Business.Common.Services.Archive;
 using SecShare.Web.Services.Crypto;
@@ -28,7 +28,7 @@ public partial class Upload : IAsyncDisposable
     private enum CopiedTarget { None, FullLink, Link, Key, CliCommand }
 
     [Inject]
-    private ISecShareUploadClient UploadClient { get; set; } = null!;
+    private IUploadClient UploadClient { get; set; } = null!;
 
     [Inject]
     private IZipArchiveService ArchiveService { get; set; } = null!;

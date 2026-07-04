@@ -127,7 +127,7 @@ Do not commit real secrets. Use `appsettings.Local.json`, user secrets, or envir
 
 File storage currently uses S3 through `IFileStorageS3Client` / `FileStorageS3Client`.
 
-- `FileStorage.MaxFileSize` is 50 MB.
+- `FileStorage.MaxFileSize` is 99 MB to keep multipart uploads within Cloudflare Free's 100 MB request body limit.
 - Stored object keys are generated under `files/yyyyMMdd/<uuid-v7>.<extension>`.
 - Metadata is persisted in the `files` table through `IFilesDao`.
 - `DeleteFileAsync` deletes the S3 object and soft-deletes the DB row by setting `DeletedAt`.

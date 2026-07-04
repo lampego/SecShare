@@ -7,6 +7,7 @@ using Microsoft.JSInterop;
 using SecShare.Business.Common.Enums;
 using SecShare.Business.Common.Formatting;
 using SecShare.Business.Common.Http;
+using SecShare.Business.Common.Http.Clients;
 using SecShare.Business.Common.Services.Archive;
 using SecShare.Business.Exceptions;
 using SecShare.Web.Services.Crypto;
@@ -35,7 +36,7 @@ public partial class Receive : IAsyncDisposable
     private NavigationManager Navigation { get; set; } = null!;
 
     [Inject]
-    private ISecShareDownloadClient DownloadClient { get; set; } = null!;
+    private IDownloadClient DownloadClient { get; set; } = null!;
 
     [Inject]
     private IWebCryptoService CryptoService { get; set; } = null!;
