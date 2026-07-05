@@ -1,6 +1,7 @@
 @using Microsoft.AspNetCore.Components
 @using Microsoft.AspNetCore.Components.Web
 @using static Microsoft.AspNetCore.Components.Web.RenderMode
+@using SecShare.Web.Components
 
 <!DOCTYPE html>
 <html lang="en">
@@ -19,7 +20,9 @@
 </head>
 
 <body>
-    <Routes @rendermode="@PageRenderMode" />
+    <div id="app" class="min-h-screen bg-[#f7f8f5] text-[#13201d]">
+        <SecShare.Web.Components.Routes @rendermode="@PageRenderMode" />
+    </div>
     <script src="js/secshare-interop.js"></script>
     <script src="_framework/blazor.web.js"></script>
 </body>
@@ -39,6 +42,3 @@
             ? null
             : InteractiveWebAssemblyWithoutPrerender;
 }
-
-
-

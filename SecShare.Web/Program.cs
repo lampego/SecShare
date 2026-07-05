@@ -26,8 +26,11 @@ using var stream = await response.Content.ReadAsStreamAsync();
 builder.Configuration.AddJsonStream(stream);
 
 
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
+// In hosted interactive mode, root components are bootstrapped from server-rendered markers.
+// Do not mount standalone roots like #app here.
+
+// builder.RootComponents.Add<App>("#app");
+// builder.RootComponents.Add<HeadOutlet>("head::after");
 
 // Register HttpClient using the URL specified in the configurations
 var apiUrl = builder.Configuration.GetValue<string>("ApiUrl") ?? builder.HostEnvironment.BaseAddress;

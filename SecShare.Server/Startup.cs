@@ -96,6 +96,7 @@ public class Startup
         app.UseMiddleware<CommitPerformerMiddleware>();
         app.UseEndpoints(endpoints =>
         {
+            endpoints.MapStaticAssets();
             endpoints.MapControllers();
             endpoints.MapRazorComponents<App>()
                 .AddInteractiveWebAssemblyRenderMode()
