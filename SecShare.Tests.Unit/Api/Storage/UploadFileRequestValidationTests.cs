@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using SecShare.Business.Common.Dto.Storage;
 using SecShare.Business.Common.Enums;
-using SecShare.Api.Dto.RequestResponse.Storage;
+using SecShare.Server.Dto.RequestResponse.Storage;
 
 namespace SecShare.Tests.Unit.Api.Storage;
 

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SecShare.Api;
+using SecShare.Server;
 using SecShare.Business.Helpers;
 using SecShare.Business.Logging;
 using Serilog;

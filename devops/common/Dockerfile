@@ -18,7 +18,7 @@ RUN apt update
 RUN apt install -y apt-transport-https wget ca-certificates curl
 
 RUN echo "{}" > appsettings.Local.json
-RUN echo "{}" > SecShare.Api/appsettings.Local.json
+RUN echo "{}" > SecShare.Server/appsettings.Local.json
 RUN echo "{}" > SecShare.Migrations/appsettings.Local.json
 RUN echo "{}" > SecShare.WorkerServices/appsettings.Local.json
 RUN echo "{}" > SecShare.Tests.Integration.Api/appsettings.Local.json
