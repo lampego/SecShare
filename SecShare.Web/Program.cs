@@ -25,6 +25,7 @@ using var response = await webHttp.GetAsync($"appsettings.{configurationFile}.js
 using var stream = await response.Content.ReadAsStreamAsync();
 builder.Configuration.AddJsonStream(stream);
 
+
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 

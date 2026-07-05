@@ -1,6 +1,7 @@
 using Autofac;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using SecShare.Api.Components;
 using SecShare.Api.Di.Autofac.Modules;
 using SecShare.Business;
 using SecShare.Business.Common.Headers;
@@ -60,6 +61,8 @@ public class Startup
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
         });
+        services.AddRazorComponents()
+            .AddInteractiveWebAssemblyComponents();
         services.AddControllers()
             .AddApplicationPart(assembly)
             .ConfigureApiBehaviorOptions(options => options.SuppressModelStateInvalidFilter = true)
@@ -85,10 +88,18 @@ public class Startup
 
         app.UseForwardedHeaders();
         app.UseMiddleware<UploadRateLimitMiddleware>();
+        app.UseStaticFiles();
         app.UseRouting();
         app.UseCors("Cors");
+        app.UseAntiforgery();
         app.UseMiddleware<ApiExceptionMiddleware>();
         app.UseMiddleware<CommitPerformerMiddleware>();
-        app.UseEndpoints(endpoints => endpoints.MapControllers());
+        app.UseEndpoints(endpoints =>
+        {
+            endpoints.MapControllers();
+            endpoints.MapRazorComponents<App>()
+                .AddInteractiveWebAssemblyRenderMode()
+                .AddAdditionalAssemblies(typeof(SecShare.Web.App).Assembly);
+        });
     }
 }

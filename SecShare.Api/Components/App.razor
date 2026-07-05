@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SecShare - Encrypted file and secret sharing from your terminal</title>
+    <meta name="description" content="Share encrypted files and secrets from the terminal with temporary links and browser-friendly receiving." />
+    <base href="/" />
+    <link rel="stylesheet" href="css/app.min.css" />
+    <link rel="icon" href="images/favicons/favicon.ico" sizes="any" />
+    <link rel="icon" href="images/favicons/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="images/app-icons/apple-touch-icon.png" />
+    <link rel="manifest" href="site.webmanifest" />
+    <HeadOutlet @rendermode="@PageRenderMode" />
+</head>
+
+<body>
+    <Routes @rendermode="@PageRenderMode" />
+    <script src="js/secshare-interop.js"></script>
+    <script src="_framework/blazor.web.js"></script>
+</body>
+</html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+
+    private static readonly IComponentRenderMode InteractiveWebAssemblyWithoutPrerender =
+        new InteractiveWebAssemblyRenderMode(prerender: false);
+
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.GetEndpoint()?.Metadata.GetMetadata<ExcludeFromInteractiveRoutingAttribute>() is null
+            ? InteractiveWebAssemblyWithoutPrerender
+            : null;
+}
+
+
+
