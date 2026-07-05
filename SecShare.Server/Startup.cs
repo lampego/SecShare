@@ -1,6 +1,8 @@
 using Autofac;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 using SecShare.Server.Components;
 using SecShare.Server.Di.Autofac.Modules;
 using SecShare.Business;
@@ -88,7 +90,23 @@ public class Startup
 
         app.UseForwardedHeaders();
         app.UseMiddleware<UploadRateLimitMiddleware>();
-        app.UseStaticFiles();
+        
+        // Serve static files from wwwroot or use integrated static assets in .NET 10
+        var wwwrootPath = Path.Combine(env.ContentRootPath, "wwwroot");
+        if (Directory.Exists(wwwrootPath))
+        {
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                FileProvider = new PhysicalFileProvider(wwwrootPath),
+                RequestPath = ""
+            });
+        }
+        else
+        {
+            // Fallback to standard static files (relies on MapStaticAssets in endpoints)
+            app.UseStaticFiles();
+        }
+        
         app.UseRouting();
         app.UseCors("Cors");
         app.UseAntiforgery();
