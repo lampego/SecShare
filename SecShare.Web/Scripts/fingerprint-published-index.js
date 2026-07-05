@@ -25,6 +25,7 @@ for (const endpoint of manifest.Endpoints || []) {
 }
 
 const assets = [
+    { url: "_framework/blazor.webassembly.js", label: "_framework/blazor.webassembly.js" },
     { url: "css/app.min.css", label: "css/app.min.css" },
     { url: "js/secshare-interop.js", label: "js/secshare-interop.js" },
     { url: "images/favicons/favicon.ico", label: "images/favicons/favicon.ico" },
