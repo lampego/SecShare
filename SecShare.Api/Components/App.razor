@@ -32,10 +32,12 @@
     private static readonly IComponentRenderMode InteractiveWebAssemblyWithoutPrerender =
         new InteractiveWebAssemblyRenderMode(prerender: false);
 
+    private bool IsHomePath => HttpContext.Request.Path == "/";
+
     private IComponentRenderMode? PageRenderMode =>
-        HttpContext.GetEndpoint()?.Metadata.GetMetadata<ExcludeFromInteractiveRoutingAttribute>() is null
-            ? InteractiveWebAssemblyWithoutPrerender
-            : null;
+        IsHomePath
+            ? null
+            : InteractiveWebAssemblyWithoutPrerender;
 }
 
 
