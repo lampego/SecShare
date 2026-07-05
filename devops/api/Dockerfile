@@ -26,6 +26,10 @@ RUN dotnet publish SecShare.Server/SecShare.Server.csproj -c Release -o /app/pub
 
 # Runtime image with ASP.NET
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
+
+# Install nginx for reverse proxy with rate limiting
+RUN apt-get update && apt-get install -y --no-install-recommends nginx && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Change timezone to UTC
@@ -35,11 +39,23 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 # Copy built API files
 COPY --from=build /app/publish/api /app/publish/api
 
+# Copy nginx configuration (with rate limiting for file operations)
+COPY devops/api/nginx.conf /etc/nginx/nginx.conf
+
+# Copy boot script that starts both dotnet and nginx
+COPY devops/api/boot.sh /app/publish/api/boot.sh
+RUN chmod +x /app/publish/api/boot.sh
+
 # Create dummy local config in the runtime directory
 RUN echo "{}" > /app/publish/api/appsettings.Local.json
 
-ENV ASPNETCORE_URLS=http://+:80
+# ASP.NET Core listens on localhost:5000
+ENV ASPNETCORE_URLS=http://127.0.0.1:5000
 
 EXPOSE 80
 
-CMD ["dotnet", "/app/publish/api/SecShare.Server.dll"]
+# Set working directory to where wwwroot and app binaries are located
+WORKDIR /app/publish/api
+
+# Run boot script that starts both dotnet and nginx
+CMD ["/bin/bash", "/app/publish/api/boot.sh"]
