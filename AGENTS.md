@@ -6,7 +6,7 @@
 
 | Project | Role |
 |---|---|
-| `SecShare.Api` | ASP.NET Core REST API host |
+| `SecShare.Server` | ASP.NET Core REST API host |
 | `SecShare.Business` | Business services, Autofac modules, middleware, logging, S3 storage client |
 | `SecShare.Business.Orm` | NHibernate entities, DAOs, mappings, session factory/provider |
 | `SecShare.Migrations` | FluentMigrator console app for PostgreSQL migrations |
@@ -31,7 +31,7 @@ API endpoints use the custom `IAsyncRequestHandler<TRequest, TResponse>` / `IAsy
 Typical layout:
 
 ```text
-SecShare.Api/Controllers/<Feature>/
+SecShare.Server/Controllers/<Feature>/
   <Feature>Controller.cs
   Actions/
     <Action>Request.cs
@@ -49,13 +49,13 @@ public Task<IActionResult> Get()
         .With(new PingRequest());
 ```
 
-Handlers are auto-registered in `SecShare.Api/Di/Autofac/Modules/ApiModule.cs` via `AsClosedTypesOf`. Put endpoint business logic in handlers or domain services, not in controllers.
+Handlers are auto-registered in `SecShare.Server/Di/Autofac/Modules/ApiModule.cs` via `AsClosedTypesOf`. Put endpoint business logic in handlers or domain services, not in controllers.
 
 ## Dependency Injection
 
 DI uses Autofac modules. The API host uses `AutofacServiceProviderFactory` and registers:
 
-- `ApiModule` from `SecShare.Api`
+- `ApiModule` from `SecShare.Server`
 - all modules from `SecShare.Business` via `RegisterAssemblyModules(typeof(BusinessAssemblyMarker).Assembly)`
 
 Current business modules:

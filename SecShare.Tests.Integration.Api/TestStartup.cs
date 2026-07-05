@@ -1,6 +1,6 @@
 using Autofac;
 using Microsoft.Extensions.Configuration;
-using SecShare.Api;
+using SecShare.Server;
 using SecShare.Business.Testing.Extensions;
 
 namespace SecShare.Tests.Integration.Api;

@@ -15,14 +15,14 @@ COPY . .
 
 # Create dummy local configurations so build/restore/publish are happy
 RUN echo "{}" > appsettings.Local.json
-RUN echo "{}" > SecShare.Api/appsettings.Local.json
+RUN echo "{}" > SecShare.Server/appsettings.Local.json
 RUN echo "{}" > SecShare.Migrations/appsettings.Local.json
 RUN echo "{}" > SecShare.WorkerServices/appsettings.Local.json
 RUN echo "{}" > SecShare.Tests.Integration.Api/appsettings.Local.json
 RUN echo "{}" > SecShare.Tests.Integration/appsettings.Local.json
 
 # Publish API
-RUN dotnet publish SecShare.Api/SecShare.Api.csproj -c Release -o /app/publish/api
+RUN dotnet publish SecShare.Server/SecShare.Server.csproj -c Release -o /app/publish/api
 
 # Runtime image with ASP.NET
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
@@ -42,4 +42,4 @@ ENV ASPNETCORE_URLS=http://+:80
 
 EXPOSE 80
 
-CMD ["dotnet", "/app/publish/api/SecShare.Api.dll"]
+CMD ["dotnet", "/app/publish/api/SecShare.Server.dll"]

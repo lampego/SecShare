@@ -366,7 +366,7 @@ node('web-node') {
         }
 
         apiContainer.envVariables = envVariables.clone()
-        apiContainer.envVariables.put('PROJECT_DIR', 'SecShare.Api')
+        apiContainer.envVariables.put('PROJECT_DIR', 'SecShare.Server')
         dockerHelper.runContainer(apiContainer)
     }
 

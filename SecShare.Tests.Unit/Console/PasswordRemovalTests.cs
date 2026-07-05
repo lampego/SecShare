@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Reflection;
 using SecShare.Business.Common.Dto.Storage;
-using SecShare.Api.Dto.RequestResponse.Storage;
+using SecShare.Server.Dto.RequestResponse.Storage;
 using SecShare.Console.Commands;
 using Spectre.Console.Cli;
 

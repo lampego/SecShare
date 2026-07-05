@@ -30,7 +30,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Tests.Unit", "SecS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Tests.Integration", "SecShare.Tests.Integration\SecShare.Tests.Integration.csproj", "{6A74C2E7-9A06-4844-8251-D402863F3E3A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Api", "SecShare.Api\SecShare.Api.csproj", "{7932371E-084F-4CCF-A787-3493D98FA3CA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Server", "SecShare.Server\SecShare.Server.csproj", "{7932371E-084F-4CCF-A787-3493D98FA3CA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SecShare.Migrations", "SecShare.Migrations\SecShare.Migrations.csproj", "{35D1285B-694E-4111-B755-EC0925F74025}"
 EndProject

@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using SecShare.Business.Common.Headers;
-using SecShare.Api.Dto.RequestResponse.Storage;
+using SecShare.Server.Dto.RequestResponse.Storage;
 using SecShare.Business.Dto;
 using SecShare.Business.Services.Queue;
 using SecShare.Business.Orm.Dao.Queue;
