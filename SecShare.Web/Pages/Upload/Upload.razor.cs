@@ -28,7 +28,7 @@ public partial class Upload : IAsyncDisposable
     );
     private enum UploadMode { Files, TextSecret }
     private enum SubmitStage { Idle, Encrypting, Uploading, CreatingLink }
-    private enum CopiedTarget { None, FullLink, Link, Key }
+    private enum CopiedTarget { None, FullLink }
 
     [Inject]
     private IUploadClient UploadClient { get; set; } = null!;
@@ -322,26 +322,6 @@ public partial class Upload : IAsyncDisposable
         }
 
         await CopyAsync(_result.FullLink, CopiedTarget.FullLink);
-    }
-
-    private async Task CopyLinkAsync()
-    {
-        if (_result is null)
-        {
-            return;
-        }
-
-        await CopyAsync(_result.LinkWithoutKey, CopiedTarget.Link);
-    }
-
-    private async Task CopyKeyAsync()
-    {
-        if (_result is null)
-        {
-            return;
-        }
-
-        await CopyAsync(_result.DecryptionKey, CopiedTarget.Key);
     }
 
     private async Task CopyAsync(string value, CopiedTarget target)

@@ -1,0 +1,28 @@
+<div class="@ContainerClassName">
+    <div class="relative">
+        <div class="min-h-14 rounded-lg border border-[#dce5da] bg-white py-3 pl-3 pr-14 font-mono text-xs leading-5 break-all text-[#13201d]">
+            @Value
+        </div>
+        <CopyButton Value="@CopyText"
+                    Title="@Title"
+                    AriaLabel="@Title" />
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? CopyValue { get; set; }
+
+    [Parameter]
+    public string Title { get; set; } = "Copy";
+
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    private string CopyText => CopyValue ?? Value;
+
+    private string ContainerClassName => Class;
+}

@@ -159,13 +159,17 @@ window.secshareInterop = {
         return Promise.resolve();
     },
 
-    copyCodeExample: function (button) {
+    copyFromButton: function (button) {
         const text = button && button.dataset ? button.dataset.copyValue : '';
-        this._setCodeCopyButtonCopied(button);
+        this._setCopyButtonCopied(button);
         return this.copyText(text);
     },
 
-    _setCodeCopyButtonCopied: function (button) {
+    copyCodeExample: function (button) {
+        return this.copyFromButton(button);
+    },
+
+    _setCopyButtonCopied: function (button) {
         if (!button) {
             return;
         }
@@ -176,6 +180,14 @@ window.secshareInterop = {
 
         const copyIcon = button.querySelector('[data-copy-icon]');
         const copiedIcon = button.querySelector('[data-copied-icon]');
+
+        if (!button.dataset.copyTitle) {
+            button.dataset.copyTitle = button.title || 'Copy';
+        }
+
+        if (!button.dataset.copyAriaLabel) {
+            button.dataset.copyAriaLabel = button.getAttribute('aria-label') || button.dataset.copyTitle;
+        }
 
         button.title = 'Copied';
         button.setAttribute('aria-label', 'Copied');
@@ -188,8 +200,8 @@ window.secshareInterop = {
         copiedIcon && copiedIcon.classList.remove('hidden');
 
         button._secshareCopyResetTimer = setTimeout(() => {
-            button.title = 'Copy code';
-            button.setAttribute('aria-label', 'Copy code');
+            button.title = button.dataset.copyTitle || 'Copy';
+            button.setAttribute('aria-label', button.dataset.copyAriaLabel || button.title);
             button.style.borderColor = 'rgba(215, 245, 234, 0.24)';
             button.style.background = '#17211f';
             button.style.color = '#d7f5ea';

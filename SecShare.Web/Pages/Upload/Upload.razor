@@ -210,14 +210,9 @@
                             <p class="mt-2 text-sm leading-6 text-[#52625d]">
                                 Send this if the receiver should open and decrypt the file directly.
                             </p>
-                            <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
-                                @_result.FullLink
-                            </div>
-                            <button type="button"
-                                    @onclick="CopyFullLinkAsync"
-                                    class="focus-ring mt-3 inline-flex rounded-md bg-[#13201d] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[#223530]">
-                                @(_copied == CopiedTarget.FullLink ? "Copied" : "Copy full link")
-                            </button>
+                            <CopyableText Value="@_result.FullLink"
+                                          Title="Copy full link"
+                                          Class="mt-4" />
                         </article>
 
                         <article class="rounded-lg border border-[#dce5da] bg-[#fbfcf8] p-4">
@@ -225,23 +220,12 @@
                             <p class="mt-2 text-sm leading-6 text-[#52625d]">
                                 Use this if you want to send the link and decryption key through different channels.
                             </p>
-                            <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
-                                @_result.LinkWithoutKey
-                            </div>
-                            <button type="button"
-                                    @onclick="CopyLinkAsync"
-                                    class="focus-ring mt-3 inline-flex rounded-md border border-[#cbd8cf] bg-white px-4 py-2 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
-                                @(_copied == CopiedTarget.Link ? "Copied" : "Copy link")
-                            </button>
-
-                            <div class="mt-4 rounded-lg border border-[#dce5da] bg-white p-3 font-mono text-xs break-all text-[#13201d]">
-                                @_result.DecryptionKey
-                            </div>
-                            <button type="button"
-                                    @onclick="CopyKeyAsync"
-                                    class="focus-ring mt-3 inline-flex rounded-md border border-[#cbd8cf] bg-white px-4 py-2 text-sm font-semibold text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
-                                @(_copied == CopiedTarget.Key ? "Copied" : "Copy key")
-                            </button>
+                            <CopyableText Value="@_result.LinkWithoutKey"
+                                          Title="Copy link"
+                                          Class="mt-4" />
+                            <CopyableText Value="@_result.DecryptionKey"
+                                          Title="Copy key"
+                                          Class="mt-4" />
                         </article>
                     </div>
 
