@@ -9,15 +9,14 @@
         </div>
 
         <div class="mt-10 grid gap-4 lg:grid-cols-3">
-            <div class="rounded-lg border border-[#dce5da] bg-white p-5 shadow-sm">
-                <h3 class="text-base font-semibold text-[#13201d]">Windows</h3>
-                <pre class="mt-4 overflow-x-auto rounded-md bg-[#101816] p-4 text-sm leading-6 text-[#d7f5ea]"><code><span class="text-[#74c69d]">PS&gt;</span> irm https://secshare.me/install.ps1 | iex</code></pre>
-            </div>
+            <CodeExample Title="Windows"
+                         Prompt="PS&gt;"
+                         Command="irm https://secshare.me/install.ps1 | iex"
+                         Class="p-5" />
 
-            <div class="rounded-lg border border-[#dce5da] bg-white p-5 shadow-sm">
-                <h3 class="text-base font-semibold text-[#13201d]">Linux / macOS</h3>
-                <pre class="mt-4 overflow-x-auto rounded-md bg-[#101816] p-4 text-sm leading-6 text-[#d7f5ea]"><code><span class="text-[#74c69d]">$</span> curl -fsSL https://secshare.me/install.sh | sh</code></pre>
-            </div>
+            <CodeExample Title="Linux / macOS"
+                         Command="curl -fsSL https://secshare.me/install.sh | sh"
+                         Class="p-5" />
 
             <div class="rounded-lg border border-[#dce5da] bg-white p-5 shadow-sm">
                 <h3 class="text-base font-semibold text-[#13201d]">Manual download</h3>

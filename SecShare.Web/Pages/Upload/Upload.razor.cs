@@ -28,7 +28,7 @@ public partial class Upload : IAsyncDisposable
     );
     private enum UploadMode { Files, TextSecret }
     private enum SubmitStage { Idle, Encrypting, Uploading, CreatingLink }
-    private enum CopiedTarget { None, FullLink, Link, Key, CliCommand }
+    private enum CopiedTarget { None, FullLink, Link, Key }
 
     [Inject]
     private IUploadClient UploadClient { get; set; } = null!;
@@ -92,6 +92,11 @@ public partial class Upload : IAsyncDisposable
         => _uploadTotalBytes is > 0
             ? Math.Clamp((_uploadBytesTransferred * 100d) / _uploadTotalBytes.Value, 0d, 100d)
             : 0d;
+
+    private string CliDownloadCommand
+        => _result is null
+            ? string.Empty
+            : $"secshare get \"{_result.FullLink}\"";
 
     private void SetMode(UploadMode mode)
     {
@@ -317,19 +322,6 @@ public partial class Upload : IAsyncDisposable
         }
 
         await CopyAsync(_result.FullLink, CopiedTarget.FullLink);
-    }
-
-    private async Task CopyCliCommandAsync()
-    {
-        if (_result is null)
-        {
-            return;
-        }
-
-        await CopyAsync(
-            $"secshare get \"{_result.FullLink}\"",
-            CopiedTarget.CliCommand
-        );
     }
 
     private async Task CopyLinkAsync()
