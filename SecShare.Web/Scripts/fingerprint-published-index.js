@@ -28,7 +28,7 @@ const assets = [
     { url: "_framework/blazor.web.js", label: "_framework/blazor.web.js" },
     { url: "_framework/blazor.webassembly.js", label: "_framework/blazor.webassembly.js" },
     { url: "css/app.min.css", label: "css/app.min.css" },
-    { url: "js/secshare-interop.js", label: "js/secshare-interop.js" },
+    { url: "js/interop.js", label: "js/interop.js" },
     { url: "images/favicons/favicon.ico", label: "images/favicons/favicon.ico" },
     { url: "images/favicons/favicon.svg", label: "images/favicons/favicon.svg" },
     { url: "images/app-icons/app-icon.svg", label: "images/app-icons/app-icon.svg" },

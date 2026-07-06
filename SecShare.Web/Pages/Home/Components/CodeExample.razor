@@ -1,6 +1,3 @@
-@implements IDisposable
-@inject IJSRuntime JS
-
 <div class="@ContainerClassName">
     @if (HasHeader)
     {
@@ -18,32 +15,24 @@
     <div class="relative">
         <pre class="overflow-x-auto rounded-md bg-[#101816] py-4 pl-4 pr-14 text-sm leading-6 text-[#d7f5ea]"><code><span class="text-[#74c69d]">@Prompt</span> @Command</code></pre>
         <button type="button"
-                @onclick="CopyCodeAsync"
-                title="@CopyButtonTitle"
-                aria-label="@CopyButtonTitle"
-                class="focus-ring absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/10 bg-white/10 text-[#d7f5ea] shadow-sm transition hover:border-white/20 hover:bg-white/15">
-            @if (_isCopied)
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M20 6 9 17l-5-5"></path>
-                </svg>
-            }
-            else
-            {
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
-            }
+                onclick="secshareInterop.copyCodeExample(this)"
+                data-copy-value="@CopyText"
+                title="Copy code"
+                aria-label="Copy code"
+                class="focus-ring absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md border text-[#d7f5ea] shadow-sm transition duration-150"
+                style="border-color: rgba(215, 245, 234, 0.24); background: #17211f; box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32);">
+            <svg data-copy-icon xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <svg data-copied-icon xmlns="http://www.w3.org/2000/svg" class="hidden h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5"></path>
+            </svg>
         </button>
     </div>
 </div>
 
 @code {
-    private readonly CancellationTokenSource _disposeCts = new();
-    private int _copyVersion;
-    private bool _isCopied;
-
     [Parameter]
     public string Title { get; set; } = string.Empty;
 
@@ -74,33 +63,5 @@
             ? $"rounded-lg border border-[#dce5da] bg-white p-4 shadow-sm {Class}".Trim()
             : Class;
 
-    private string CopyButtonTitle => _isCopied ? "Copied" : "Copy code";
-
-    private async Task CopyCodeAsync()
-    {
-        var version = ++_copyVersion;
-        await JS.InvokeVoidAsync("secshareInterop.copyText", CopyValue ?? Command);
-
-        _isCopied = true;
-        StateHasChanged();
-
-        try
-        {
-            await Task.Delay(2000, _disposeCts.Token);
-            if (_copyVersion == version)
-            {
-                _isCopied = false;
-                StateHasChanged();
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    public void Dispose()
-    {
-        _disposeCts.Cancel();
-        _disposeCts.Dispose();
-    }
+    private string CopyText => CopyValue ?? Command;
 }
