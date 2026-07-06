@@ -1,0 +1,44 @@
+<button type="button"
+        onclick="secshareInterop.copyFromButton(this)"
+        data-copy-value="@Value"
+        title="@Title"
+        aria-label="@AriaLabel"
+        class="@ClassName"
+        style="@ButtonStyle">
+    <svg data-copy-icon xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+    <svg data-copied-icon xmlns="http://www.w3.org/2000/svg" class="hidden h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M20 6 9 17l-5-5"></path>
+    </svg>
+</button>
+
+@code {
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Title { get; set; } = "Copy";
+
+    [Parameter]
+    public string AriaLabel { get; set; } = "Copy";
+
+    [Parameter]
+    public string Class { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Style { get; set; } = string.Empty;
+
+    private string ClassName
+        => $"focus-ring absolute right-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-md border text-[#d7f5ea] shadow-sm transition duration-150 {Class}".Trim();
+
+    private string ButtonStyle
+        => (
+            "position: absolute; top: 0.5rem; right: 0.5rem; z-index: 1; " +
+            "display: inline-flex; width: 2rem; height: 2rem; align-items: center; justify-content: center; " +
+            "border-color: rgba(215, 245, 234, 0.24); background: #17211f; " +
+            "box-shadow: 0 6px 14px rgba(0, 0, 0, 0.32); " +
+            Style
+        ).Trim();
+}
