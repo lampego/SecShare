@@ -25,6 +25,7 @@ for (const endpoint of manifest.Endpoints || []) {
 }
 
 const assets = [
+    { url: "_framework/blazor.web.js", label: "_framework/blazor.web.js" },
     { url: "_framework/blazor.webassembly.js", label: "_framework/blazor.webassembly.js" },
     { url: "css/app.min.css", label: "css/app.min.css" },
     { url: "js/secshare-interop.js", label: "js/secshare-interop.js" },
@@ -45,7 +46,11 @@ for (const asset of assets) {
         continue;
     }
 
-    updatedHtml = updatedHtml.split(asset.url).join(`${asset.url}?v=${fingerprint}`);
+    const fingerprintedUrl = `${asset.url}?v=${fingerprint}`;
+
+    updatedHtml = updatedHtml
+        .split(asset.url).join(fingerprintedUrl)
+        .split(createFingerprintPlaceholder(asset.url)).join(fingerprintedUrl);
 }
 
 fs.writeFileSync(indexPath, updatedHtml);
@@ -80,4 +85,14 @@ function resolveHtmlSourcePath(sourcePath, fallbackPath) {
     }
 
     return `${sourcePath}/${htmlFiles[0]}`;
+}
+
+function createFingerprintPlaceholder(url) {
+    const extensionIndex = url.lastIndexOf(".");
+
+    if (extensionIndex === -1) {
+        return `${url}#[.{fingerprint}]`;
+    }
+
+    return `${url.slice(0, extensionIndex)}#[.{fingerprint}]${url.slice(extensionIndex)}`;
 }
