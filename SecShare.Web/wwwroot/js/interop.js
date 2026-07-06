@@ -159,6 +159,47 @@ window.secshareInterop = {
         return Promise.resolve();
     },
 
+    copyCodeExample: function (button) {
+        const text = button && button.dataset ? button.dataset.copyValue : '';
+        this._setCodeCopyButtonCopied(button);
+        return this.copyText(text);
+    },
+
+    _setCodeCopyButtonCopied: function (button) {
+        if (!button) {
+            return;
+        }
+
+        if (button._secshareCopyResetTimer) {
+            clearTimeout(button._secshareCopyResetTimer);
+        }
+
+        const copyIcon = button.querySelector('[data-copy-icon]');
+        const copiedIcon = button.querySelector('[data-copied-icon]');
+
+        button.title = 'Copied';
+        button.setAttribute('aria-label', 'Copied');
+        button.style.borderColor = '#74c69d';
+        button.style.background = '#163d30';
+        button.style.color = '#d7f5ea';
+        button.style.boxShadow = '0 0 0 2px rgba(116, 198, 157, 0.45), 0 6px 14px rgba(0, 0, 0, 0.34)';
+        button.style.transform = 'scale(1.04)';
+        copyIcon && copyIcon.classList.add('hidden');
+        copiedIcon && copiedIcon.classList.remove('hidden');
+
+        button._secshareCopyResetTimer = setTimeout(() => {
+            button.title = 'Copy code';
+            button.setAttribute('aria-label', 'Copy code');
+            button.style.borderColor = 'rgba(215, 245, 234, 0.24)';
+            button.style.background = '#17211f';
+            button.style.color = '#d7f5ea';
+            button.style.boxShadow = '0 6px 14px rgba(0, 0, 0, 0.32)';
+            button.style.transform = '';
+            copyIcon && copyIcon.classList.remove('hidden');
+            copiedIcon && copiedIcon.classList.add('hidden');
+        }, 2000);
+    },
+
     _fallbackCopy: function (text) {
         try {
             const textarea = document.createElement('textarea');
