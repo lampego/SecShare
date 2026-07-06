@@ -124,7 +124,7 @@ node('build-node') {
         def dbHost = ''
         if (effectiveEnvironment == 'Production')
         {
-            envVariables.put('App__FrontendUrl', 'https://secshare.com')
+            envVariables.put('App__FrontendUrl', 'https://secshare.me')
             dbName = 'secshare'
             dbPort = '5432'
             dbHost = '192.168.88.41'
@@ -133,7 +133,7 @@ node('build-node') {
         }
         else if (effectiveEnvironment == 'Development')
         {
-            envVariables.put('App__FrontendUrl', 'https://dev.secshare.com')
+            envVariables.put('App__FrontendUrl', 'https://dev.secshare.me')
             dbName = 'secshare_dev'
             dbPort = '5432'
             dbHost = '192.168.88.42'

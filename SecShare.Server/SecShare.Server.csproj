@@ -40,4 +40,10 @@
       <Folder Include="Dto\RequestResponse\" />
     </ItemGroup>
 
+    <Target Name="FingerprintPublishedIndexAssets"
+            AfterTargets="Publish"
+            Condition="Exists('$(PublishDir)wwwroot/index.html') And Exists('$(IntermediateOutputPath)staticwebassets.publish.endpoints.json')">
+        <Exec Command="node &quot;$(MSBuildProjectDirectory)\..\SecShare.Web\Scripts\fingerprint-published-index.js&quot; &quot;$(IntermediateOutputPath)staticwebassets.publish.endpoints.json&quot; &quot;$(PublishDir)wwwroot/index.html&quot;" />
+    </Target>
+
 </Project>
