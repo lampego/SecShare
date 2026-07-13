@@ -1,0 +1,42 @@
+<div class="rounded-xl border border-[#dce5da] bg-white/80 p-8 shadow-sm">
+    <div class="mb-6 flex items-start gap-4">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#eaf6ef]">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#1a6641]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div class="min-w-0">
+            <h1 class="text-base font-semibold text-[#13201d]">
+                @(ContentType == StorageContentType.Folder ? "Archive ready" : "File ready")
+            </h1>
+            <p class="mt-0.5 truncate font-mono text-sm text-[#52625d]">@FileName</p>
+            @if (HasKeyFromLink)
+            {
+                <p class="mt-1 text-xs text-[#a0afa9]">Encryption key was found in the link.</p>
+            }
+        </div>
+    </div>
+    <button @onclick="OnSave"
+            class="focus-ring inline-flex items-center gap-2 rounded-lg border border-[#dce5da] bg-white px-4 py-2 text-sm font-medium text-[#13201d] shadow-sm transition hover:border-[#9bb5aa]">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-[#52625d]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download again
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public StorageContentType ContentType { get; set; }
+
+    [Parameter]
+    public string? FileName { get; set; }
+
+    [Parameter]
+    public bool HasKeyFromLink { get; set; }
+
+    [Parameter]
+    public EventCallback OnSave { get; set; }
+}

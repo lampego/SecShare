@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
-namespace SecShare.Web.Pages;
+namespace SecShare.Web.Pages.Receive;
 
 public partial class ReceiveLanding
 {
@@ -93,4 +93,3 @@ public partial class ReceiveLanding
         return false;
     }
 }
-

@@ -5,14 +5,13 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
 using SecShare.Business.Common.Enums;
-using SecShare.Business.Common.Formatting;
 using SecShare.Business.Common.Http;
 using SecShare.Business.Common.Http.Clients;
 using SecShare.Business.Common.Services.Archive;
 using SecShare.Business.Exceptions;
 using SecShare.Web.Services.Crypto;
 
-namespace SecShare.Web.Pages;
+namespace SecShare.Web.Pages.Receive;
 
 public partial class Receive : IAsyncDisposable
 {
@@ -107,9 +106,15 @@ public partial class Receive : IAsyncDisposable
             if (!string.IsNullOrWhiteSpace(hash))
             {
                 _encryptionKey = hash;
+                _keyInput = hash;
                 _hasKeyFromLink = true;
                 // Remove the key from the address bar immediately after reading it.
                 await JS.InvokeVoidAsync("secshareInterop.clearLocationHash");
+
+                // A link-provided key must still be explicitly confirmed before any download starts.
+                _state = PageState.NeedKey;
+                StateHasChanged();
+                return;
             }
         }
         catch (Exception ex)
@@ -227,7 +232,14 @@ public partial class Receive : IAsyncDisposable
         StorePreviousStage();
         StateHasChanged();
 
-        await DecryptAndProcessAsync();
+        if (_downloadedData is null)
+        {
+            await DownloadAsync();
+        }
+        else
+        {
+            await DecryptAndProcessAsync();
+        }
 
         _isDecrypting = false;
         StateHasChanged();
@@ -258,21 +270,10 @@ public partial class Receive : IAsyncDisposable
         )
         {
             Logger.LogWarning(ex, "Failed to decrypt payload for file {FileId}.", Id);
-            if (_hasKeyFromLink)
-            {
-                // Key came from the URL but was invalid; user cannot re-enter it easily.
-                SetError(
-                    "The decryption key in the link is incorrect. " +
-                    "Re-open the original link or ask the sender for a new one."
-                );
-            }
-            else
-            {
-                _keyError = "The key is incorrect. Please check it and try again.";
-                _encryptionKey = null;
-                _state = PageState.NeedKey;
-                StateHasChanged();
-            }
+            _keyError = "The key is incorrect. Please check it and try again.";
+            _encryptionKey = null;
+            _state = PageState.NeedKey;
+            StateHasChanged();
 
             return;
         }
@@ -456,11 +457,6 @@ public partial class Receive : IAsyncDisposable
         _errorMessage = message;
         _state = PageState.Error;
         StateHasChanged();
-    }
-
-    private static string FormatSpeed(double bytesPerSecond)
-    {
-        return $"{ByteSizeFormatter.Format(bytesPerSecond)}/s";
     }
 
     public ValueTask DisposeAsync()
