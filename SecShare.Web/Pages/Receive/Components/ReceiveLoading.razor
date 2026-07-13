@@ -1,0 +1,24 @@
+<div class="rounded-xl border border-[#dce5da] bg-white/80 p-10 text-center shadow-sm">
+    <div class="mx-auto mb-4 h-7 w-7 animate-spin rounded-full border-[2.5px] border-[#dce5da] border-t-[#13201d]"></div>
+    <p class="font-mono text-sm text-[#52625d]">Loading encrypted content…</p>
+    @if (Progress is { TotalBytes: > 0 } progress)
+    {
+        var percent = (int)Math.Min(100, progress.BytesTransferred * 100 / progress.TotalBytes.Value);
+        <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-[#dce5da]">
+            <div class="h-full rounded-full bg-[#13201d] transition-all duration-150"
+                 style="width: @(percent)%"></div>
+        </div>
+        <p class="mt-2 text-xs text-[#a0afa9]">
+            @ByteSizeFormatter.Format(progress.BytesTransferred) / @ByteSizeFormatter.Format(progress.TotalBytes.Value)
+            · @FormatSpeed(progress.BytesPerSecond)
+        </p>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public TransferProgress? Progress { get; set; }
+
+    private static string FormatSpeed(double bytesPerSecond)
+        => $"{ByteSizeFormatter.Format(bytesPerSecond)}/s";
+}

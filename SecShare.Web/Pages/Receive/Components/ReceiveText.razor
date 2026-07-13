@@ -1,0 +1,49 @@
+<div class="overflow-hidden rounded-xl border border-[#dce5da] bg-white/80 shadow-sm">
+    <div class="flex items-center justify-between border-b border-[#dce5da] px-5 py-3">
+        <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-[#13201d]">Decrypted text</span>
+            @if (HasKeyFromLink)
+            {
+                <span class="inline-flex items-center gap-1 rounded-full bg-[#eaf6ef] px-2 py-0.5 text-xs font-medium text-[#1a6641]">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Key found in link
+                </span>
+            }
+        </div>
+        <button @onclick="OnCopy"
+                class="focus-ring inline-flex items-center gap-1.5 rounded-md border border-[#dce5da] bg-white px-3 py-1.5 text-xs font-medium text-[#52625d] shadow-sm transition hover:border-[#9bb5aa] hover:text-[#13201d]">
+            @if (IsCopied)
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-[#1a6641]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Copied!</span>
+            }
+            else
+            {
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>Copy text</span>
+            }
+        </button>
+    </div>
+    <pre class="max-h-96 overflow-y-auto p-5 font-mono text-sm leading-relaxed whitespace-pre-wrap break-words text-[#13201d]">@TextContent</pre>
+</div>
+
+@code {
+    [Parameter]
+    public string? TextContent { get; set; }
+
+    [Parameter]
+    public bool HasKeyFromLink { get; set; }
+
+    [Parameter]
+    public bool IsCopied { get; set; }
+
+    [Parameter]
+    public EventCallback OnCopy { get; set; }
+}
