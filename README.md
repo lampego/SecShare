@@ -1,23 +1,14 @@
-# SecShare
+# SecShare — CLI-first encrypted file sharing
 
-SecShare is a secure file and secret sharing tool for developers, built around a CLI-first workflow. It lets you upload a file, directory, or text secret from the terminal, get a link, and send that link to another person.
+SecShare lets you send a file, directory, or text secret with a temporary link. It encrypts the content on your machine before upload; the decryption key stays in the link fragment and is not sent to SecShare in a normal HTTP request.
 
-The CLI command and release assets use the `secshare` name.
+The CLI is the primary workflow. A recipient can also open a link in the browser and decrypt the content locally.
 
 ## Why
 
-Sending secrets through Slack, Telegram, or email is easy, but it leaves sensitive data in places where it does not belong. SecShare is meant for short-lived sharing flows that are convenient from a terminal and easy to automate in scripts or CI jobs.
+Pasting a production credential into Slack, Telegram, or email leaves a durable copy in chat history, search indexes, notifications, and backups. SecShare is for sharing sensitive content from a terminal with a defined expiry and download limit.
 
-## Features
-
-- CLI upload flow for files and directories.
-- Text secret sharing through CLI text mode.
-- Download and decrypt shared content from a link.
-- Client-side AES-256-GCM encryption in the CLI.
-- Linux, macOS, and Windows installer scripts.
-- TTL enforcement and download-limit deletion.
-
-## Installation
+## Quick start
 
 Linux and macOS:
 
@@ -31,11 +22,17 @@ Windows:
 irm https://secshare.me/install.ps1 | iex
 ```
 
-See [Installation Guide](docs/install.md) and [CLI Usage Guide](docs/cli-usage.md).
+Create a link that expires in one hour after one download:
 
-Uninstall commands are also available in the installation guide.
+```bash
+secshare upload ./backup.zip --expires 1h --downloads 1
+```
 
-## Usage Examples
+The command prints a link such as `https://secshare.me/f/<token>#<decryption-key>`. Send it to the recipient, who can use the CLI or open it in a browser.
+
+For supported platforms, version pinning, checksums, and uninstalling, see the [installation guide](docs/install.md).
+
+## Usage
 
 Upload a file:
 
@@ -43,7 +40,7 @@ Upload a file:
 secshare upload ./backup.zip
 ```
 
-Upload a directory:
+Upload a directory recursively. SecShare packages it as an encrypted archive and extracts it after download:
 
 ```bash
 secshare upload ./logs
@@ -55,24 +52,47 @@ Share a text secret:
 secshare upload "DATABASE_URL=postgres://user:pass@example/db" --text
 ```
 
-Send expiry/download options with an upload:
+Pass text from a script or CI job through standard input:
 
 ```bash
-secshare upload ./report.pdf --expires 1h --downloads 1
+printf '%s' "$DEPLOY_TOKEN" | secshare upload
 ```
 
-Download and decrypt a shared link:
+Download and decrypt a complete link into a destination directory:
 
 ```bash
-secshare get "https://secshare.me/f/<token>#<key>" ./downloads
+secshare get "https://secshare.me/f/<token>#<decryption-key>" ./downloads
 ```
-## Security Note
 
-SecShare is intended to make temporary link-based sharing safer and more convenient, but it should not be treated as an absolute security guarantee. The CLI encrypts uploaded content client-side with AES-256-GCM and puts the decryption key in the URL fragment, which is not sent to the API during normal HTTP requests.
+To share the URL and key through separate channels, give `secshare get` the URL without the fragment. It prompts for the key:
 
-Do not post production secrets in GitHub issues, discussions, logs, or screenshots. TTL and download-limit deletion are enforced by backend queue jobs.
+```bash
+secshare get "https://secshare.me/f/<token>" ./downloads
+```
+
+See the complete [CLI usage guide](docs/cli-usage.md).
+
+## Security model
+
+1. SecShare packages the selected content locally and generates a random 32-byte key.
+2. The package is encrypted locally with AES-256-GCM, using a random 12-byte nonce and a 16-byte authentication tag.
+3. SecShare receives the encrypted payload, a share token, expiry, download limit, and metadata needed to operate the link. It does not receive the plaintext or decryption key.
+4. The key is placed after `#` in the share URL. URL fragments are not included in normal HTTP requests, so a request to SecShare contains the token but not the key.
+5. The recipient downloads the encrypted payload and decrypts it locally in the CLI or browser. AES-GCM authentication rejects altered data and incorrect keys.
+
+### What to keep in mind
+
+- Anyone with the complete link can decrypt the content. Treat it as a secret: it can leak through shell history, screenshots, clipboard sync, chat forwarding, browser extensions, or application logs.
+- Send the URL and its key separately when you need an additional separation of channels.
+- Expiry and download limits are enforced by the service. A download request consumes one allowed download; after the limit is reached or the expiry passes, the encrypted payload is scheduled for deletion. These controls reduce exposure but are not instantaneous cryptographic erasure.
+- This is a client-side encryption design, not a substitute for an independent security audit or protection against a compromised device, client, or delivery channel.
+
+## Technical details
+
+- The CLI encrypts files, directories, and text locally with AES-256-GCM before upload.
+- A file or directory is transferred as an encrypted archive; the original content is restored after decryption.
+- The browser can download and decrypt a received link locally.
 
 ## License
 
-This project is licensed under the Apache License 2.0.
-See [LICENSE](LICENSE) for details.
+Licensed under the [Apache License 2.0](LICENSE).
