@@ -3,7 +3,7 @@ using Spectre.Console.Cli;
 
 var app = new CommandApp();
 app.SetDefaultCommand<UploadCommand>()
-    .WithDescription("Encrypt and upload a file or directory, then print a full secure link and separate link/decryption key.");
+    .WithDescription("Encrypt and upload files, a directory, or a file mask, then print a full secure link and separate link/decryption key.");
 
 app.Configure(config =>
 {
@@ -11,8 +11,9 @@ app.Configure(config =>
     config.SetApplicationVersion("0.1.0");
 
     config.AddCommand<UploadCommand>("upload")
-        .WithDescription("Encrypt and upload a file or directory, then print a full secure link and separate link/decryption key.")
-        .WithExample(["upload", "./report.pdf"]);
+        .WithDescription("Encrypt and upload files, a directory, or a file mask, then print a full secure link and separate link/decryption key.")
+        .WithExample(["upload", "./report.pdf"])
+        .WithExample(["upload", "*.jpg"]);
 
     config.AddCommand<DownloadCommand>("get")
         .WithDescription("Download and decrypt a shared file. Pass a full link with key, or a link without key and SecShare will ask for it.")
