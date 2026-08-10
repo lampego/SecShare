@@ -7,6 +7,11 @@ public interface IZipArchiveService
 {
     Task<ZipArchiveBuildResult> CreateFromPathAsync(string path, CancellationToken cancellationToken);
 
+    Task<ZipArchiveBuildResult> CreateFromPathsAsync(
+        IReadOnlyCollection<string> paths,
+        CancellationToken cancellationToken
+    );
+
     Task<ZipArchiveBuildResult> CreateFromStreamsAsync(
         IReadOnlyCollection<ZipArchiveSourceItem> items,
         string sourceName,

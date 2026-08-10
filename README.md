@@ -48,6 +48,13 @@ Upload a directory recursively. SecShare packages it as an encrypted archive and
 secshare upload ./logs
 ```
 
+Upload all files matching a wildcard into one encrypted archive. Quote the mask to pass it directly to SecShare; masks are matched in the specified directory and are not recursive:
+
+```bash
+secshare upload "*.jpg"
+secshare upload "./photos/*.jpg"
+```
+
 Share a text secret:
 
 ```bash

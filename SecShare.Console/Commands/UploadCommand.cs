@@ -19,9 +19,9 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
 {
     public sealed class Settings : CommandSettings
     {
-        [CommandArgument(0, "[path]")]
-        [Description("Path to a file or directory to upload.")]
-        public string? Path { get; init; }
+        [CommandArgument(0, "[paths...]")]
+        [Description("File or directory paths to upload. Supports masks such as *.jpg.")]
+        public string[]? Paths { get; init; }
 
         [CommandOption("-e|--expires <expires>")]
         [DefaultValue("24h")]
@@ -41,10 +41,11 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken cancellationToken)
     {
-        var inputToProcess = settings.Path;
+        var inputPaths = settings.Paths ?? [];
+        var inputToProcess = inputPaths.Length == 1 ? inputPaths[0] : null;
         var isFromStdin = false;
 
-        if (string.IsNullOrWhiteSpace(inputToProcess))
+        if (inputPaths.Length == 0)
         {
             if (System.Console.IsInputRedirected)
             {
@@ -59,7 +60,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         }
 
         AnsiConsole.MarkupLine("[bold]SecShare[/] client-side encrypted upload");
-        var displayTarget = isFromStdin ? "Standard Input" : inputToProcess;
+        var displayTarget = isFromStdin ? "Standard Input" : string.Join(", ", inputPaths);
         AnsiConsole.MarkupLine($"Target: [cyan]{Markup.Escape(displayTarget)}[/]");
         AnsiConsole.WriteLine();
 
@@ -84,10 +85,10 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
                 .Columns(TransferProgressUi.CreateColumns())
                 .StartAsync(async ctx =>
                 {
-                    var zipTask = ctx.AddTask("Zipping directory...", autoStart: true, maxValue: 100);
+                    var zipTask = ctx.AddTask("Creating archive...", autoStart: true, maxValue: 100);
                     var archive = isText
-                        ? await archiveService.CreateFromTextAsync(inputToProcess, cancellationToken)
-                        : await archiveService.CreateFromPathAsync(inputToProcess, cancellationToken);
+                        ? await archiveService.CreateFromTextAsync(inputToProcess!, cancellationToken)
+                        : await archiveService.CreateFromPathsAsync(inputPaths, cancellationToken);
                     zipTask.Value = 100;
                     zipTask.StopTask();
 
@@ -160,7 +161,7 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
         task.StopTask();
     }
 
-    private static StorageContentType ResolveContentType(string path, bool isText)
+    private static StorageContentType ResolveContentType(string? path, bool isText)
     {
         if (isText)
         {
@@ -171,4 +172,5 @@ public sealed class UploadCommand : AsyncCommand<UploadCommand.Settings>
             ? StorageContentType.Folder
             : StorageContentType.File;
     }
+
 }

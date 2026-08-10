@@ -176,6 +176,86 @@ public sealed class ZipArchiveServiceTests
     }
 
     [Fact]
+    public async Task CreateFromPathsAsync_WithMaskAndDirectory_PreservesDirectoryStructure()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var directoryPath = Path.Combine(root, "album");
+            Directory.CreateDirectory(Path.Combine(directoryPath, "empty"));
+            await File.WriteAllTextAsync(Path.Combine(root, "photo.jpg"), "photo");
+            await File.WriteAllTextAsync(Path.Combine(root, "note.txt"), "note");
+            await File.WriteAllTextAsync(Path.Combine(directoryPath, "inside.txt"), "inside");
+
+            var archive = await this._zipArchiveService.CreateFromPathsAsync(
+                [Path.Combine(root, "*.jpg"), directoryPath],
+                CancellationToken.None
+            );
+
+            using var stream = new MemoryStream(archive.ArchiveBytes);
+            using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
+
+            Assert.Equal(2, archive.FileCount);
+            Assert.Equal("selected files", archive.SourceName);
+            Assert.Equal(
+                ["album/", "album/empty/", "photo.jpg", "album/inside.txt"],
+                zip.Entries.Select(entry => entry.FullName)
+            );
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task CreateFromPathsAsync_WithRepeatedFile_ArchivesItOnce()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var filePath = Path.Combine(root, "photo.jpg");
+            await File.WriteAllTextAsync(filePath, "photo");
+
+            var archive = await this._zipArchiveService.CreateFromPathsAsync(
+                [filePath, filePath],
+                CancellationToken.None
+            );
+
+            using var stream = new MemoryStream(archive.ArchiveBytes);
+            using var zip = new ZipArchive(stream, ZipArchiveMode.Read);
+
+            Assert.Equal(1, archive.FileCount);
+            Assert.Equal(["photo.jpg"], zip.Entries.Select(entry => entry.FullName));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task CreateFromPathsAsync_WhenMaskDoesNotMatch_ThrowsFileNotFoundException()
+    {
+        var root = CreateTempDirectory();
+        try
+        {
+            var exception = await Assert.ThrowsAsync<FileNotFoundException>(
+                () => this._zipArchiveService.CreateFromPathsAsync(
+                    [Path.Combine(root, "*.jpg")],
+                    CancellationToken.None
+                )
+            );
+
+            Assert.Equal("The upload mask did not match any files.", exception.Message);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task CreateFromPathAsync_WhenTotalSizeExceedsLimit_ThrowsInvalidOperationException()
     {
         var directory = CreateTempDirectory();
