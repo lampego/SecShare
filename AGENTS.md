@@ -164,6 +164,15 @@ dotnet test ./SecShare.Tests.Unit
 
 Integration tests require PostgreSQL and migrated schema matching the configured connection string.
 
+## Independent Code Review
+
+For every code-change task, before declaring completion:
+
+- Delegate a review of the final diff to a separate, read-only reviewer agent using `gpt-5.6-terra`.
+- The reviewer must not modify files; it reports findings only.
+- Address blocking findings, then request a final follow-up review.
+- Do not substitute self-review for independent review. If the required reviewer model is unavailable, report this as an unmet verification step.
+
 ## API Responses & Exceptions
 
 `MainApiControllerBase.Success` returns `200 OK` with `JsonCommonResponse` for no-response requests. Response requests return the response object through `OkObjectResult`.

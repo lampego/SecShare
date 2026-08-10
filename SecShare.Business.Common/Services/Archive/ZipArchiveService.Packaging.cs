@@ -232,7 +232,8 @@ public sealed partial class ZipArchiveService : IZipArchiveService
 
         return Directory
             .EnumerateFiles(searchDirectory, searchPattern, SearchOption.TopDirectoryOnly)
-            .Select(file => new FileInfo(file));
+            .Select(file => new FileInfo(file))
+            .OrderBy(file => file.FullName, StringComparer.Ordinal);
     }
 
     private static string ResolveSourceName(
