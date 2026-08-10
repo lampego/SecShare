@@ -2,6 +2,8 @@
 
 SecShare lets you send a file, directory, or text secret with a temporary link. It encrypts the content on your machine before upload; the decryption key stays in the link fragment and is not sent to SecShare in a normal HTTP request.
 
+Website: [secshare.me](https://secshare.me/)
+
 The CLI is the primary workflow. A recipient can also open a link in the browser and decrypt the content locally.
 
 ## Why
